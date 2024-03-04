@@ -73,6 +73,34 @@
                 ],
                 "summary": "Create a new user account",
                 "operationId": "a7d34320e96b3342d06dc4e88d81e41c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "JohnDoe@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -106,24 +134,7 @@
                     "Admin"
                 ],
                 "summary": "Get an admin user",
-                "operationId": "0ab164083c4286c7561a08a3a419720d",
-                "responses": {
-                    "200": {
-                        "description": "Successful operation"
-                    },
-                    "400": {
-                        "description": "Invalid request"
-                    }
-                }
-            }
-        },
-        "/admin/users": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Get a list of users",
-                "operationId": "1b1549f3cb702082fa6ef056bba3410b",
+                "operationId": "b553b85dcad15639fb6f02ee966ed48c",
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -140,7 +151,7 @@
                     "Admin"
                 ],
                 "summary": "Get all admin users",
-                "operationId": "ca7ba1b66c983e4591107ca74d8d7c39",
+                "operationId": "38469a8802619b00ba6119a21cd16dde",
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -170,7 +181,7 @@
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": ""
+                                        "example": "testuser@example.com"
                                     }
                                 },
                                 "type": "object"
@@ -239,7 +250,7 @@
                     "User"
                 ],
                 "summary": "Get a user",
-                "operationId": "b2f1fe8e505853a5ddca04e1c1696f97",
+                "operationId": "3d9589591e5a3f03e46356176b667054",
                 "parameters": [
                     {
                         "name": "email",
@@ -265,6 +276,23 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get a list of users",
+                "operationId": "8b282f898f566e9006a7a0938725cf9c",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid request"
                     }
                 }
             }

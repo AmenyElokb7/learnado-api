@@ -15,6 +15,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property  string $last_name
  * @property  string $email
  * @property  string $password
+ * @property  string $role
  * @property  bool $is_valid
  * @property  string $email_verified_at
  * @property  string $remember_token
@@ -22,34 +23,21 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property  string $updated_at
  * @property  string $deleted_at
  * @property  Media $media
+ * @property  Course $courses
+ * @property  Course $teachingCourses
  */
-class User extends Authenticatable implements JWTSubject
+class Admin extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, SoftDeletes, ApplyQueryScopes;
+    use Notifiable, SoftDeletes, ApplyQueryScopes, HasFactory;
 
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_valid'];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
+    protected $fillable = [
+        'first_name', 'last_name', 'email', 'password', 'role', 'is_valid',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
+    protected $hidden = [
+        'password', 'remember_token',
+    ];
+
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
@@ -64,16 +52,25 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    public function refreshTokens()
+    {
+        return $this->morphMany(RefreshToken::class, 'tokenable');
+    }
+
     public function media()
     {
         return $this->morphMany(Media::class, 'model');
     }
 
-    /**
-     * @param Builder $query
-     * @param string $firstName
-     * @return Builder
-     */
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
+    }
+
+    public function teachingCourses()
+    {
+        return $this->hasMany(Course::class, 'facilitateur_id');
+    }
 
     public function scopeByFirstName(Builder $query, ?string $firstName): Builder
     {
@@ -85,7 +82,7 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * @param Builder $query
-     * @param string $lastName
+     * @param ?string $lastName
      * @return Builder
      */
     public function scopeByLastName(Builder $query, ?string $lastName): Builder

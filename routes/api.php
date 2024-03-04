@@ -1,19 +1,20 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\Admin\AdminRegisterController;
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\LogoutController;
+use App\Http\Controllers\Api\Auth\TokenController;
+use App\Http\Controllers\Api\User\UserRegisterController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// Public routes
+Route::post('/login', AuthController::class)->name('login');
+Route::post('/register/user', UserRegisterController::class);
+Route::post('/register/admin', AdminRegisterController::class);
+
+// Protected routes for admin and user
+Route::middleware('auth:User,admin')->group(function () {
+    Route::post('/logout', LogoutController::class);
+    Route::post('/refresh-token', TokenController::class);
 });

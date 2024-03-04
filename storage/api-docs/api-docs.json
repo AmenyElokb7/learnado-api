@@ -1,0 +1,307 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Learnado API",
+        "description": "This is a simple API for an e-learning application",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/register/admin": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Register a new admin user",
+                "operationId": "3de160f8f69082f370dd1ad89d18410a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "email",
+                                    "password",
+                                    "account_type"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "JohnDoe@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "account_type": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "profile_picture": {
+                                        "type": "file",
+                                        "example": "profile_picture.jpg"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    }
+                }
+            }
+        },
+        "/admin/create-user": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Create a new user account",
+                "operationId": "a7d34320e96b3342d06dc4e88d81e41c",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    }
+                }
+            }
+        },
+        "/admin/delete-user": {
+            "delete": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Delete a user account",
+                "operationId": "9c61f8baa2827de3824900be6757c584",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    }
+                }
+            }
+        },
+        "/admin/{email}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get an admin user",
+                "operationId": "0ab164083c4286c7561a08a3a419720d",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get a list of users",
+                "operationId": "1b1549f3cb702082fa6ef056bba3410b",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    }
+                }
+            }
+        },
+        "/admin/admins": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get all admin users",
+                "operationId": "ca7ba1b66c983e4591107ca74d8d7c39",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    }
+                }
+            }
+        },
+        "/admin/suspend-account": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Suspend a user account",
+                "operationId": "b263aed639ce110a6bd0f611df05ce6c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": ""
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User account suspended successfully"
+                    }
+                }
+            }
+        },
+        "/update-user-account/{id}": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Update a user account",
+                "operationId": "8b7d268ebfc4bee423bdd3039e24fd01",
+                "responses": {
+                    "401": {
+                        "description": "You are not authorized to update this account"
+                    },
+                    "200": {
+                        "description": "User account updated successfully"
+                    }
+                }
+            }
+        },
+        "/admin/validate-user-account": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Suspend a user account",
+                "operationId": "e5914da0cb9436e8ccf239669ed683c8",
+                "responses": {
+                    "200": {
+                        "description": "User account validated successfully"
+                    }
+                }
+            }
+        },
+        "/concepteur/affect-course": {
+            "post": {
+                "tags": [
+                    "Course"
+                ],
+                "summary": "Affect a course to a facilitator",
+                "operationId": "7fc5fdf0d8bb925130b1020bd8643ec1",
+                "responses": {
+                    "200": {
+                        "description": "Course affected successfully"
+                    },
+                    "403": {
+                        "description": "You are not allowed to affect a course"
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get a user",
+                "operationId": "b2f1fe8e505853a5ddca04e1c1696f97",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User found"
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/password/set": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Set a user password",
+                "operationId": "d53b204cb2a724fb5f30e2a09499a7ef",
+                "responses": {
+                    "200": {
+                        "description": "Password set successfully"
+                    },
+                    "401": {
+                        "description": "Invalid token"
+                    }
+                }
+            }
+        },
+        "/register/user": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Register a user",
+                "operationId": "09b29a4d87973f01a0d80f01fbc90b82",
+                "responses": {
+                    "200": {
+                        "description": "User registered successfully"
+                    },
+                    "400": {
+                        "description": "An error occurred"
+                    }
+                }
+            }
+        }
+    }
+}

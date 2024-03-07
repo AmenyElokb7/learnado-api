@@ -21,13 +21,13 @@ class QueryConfig
      * paginate per page
      * @var int $perPage
      */
-    private int $perPage = 10;
+    private int $perPage;
 
     /**
      * paginate page number
      * @var int $page
      */
-    private int $page = 1;
+    private int $page;
 
     /**
      * Filters
@@ -62,10 +62,16 @@ class QueryConfig
 
     /**
      * SearchQueryConfig constructor
-     * @param array $config
      */
     public function __construct()
     {
+        $configValuePerPage = config('constants.DEFAULT_PER_PAGE');
+        $this->perPage = is_null($configValuePerPage) ? 10 : (int)$configValuePerPage;
+
+        $configValuePage = config('constants.DEFAULT_PAGE');
+        $this->page = is_null($configValuePage) ? 1 : (int)$configValuePage;
+
+
     }
 
 
@@ -115,9 +121,9 @@ class QueryConfig
         return $this->direction;
     }
 
-    public final function setDirection(mixed $DIRECTION): static
+    public final function setDirection(mixed $direction): static
     {
-        $this->direction = $DIRECTION;
+        $this->direction = $direction;
         return $this;
     }
 
@@ -126,9 +132,9 @@ class QueryConfig
         return $this->paginated;
     }
 
-    public final function setPaginated(mixed $PAGINATION): static
+    public final function setPaginated(mixed $pagination): static
     {
-        $this->paginated = $PAGINATION;
+        $this->paginated = $pagination;
         return $this;
     }
 

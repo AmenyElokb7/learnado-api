@@ -33,7 +33,7 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
-    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_valid'];
+    protected $fillable = ['first_name', 'last_name', 'email', 'role', 'password', 'is_valid'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -71,7 +71,7 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * @param Builder $query
-     * @param string $firstName
+     * @param string|null $firstName
      * @return Builder
      */
 
@@ -85,7 +85,7 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * @param Builder $query
-     * @param string $lastName
+     * @param string|null $lastName
      * @return Builder
      */
     public function scopeByLastName(Builder $query, ?string $lastName): Builder
@@ -98,7 +98,7 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * @param Builder $query
-     * @param string $email
+     * @param string|null $email
      * @return Builder
      */
     public function scopeByEmail(Builder $query, ?string $email): Builder

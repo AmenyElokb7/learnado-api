@@ -1,4 +1,5 @@
 <?php
+
 return [
     'PAGINATE' => [
         'DEFAULT_PAGE' => 1,
@@ -12,6 +13,9 @@ return [
     'REFRESH_TOKEN_EXPIRATION_IN_DAYS' => function () {
         return auth()->factory()->getTTL() / 1440;
     },
+    'MIN_PASSWORD_LENGTH' => 8,
+    'PASSWORD_REGEX' => '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+    'MAX_STRING_LENGTH' => 255,
 
 ];
 

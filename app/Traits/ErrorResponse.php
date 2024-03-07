@@ -11,18 +11,13 @@ trait ErrorResponse
      *
      * @param string $message
      * @param int $status
-     * @param mixed $errors
      * @return JsonResponse
      */
-    public final function returnErrorResponse(string $message, int $status, $errors = null): JsonResponse
+    public final function returnErrorResponse(string $message, int $status): JsonResponse
     {
         $response = [
-            'message' => $message,
+            'message' => __('messages.' . $message),
         ];
-
-        if ($errors !== null) {
-            $response['errors'] = $errors;
-        }
 
         return response()->json($response, $status);
     }

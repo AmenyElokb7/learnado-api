@@ -2,14 +2,17 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\Admin;
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\Concepteur;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\IsAdmin;
-use App\Http\Middleware\IsConcepteur;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\SetLocaleMiddleware;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
+use App\Http\Middleware\User;
 use App\Http\Middleware\ValidateSignature;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
@@ -68,6 +71,7 @@ class Kernel extends HttpKernel
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             ThrottleRequests::class . ':api',
             SubstituteBindings::class,
+            SetLocaleMiddleware::class,
         ],
     ];
 
@@ -90,7 +94,8 @@ class Kernel extends HttpKernel
         'signed' => ValidateSignature::class,
         'throttle' => ThrottleRequests::class,
         'verified' => EnsureEmailIsVerified::class,
-        'isAdmin' => IsAdmin::class,
-        'isConcepteur' => IsConcepteur::class,
+        'admin' => Admin::class,
+        'concepteur' => Concepteur::class,
+        'user' => User::class,
     ];
 }

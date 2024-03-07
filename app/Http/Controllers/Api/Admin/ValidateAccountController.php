@@ -9,6 +9,7 @@ use App\Traits\SuccessResponse;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -19,10 +20,32 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     description="This is a simple API for an e-learning application",
  *    ),
  * @OA\Post(
- *    path="/admin/validate-user-account",
- *   summary="Suspend a user account",
- *  tags={"Admin"},
- *     @OA\Response(response=200, description="User account validated successfully"),
+ *     path="/api/admin/validate-user-account",
+ *     summary="Suspend a user account",
+ *     tags={"Admin"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 required={"email"},
+ *                 @OA\Property(
+ *                     property="email",
+ *                     type="string",
+ *                     format="email",
+ *                     example="testuser@example.com"
+ *                 ),
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="User account suspended successfully",
+ *              content={
+ *          @OA\MediaType(
+ *          mediaType="application/json",
+ *                ),
+ *            }
+ *     )
  * ),
  */
 class ValidateAccountController extends Controller
@@ -35,14 +58,22 @@ class ValidateAccountController extends Controller
         $this->adminRepository = $adminRepository;
     }
 
-    public function __invoke(Request $request): JsonResponse
+    /**
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
+     */
+
+    public function __invoke(Request $request, $id): JsonResponse
     {
-        $email = $request->input('email');
 
         try {
-            $this->adminRepository->validateUserAccount($email);
-            return $this->returnSuccessResponse('User account validated successfully', '', ResponseAlias::HTTP_OK);
+            $this->adminRepository->validateUserAccount($id);
+            return $this->returnSuccessResponse(__('user_validated'), null, ResponseAlias::HTTP_OK);
+
         } catch (Exception $exception) {
+
+            Log::error($exception->getMessage());
             return $this->returnErrorResponse($exception->getMessage(), ResponseAlias::HTTP_BAD_REQUEST);
         }
 

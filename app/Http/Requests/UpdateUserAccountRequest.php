@@ -18,15 +18,28 @@ class UpdateUserAccountRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
-            'first_name' => 'sometimes|required|string|max:255',
-            'last_name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $this->user()->id,
-            'profile_picture' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'first_name' => 'sometimes|string|max:' . config('constants.MAX_STRING_LENGTH'),
+            'last_name' => 'sometimes|string|max:' . config('constants.MAX_STRING_LENGTH'),
+            'profile_picture' => 'image|mimes:' . config('constants.MIME_TYPES') . '|max:' . config('constants.MAX_FILE_SIZE'),
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'profile_picture.image' => __('messages.profile_picture_image'),
+            'profile_picture.mimes' => __('messages.profile_picture_type' . config('constants.MIME_TYPES')),
+            'profile_picture.max' => __('messages.profile_picture_size ' . config('constants.MAX_FILE_SIZE')),
+            'first_name.sometimes' => __('messages.first_name_required'),
+            'first_name.max' => __('messages.first_name_max'),
+            'last_name.sometimes' => __('messages.last_name_required'),
+            'last_name.max' => __('messages.last_name_max'),
+
         ];
     }
 }

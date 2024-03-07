@@ -1,0 +1,73 @@
+<?php
+return [
+    'user_authenticated' => 'Utilisateur authentifié avec succès',
+    'user_registered' => 'Utilisateur enregistré avec succès',
+    'user_logout' => 'Utilisateur déconnecté avec succès',
+    'user_authenticated_failed' => 'Veuillez vérifier vos identifiants et réessayer',
+    'user_not_validated' => 'Compte non validé. Veuillez contacter le support',
+    'user_registration_failed' => 'Echec d\'enregistrement de l\'utilisateur',
+    'user_detail' => 'Détails de l\'utilisateur récupérés avec succès',
+    'user_retrieved' => 'Utilisateur récupéré avec succès',
+    'user_detail_failed' => 'Echec de récupération des détails de l\'utilisateur',
+    'user_update' => 'Détails de l\'utilisateur mis à jour avec succès',
+    'user_not_found' => 'Utilisateur non trouvé',
+    'user_deleted' => 'Utilisateur supprimé avec succès',
+    'user_update_failed' => 'Echec de mise à jour des détails de l\'utilisateur',
+    'user_not_authorized' => 'Vous n\'êtes pas autorisé à effectuer cette action',
+    'user_created' => 'Utilisateur créé avec succès',
+    'user_suspended' => 'Utilisateur suspendu avec succès',
+    'user_validated' => 'Compte validé avec succès',
+    'password_reset' => 'Mot de passe réinitialisé avec succès',
+    'already_validated' => 'Compte déjà validé',
+    //Token
+    'token_invalid' => 'Token invalide or expiré',
+    'token_expired' => 'Token expiré',
+    'token_not_found' => 'Token non trouvé',
+    'token_not_provided' => 'Token non fourni',
+    'token_refreshed' => 'Token rafraîchi avec succès',
+    'token_invalid_type' => 'Type de token invalide',
+    'token_revoke_failed' => 'Echec de révocation du token en raison d\'une erreur de serveur. Veuillez réessayer plus tard',
+    'token_generation_failed' => 'Echec de génération du token',
+    'password_reset_mail_sent' => 'Mail de réinitialisation du mot de passe envoyé avec succès',
+
+    //media
+    'media_creation_failed' => 'Echec de création de média',
+    'media_deleting__failed' => 'Echec de suppression de média',
+
+    //500 errors
+    'internal_server_error' => 'Erreur interne du serveur',
+    'general_error' => 'Quelque chose s\'est mal passé, veuillez réessayer plus tard',
+
+    //courses
+    'course_assigned' => 'Cours attribué avec succès',
+    'course_created' => 'Cours créé avec succès',
+    'course_creation_failed' => 'Echec de création de cours',
+    'course_updated' => 'Cours mis à jour avec succès',
+    'course_exception' => 'Quelque chose s\'est mal passé, veuillez réessayer plus tard',
+    'course_not_found' => 'Cours non trouvé',
+
+    // validation
+    'profile_picture_image' => 'La photo de profil doit être un fichier image',
+    'profile_picture_size' => 'La photo de profil doit être inférieure en Mo à ',
+    'profile_picture_type' => 'La photo de profil doit être de type',
+    'first_name_required' => 'Le prénom est requis',
+    'first_name_max' => 'Le prénom ne doit pas dépasser 255 caractères',
+    'last_name_required' => 'Le nom est requis',
+    'last_name_max' => 'Le nom ne doit pas dépasser 255 caractères',
+    'email_required' => 'L\'adresse e-mail est requise',
+    'email_email' => 'L\'adresse e-mail doit être une adresse e-mail valide',
+    'email_unique' => 'L\'adresse e-mail a déjà été prise',
+    'password_required' => 'Le mot de passe est requis',
+    'password_confirmed' => 'Le mot de passe doit être confirmé',
+    'password_min' => 'Le mot de passe doit comporter au moins 8 caractères .',
+    'password_regex' => 'Le mot de passe doit comporter au moins 8 caractères, une lettre majuscule, une lettre minuscule et un chiffre',
+    'password_confirmation_required' => 'La confirmation du mot de passe est requise',
+    'account_type_required' => 'Le type de compte est requis',
+    'course_title_required' => 'Le titre du cours est requis',
+    'course_category_required' => 'La catégorie du cours est requise',
+    'course_description_required' => 'La description du cours est requise',
+    'language_required' => 'La langue est requise',
+    'course_is_paid_required' => 'Merci de préciser si le cours est payant ou non',
+    'course_price_required' => 'Merci de préciser le prix du cours',
+
+];

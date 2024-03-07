@@ -1,0 +1,73 @@
+<?php
+return [
+    'user_authenticated' => 'User authenticated successfully',
+    'user_registered' => 'User registered successfully',
+    'user_logout' => 'User logout successfully',
+    'user_authenticated_failed' => 'Please check your credentials and try again',
+    'user_not_validated' => 'Account is not validated. Please contact support',
+    'user_registration_failed' => 'User registration failed',
+    'user_detail' => 'User details retrieved successfully',
+    'user_retrieved' => 'User retrieved successfully',
+    'user_detail_failed' => 'User details retrieval failed',
+    'user_update' => 'User details updated successfully',
+    'user_not_found' => 'User not found',
+    'user_deleted' => 'User deleted successfully',
+    'user_update_failed' => 'User details update failed',
+    'user_not_authorized' => 'You are not authorized to do this action',
+    'user_created' => 'User created successfully',
+    'user_suspended' => 'User suspended successfully',
+    'user_validated' => 'Account validated successfully',
+    'password_reset' => 'Password reset successfully',
+    'already_validated' => 'Account already validated',
+    //Token
+    'token_invalid' => 'Token invalid or expired',
+    'token_expired' => 'Token expired',
+    'token_not_found' => 'Token not found',
+    'token_not_provided' => 'Token not provided',
+    'token_refreshed' => 'Token refreshed successfully',
+    'token_invalid_type' => 'Invalid token type',
+    'token_revoke_failed' => 'Revoke token failed due to a server error. Please try again later',
+    'token_generation_failed' => 'Token generation failed',
+    'password_reset_mail_sent' => 'Password reset mail sent successfully',
+
+    //media
+    'media_creation_failed' => 'Media creation failed',
+    'media_deleting_failed' => 'Media deleting failed',
+
+    //500 errors
+    'internal_server_error' => 'Internal server error',
+    'general_error' => 'Something went wrong, please try again later',
+
+    //courses
+    'course_assigned' => 'Course assigned successfully',
+    'course_created' => 'Course created successfully',
+    'course_creation_failed' => 'Course creation failed',
+    'course_updated' => 'Course updated successfully',
+    'course_exception' => 'Something went wrong, please try again later',
+    'course_not_found' => 'Course not found',
+
+    // validation
+    'profile_picture_image' => 'Profile picture must be an image file',
+    'profile_picture_size' => 'Profile picture must be less in MB than ',
+    'profile_picture_type' => 'Profile picture must be of type jpg, jpeg, png or gif',
+    'first_name_required' => 'First name is required',
+    'first_name_max' => 'First name may not be greater than 255 characters',
+    'last_name_required' => 'Last name is required',
+    'last_name_max' => 'Last name may not be greater than 255 characters',
+    'email_required' => 'Email is required',
+    'email_email' => 'Email must be a valid email address',
+    'email_unique' => 'Email has already been taken',
+    'password_required' => 'Password is required',
+    'password_min' => 'Password must be at least 8 characters ',
+    'password_regex' => 'Password must contain at least one uppercase letter, one lowercase letter and one number',
+    'password_confirmed' => 'Password confirmation does not match',
+    'password_confirmation_required' => 'Password confirmation is required',
+    'account_type_required' => 'Account type is required',
+    'course_title_required' => 'Course title is required',
+    'course_category_required' => 'Course category is required',
+    'course_description_required' => 'Course description is required',
+    'course_language_required' => 'Course language is required',
+    'course_is_paid_required' => 'Please specify if course is paid or not',
+    'course_price_required' => 'Please specify the course price',
+
+];

@@ -58,7 +58,7 @@ class SetPasswordMail extends Mailable
 
     public function build()
     {
-        $resetUrl = config('app.frontend_url') . '/reset-password?token=' . $this->token;
+        $resetUrl = config('app.frontend_url') . '/password-set/?token=' . $this->token;
         return $this->subject('Set Your Password')
             ->markdown('emails.users.set-password')
             ->with([

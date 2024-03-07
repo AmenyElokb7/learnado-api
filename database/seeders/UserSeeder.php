@@ -16,6 +16,7 @@ class UserSeeder extends Seeder
                 'first_name' => 'Test',
                 'last_name' => 'User',
                 'email' => 'testuser' . $i . '@example.com',
+                'role' => 0,
                 'password' => bcrypt('12345678'),
                 'is_valid' => false,
 

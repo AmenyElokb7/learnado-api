@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property mixed model_type
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Media extends Model
 {
+    use HasFactory, SoftDeletes;
 
     protected $fillable = ['model_type', 'model_id', 'file_name', 'mime_type', 'external_url'];
 

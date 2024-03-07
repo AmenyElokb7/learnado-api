@@ -2,15 +2,18 @@
 
 namespace App\Exceptions\Token;
 
+use App\Traits\ErrorResponse;
 use Exception;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class TokenException extends Exception
 {
+    use ErrorResponse;
 
-    public function __construct($message = 'Token error.', $code = 0, Exception $previous = null)
+    public function __construct($message, $code = 0, Exception $previous = null)
     {
+        $message = __('messages.token_invalid');
         parent::__construct($message, $code, $previous);
     }
 
@@ -21,6 +24,6 @@ class TokenException extends Exception
 
     public function render($request)
     {
-        return response()->json(['error' => $this->getMessage()], Response::HTTP_BAD_REQUEST);
+        return $this->returnErrorResponse(__('token_invalid'), ResponseAlias::HTTP_UNAUTHORIZED);
     }
 }

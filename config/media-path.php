@@ -1,17 +1,24 @@
 <?php
 
 return [
-    'user' => [
-        'path' => 'public/profile_pictures',
-        'disk' => 'public',
+
+    'disk' => 'public',
+    'App\Models\User' => [
+        'path' => 'profile_pictures',
+
     ],
-    'course' => [
-        'path' => 'public/media_courses',
-        'disk' => 'public',
+    'App\Models\Admin' => [
+        'path' => 'profile_pictures',
+
     ],
-    'steps' => [
-        'path' => 'public/media_steps',
-        'disk' => 'public',
+    'App\Models\Course' => [
+        'path' => 'media_courses',
+
     ],
+    'App\Models\Step' => [
+        'path' => 'media_steps',
+
+    ],
+
 
 ];

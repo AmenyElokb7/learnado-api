@@ -2,13 +2,13 @@
 
 namespace App\Http\Middleware;
 
+use App\Enum\UserRoleEnum;
 use App\Traits\ErrorResponse;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class IsConcepteur
+class Concepteur
 {
     use ErrorResponse;
 
@@ -19,10 +19,10 @@ class IsConcepteur
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::guard('admin')->check() && Auth::guard('admin')->user()->role === 'concepteur') {
+        if (auth()->user()->role === UserRoleEnum::CONCEPTEUR->value) {
             return $next($request);
         }
-        return $this->returnErrorResponse('You are not authorized to access this route', Response::HTTP_FORBIDDEN);
+        return $this->returnErrorResponse(__('user_not_authorized'), Response::HTTP_FORBIDDEN);
 
     }
 }

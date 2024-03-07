@@ -6,17 +6,17 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/register/admin": {
+        "/api/register/admin": {
             "post": {
                 "tags": [
-                    "Admin"
+                    "Auth"
                 ],
                 "summary": "Register a new admin user",
-                "operationId": "3de160f8f69082f370dd1ad89d18410a",
+                "operationId": "0ee28040e5f5a8f7db5684033c6b8f70",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "first_name",
@@ -40,15 +40,22 @@
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "12345678"
+                                        "format": "password",
+                                        "example": "12345678Aa"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "12345678Aa"
                                     },
                                     "account_type": {
                                         "type": "string",
                                         "example": "admin"
                                     },
                                     "profile_picture": {
-                                        "type": "file",
-                                        "example": "profile_picture.jpg"
+                                        "description": "Profile picture file",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -58,25 +65,78 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Admin registered successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "account": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
-                        "description": "Invalid request"
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid request data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation errors"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
-        "/admin/create-user": {
+        "/api/admin/create-user": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Create a new user account",
-                "operationId": "a7d34320e96b3342d06dc4e88d81e41c",
+                "operationId": "20dc330edc0eda0792fdf390507c1c2a",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "first_name": {
@@ -93,7 +153,18 @@
                                     },
                                     "password": {
                                         "type": "string",
+                                        "format": "password",
                                         "example": "12345678"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "12345678"
+                                    },
+                                    "profile_picture": {
+                                        "description": "Profile picture of the user",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -103,7 +174,10 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
                     },
                     "400": {
                         "description": "Invalid request"
@@ -111,33 +185,77 @@
                 }
             }
         },
-        "/admin/delete-user": {
+        "/api/admin/delete-user-account/{email}": {
             "delete": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Delete a user account",
-                "operationId": "9c61f8baa2827de3824900be6757c584",
+                "operationId": "906830593b76d3fbe12a206cd4d78b77",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "path",
+                        "description": "The email of the user to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
                     },
                     "400": {
                         "description": "Invalid request"
+                    },
+                    "404": {
+                        "description": "User not found"
                     }
                 }
             }
         },
-        "/admin/{email}": {
+        "/api/admin/{email}": {
             "get": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Get an admin user",
-                "operationId": "b553b85dcad15639fb6f02ee966ed48c",
+                "operationId": "ba05763022df8be6d45f75b5048847cb",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "path",
+                        "description": "The email of the admin to retrieve",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Admin found"
+                                        },
+                                        "admin": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Invalid request"
@@ -145,16 +263,88 @@
                 }
             }
         },
-        "/admin/admins": {
+        "/api/admin/admins": {
             "get": {
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Get all admin users",
-                "operationId": "38469a8802619b00ba6119a21cd16dde",
+                "summary": "Get a list of admins",
+                "operationId": "0840e27adf27ee3d7f5ae2cea601ec10",
+                "parameters": [
+                    {
+                        "name": "first_name",
+                        "in": "query",
+                        "description": "Filter admins by first name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "last_name",
+                        "in": "query",
+                        "description": "Filter admins by last name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filter admins by email",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "PER_PAGE",
+                        "in": "query",
+                        "description": "Number of admins per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "ORDER_BY",
+                        "in": "query",
+                        "description": "Attribute to order admins by",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "DIRECTION",
+                        "in": "query",
+                        "description": "Direction of sorting, asc or desc",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "PAGINATION",
+                        "in": "query",
+                        "description": "Enable pagination (true or false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
                     },
                     "400": {
                         "description": "Invalid request"
@@ -162,17 +352,17 @@
                 }
             }
         },
-        "/admin/suspend-account": {
+        "/api/admin/suspend-account": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Suspend a user account",
-                "operationId": "b263aed639ce110a6bd0f611df05ce6c",
+                "operationId": "b2ec5e727c852d327a68ed0d1791ae7b",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "email"
@@ -191,57 +381,451 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "User account suspended successfully"
+                        "description": "User account suspended successfully",
+                        "content": {
+                            "application/json": {}
+                        }
                     }
                 }
             }
         },
-        "/update-user-account/{id}": {
+        "/api/update-user-account/{id}": {
             "patch": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Update a user account",
-                "operationId": "8b7d268ebfc4bee423bdd3039e24fd01",
+                "operationId": "5da46c2ba7146daf7837fb29c41da336",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The ID of the user account to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Data for updating a user account",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "first_name",
+                                    "last_name"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
+                    "200": {
+                        "description": "User account updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User account updated successfully"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "description": "You are not authorized to update this account"
                     },
-                    "200": {
-                        "description": "User account updated successfully"
+                    "400": {
+                        "description": "Invalid request"
                     }
                 }
             }
         },
-        "/admin/validate-user-account": {
+        "/api/admin/validate-user-account": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Suspend a user account",
-                "operationId": "e5914da0cb9436e8ccf239669ed683c8",
+                "operationId": "2d9bf649421e1ecb5e4af654b94cf988",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "testuser@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "User account validated successfully"
+                        "description": "User account suspended successfully",
+                        "content": {
+                            "application/json": {}
+                        }
                     }
                 }
             }
         },
-        "/concepteur/affect-course": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authenticate a user",
+                "operationId": "166ed9fbecb400fd6c0d84b0c9f00cce",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "testuser@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "12345678"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login Successful"
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/refresh-token": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get a new access token",
+                "operationId": "3ca470a54b6819771ee721d60c54cbb7",
+                "requestBody": {
+                    "description": "Refresh token required to obtain a new access token",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "refresh_token"
+                                ],
+                                "properties": {
+                                    "refresh_token": {
+                                        "type": "string",
+                                        "example": "YourRefreshTokenHere"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "NewAccessTokenHere"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 3600
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized, invalid or expired refresh token"
+                    },
+                    "500": {
+                        "description": "Internal server error, e.g., failed to generate an access token"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/api/concepteur/affect-course/{course_id}/{facilitator_id}": {
             "post": {
                 "tags": [
                     "Course"
                 ],
-                "summary": "Affect a course to a facilitator",
-                "operationId": "7fc5fdf0d8bb925130b1020bd8643ec1",
+                "summary": "Assign a course to a facilitator",
+                "operationId": "ef0af652a76d845dfda7c0c7e7b2d3a3",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "description": "The ID of the course to be assigned",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "facilitator_id",
+                        "in": "path",
+                        "description": "The ID of the facilitator to whom the course will be assigned",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Course affected successfully"
+                        "description": "Course assigned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Course affected successfully"
+                                        },
+                                        "data": {
+                                            "description": "Details of the course assignment",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
-                    "403": {
-                        "description": "You are not allowed to affect a course"
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Missing required fields or invalid data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Course or facilitator not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while assigning the course"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/concepteur/create-course": {
+            "post": {
+                "tags": [
+                    "Course"
+                ],
+                "summary": "Create a new course",
+                "operationId": "d14c879065c019f3eb611834068973a0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Introduction to Laravel"
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "Technology"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "This course is an introduction to Laravel"
+                                    },
+                                    "prerequisites": {
+                                        "type": "string",
+                                        "example": "Basic knowledge of PHP"
+                                    },
+                                    "course_for": {
+                                        "type": "string",
+                                        "example": "Beginners"
+                                    },
+                                    "language": {
+                                        "type": "string",
+                                        "example": "English"
+                                    },
+                                    "duration": {
+                                        "type": "string",
+                                        "example": "2 weeks"
+                                    },
+                                    "is_paid": {
+                                        "type": "boolean",
+                                        "example": "true"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "double",
+                                        "example": "100.00"
+                                    },
+                                    "discount": {
+                                        "type": "number",
+                                        "format": "double",
+                                        "example": "10.00"
+                                    },
+                                    "facilitator_id": {
+                                        "type": "integer",
+                                        "example": "1"
+                                    },
+                                    "course_media": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Course created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Course created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid request data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/user": {
@@ -280,16 +864,88 @@
                 }
             }
         },
-        "/admin/users": {
+        "/api/admin/users": {
             "get": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Get a list of users",
-                "operationId": "8b282f898f566e9006a7a0938725cf9c",
+                "operationId": "bae07159b7f2d6682efe7911b6b0b401",
+                "parameters": [
+                    {
+                        "name": "first_name",
+                        "in": "query",
+                        "description": "Filter users by first name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "last_name",
+                        "in": "query",
+                        "description": "Filter users by last name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filter users by email",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "PER_PAGE",
+                        "in": "query",
+                        "description": "Number of users per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "ORDER_BY",
+                        "in": "query",
+                        "description": "Attribute to order users by",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "DIRECTION",
+                        "in": "query",
+                        "description": "Direction of sorting, asc or desc",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "PAGINATION",
+                        "in": "query",
+                        "description": "Enable pagination (true or false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
                     },
                     "400": {
                         "description": "Invalid request"
@@ -297,36 +953,197 @@
                 }
             }
         },
-        "/users/password/set": {
+        "/api/users/password/set": {
             "post": {
                 "tags": [
-                    "User"
+                    "Auth"
                 ],
                 "summary": "Set a user password",
-                "operationId": "d53b204cb2a724fb5f30e2a09499a7ef",
+                "operationId": "003fa981328905f7679bfc52d2b179b2",
+                "requestBody": {
+                    "description": "Payload to set a new password for a user",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "token"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "testuser@example.com"
+                                    },
+                                    "password": {
+                                        "description": "Password must be at least 8 characters long and contain a mix of letters, numbers, and symbols.",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "12345678Aa"
+                                    },
+                                    "password_confirmation": {
+                                        "description": "password must much",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "12345678Aa"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Password set successfully"
+                        "description": "Password set successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password set successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid request format or parameters"
                     },
                     "401": {
-                        "description": "Invalid token"
+                        "description": "Unauthorized - Invalid token"
+                    },
+                    "500": {
+                        "description": "Internal Server Error - Failed to set password"
                     }
                 }
             }
         },
-        "/register/user": {
+        "/api/register/user": {
             "post": {
                 "tags": [
-                    "User"
+                    "Auth"
                 ],
-                "summary": "Register a user",
-                "operationId": "09b29a4d87973f01a0d80f01fbc90b82",
+                "summary": "Register a new admin user",
+                "operationId": "b02ad78dd7b791e46a4029090e7839fe",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "email",
+                                    "password",
+                                    "account_type"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "JohnDoe@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "12345678Aa"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "12345678Aa"
+                                    },
+                                    "account_type": {
+                                        "type": "string",
+                                        "example": "user"
+                                    },
+                                    "profile_picture": {
+                                        "description": "Profile picture file",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "User registered successfully"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Admin registered successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "account": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
-                        "description": "An error occurred"
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid request data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation errors"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }

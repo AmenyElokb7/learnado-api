@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->string('mime_type')->nullable();
             $table->string('external_url')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->index(['model_type', 'model_id']);
         });
     }

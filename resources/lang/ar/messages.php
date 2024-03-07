@@ -1,0 +1,73 @@
+<?php
+return [
+    'user_authenticated' => 'تم توثيق المستخدم بنجاح',
+    'user_registered' => 'تم تسجيل المستخدم بنجاح',
+    'user_logout' => 'تم تسجيل خروج المستخدم بنجاح',
+    'user_authenticated_failed' => 'يرجى التحقق من بيانات الاعتماد الخاصة بك وحاول مرة أخرى',
+    'user_not_validated' => 'الحساب غير موثق. يرجى الاتصال بالدعم',
+    'user_registration_failed' => 'فشل تسجيل المستخدم',
+    'user_detail' => 'تم استرداد تفاصيل المستخدم بنجاح',
+    'user_retrieved' => 'تم استرداد المستخدم بنجاح',
+    'user_detail_failed' => 'فشل استرداد تفاصيل المستخدم',
+    'user_update' => 'تم تحديث تفاصيل المستخدم بنجاح',
+    'user_not_found' => 'المستخدم غير موجود',
+    'user_deleted' => 'تم حذف المستخدم بنجاح',
+    'user_update_failed' => 'فشل تحديث تفاصيل المستخدم',
+    'user_not_authorized' => 'غير مصرح لك بالقيام بهذا الإجراء',
+    'user_created' => 'تم إنشاء المستخدم بنجاح',
+    'user_suspended' => 'تم تعليق المستخدم بنجاح',
+    'user_validated' => 'تم التحقق من الحساب بنجاح',
+    'password_reset' => 'تم إعادة تعيين كلمة المرور بنجاح',
+    'already_validated' => 'الحساب موثق بالفعل',
+//Token
+    'token_invalid' => 'الرمز غير صالح أو منتهي الصلاحية',
+    'token_expired' => 'انتهت صلاحية الرمز',
+    'token_not_found' => 'الرمز غير موجود',
+    'token_not_provided' => 'الرمز غير مقدم',
+    'token_refreshed' => 'تم تحديث الرمز بنجاح',
+    'token_invalid_type' => 'نوع الرمز غير صالح',
+    'token_revoke_failed' => 'فشل في إلغاء الرمز بسبب خطأ في الخادم. يرجى المحاولة مرة أخرى في وقت لاحق',
+    'token_generation_failed' => 'فشل في إنشاء الرمز',
+    'password_reset_mail_sent' => 'تم إرسال بريد إعادة تعيين كلمة المرور بنجاح',
+
+//media
+    'media_creation_failed' => 'فشل إنشاء الوسائط',
+    'media_deleting__failed' => 'فشل حذف الوسائط',
+
+//500 errors
+    'internal_server_error' => 'خطأ داخلي في الخادم',
+    'general_error' => 'حدث خطأ ما، يرجى المحاولة مرة أخرى لاحقًا',
+
+//courses
+    'course_assigned' => 'تم تعيين الدورة بنجاح',
+    'course_created' => 'تم إنشاء الدورة بنجاح',
+    'course_creation_failed' => 'فشل إنشاء الدورة',
+    'course_updated' => 'تم تحديث الدورة بنجاح',
+    'course_exception' => 'حدث خطأ ما، يرجى المحاولة مرة أخرى لاحقًا',
+    'course_not_found' => 'الدورة غير موجودة',
+
+// validation
+    'profile_picture_image' => 'يجب أن تكون صورة الملف الشخصي ملف صورة',
+    'profile_picture_size' => 'يجب أن تكون صورة الملف الشخصي أقل بميغابايت من ',
+    'profile_picture_type' => 'يجب أن تكون صورة الملف الشخصي من نوع jpg أو jpeg أو png أو gif',
+    'first_name_required' => 'الاسم الأول مطلوب',
+    'first_name_max' => 'قد لا يكون الاسم الأول أكثر من 255 حرفًا',
+    'last_name_required' => 'الاسم الأخير مطلوب',
+    'last_name_max' => 'قد لا يكون الاسم الأخير أكثر من 255 حرفًا',
+    'email_required' => 'البريد الإلكتروني مطلوب',
+    'email_email' => 'يجب أن يكون البريد الإلكتروني عنوان بريد إلكتروني صالح',
+    'email_unique' => 'تم أخذ البريد الإلكتروني بالفعل',
+    'password_required' => 'كلمة المرور مطلوبة',
+    'password_confirmed' => 'كلمة المرور غير متطابقة',
+    'password_min' => 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.',
+    'password_regex' => 'يجب أن تحتوي كلمة المرور على حرف كبير وحرف صغير ورقم ',
+    'password_confirmation_required' => 'تأكيد كلمة المرور مطلوب',
+    'account_type_required' => 'نوع الحساب مطلوب',
+    'course_title_required' => 'عنوان الدورة مطلوب',
+    'course_category_required' => 'فئة الدورة مطلوبة',
+    'course_description_required' => 'وصف الدورة مطلوب',
+    'language_required' => 'اللغة مطلوبة',
+    'course_is_paid_required' => 'يرجى تحديد ما إذا كانت الدورة مدفوعة أم لا',
+    'course_price_required' => 'يرجى تحديد سعر الدورة',
+
+];

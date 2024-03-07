@@ -17,6 +17,10 @@ class LogoutController extends Controller
 {
     use ErrorResponse, SuccessResponse;
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function __invoke(Request $request): JsonResponse
     {
         try {
@@ -26,9 +30,10 @@ class LogoutController extends Controller
                 JWTAuth::setToken($refreshToken)->invalidate();
             }
             Auth::logout();
-            return $this->returnSuccessResponse('User logged out successfully', null, ResponseAlias::HTTP_OK);
+            return $this->returnSuccessResponse(__('user_logout'), null, ResponseAlias::HTTP_OK);
         } catch (Exception $e) {
-            return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage());
+            return $this->returnErrorResponse(__('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

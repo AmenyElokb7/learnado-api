@@ -18,24 +18,25 @@ trait SuccessResponse
     public final function returnSuccessResponse(string $message, mixed $data, int $status): JsonResponse
     {
         return response()->json([
-            'message' => $message,
+            'message' => __('messages.' . $message),
             'data' => $data,
         ], $status);
     }
 
     /**
+     * @param string $message
      * @param mixed $data
      * @param int $status
      * @param bool $isPaginated
      * @return JsonResponse
      */
 
-    public final function returnSuccessPaginationResponse($data, int $status, bool $isPaginated): JsonResponse
+    public final function returnSuccessPaginationResponse(string $message, mixed $data, int $status, bool $isPaginated): JsonResponse
     {
 
         if ($isPaginated) {
             return response()->json([
-                'message' => 'Success',
+                'message' => __('messages.' . $message),
                 'data' => $data->items(),
                 'meta' => [
                     'current_page' => $data->currentPage(),
@@ -45,7 +46,7 @@ trait SuccessResponse
             ], $status);
         } else {
             return response()->json([
-                'message' => 'Success',
+                'message' => __('messages.' . $message),
                 'data' => $data,
             ], $status);
         }

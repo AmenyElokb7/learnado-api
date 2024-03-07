@@ -10,7 +10,7 @@ class AuthenticateUserRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize(): bool
+    public final function authorize(): bool
     {
         return true;
     }
@@ -18,23 +18,22 @@ class AuthenticateUserRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array|string>
      */
-    public function rules(): array
+    public final function rules(): array
     {
         return [
             'email' => 'required|email',
-            'password' => 'required|string|min:6',
+            'password' => 'required',
         ];
     }
 
-    public function messages()
+    public final function messages(): array
     {
         return [
-            'email.required' => 'An email address is required.',
-            'email.email' => 'Please provide a valid email address.',
-            'password.required' => 'A password is required.',
-            'password.min' => 'The password must be at least 6 characters.',
+            'email.required' => __('messages.email_required'),
+            'email.email' => __('messages.email_email'),
+            'password.required' => __('messages.password_required'),
         ];
     }
 }

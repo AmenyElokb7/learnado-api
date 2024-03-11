@@ -88,13 +88,13 @@ class IndexUsersController extends Controller
         try {
             $users = UserRepository::index($paginationParams);
             return $this->returnSuccessPaginationResponse(
-                _('user_retrieved'),
+                __('user_retrieved'),
                 $users,
                 ResponseAlias::HTTP_OK,
                 $paginationParams->isPaginated()
             );
         } catch (Exception $exception) {
-            return $this->returnErrorResponse(_('messages.general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->returnErrorResponse(__('messages.general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -19,6 +19,7 @@ return [
     'user_validated' => 'تم التحقق من الحساب بنجاح',
     'password_reset' => 'تم إعادة تعيين كلمة المرور بنجاح',
     'already_validated' => 'الحساب موثق بالفعل',
+    'subscribed_users_found' => 'تم استرداد المستخدمين بنجاح',
 //Token
     'token_invalid' => 'الرمز غير صالح أو منتهي الصلاحية',
     'token_expired' => 'انتهت صلاحية الرمز',
@@ -46,7 +47,7 @@ return [
     'course_exception' => 'حدث خطأ ما، يرجى المحاولة مرة أخرى لاحقًا',
     'course_not_found' => 'الدورة غير موجودة',
 
-// validation
+// validation users
     'profile_picture_image' => 'يجب أن تكون صورة الملف الشخصي ملف صورة',
     'profile_picture_size' => 'يجب أن تكون صورة الملف الشخصي أقل بميغابايت من ',
     'profile_picture_type' => 'يجب أن تكون صورة الملف الشخصي من نوع jpg أو jpeg أو png أو gif',
@@ -63,11 +64,19 @@ return [
     'password_regex' => 'يجب أن تحتوي كلمة المرور على حرف كبير وحرف صغير ورقم ',
     'password_confirmation_required' => 'تأكيد كلمة المرور مطلوب',
     'account_type_required' => 'نوع الحساب مطلوب',
+//validation courses
     'course_title_required' => 'عنوان الدورة مطلوب',
     'course_category_required' => 'فئة الدورة مطلوبة',
     'course_description_required' => 'وصف الدورة مطلوب',
     'language_required' => 'اللغة مطلوبة',
     'course_is_paid_required' => 'يرجى تحديد ما إذا كانت الدورة مدفوعة أم لا',
-    'course_price_required' => 'يرجى تحديد سعر الدورة',
-
+    'course_price_required_if' => 'يتطلب الحقل السعر عندما يتم وضع علامة على الدورة كمدفوعة',
+    'teaching_type_required' => 'نوع التدريس مطلوب',
+    'facilitator_id_exists' => 'معلم غير موجود',
+    'selectedUserIds_required_if' => 'المستخدمون المحددون مطلوبون عندما يتم وضع علامة على الدورة كخاصة',
+    'selectedUserIds_exists' => 'مستخدم أو مستخدمون محددون غير موجودون',
+    'course_media_max' => 'يجب أن يكون حجم الوسائط أقل من ',
+    'course_media_mimes' => 'يجب أن تكون الوسائط من نوع ',
+    'place_required_if' => 'يجب عليك تحديد المكان',
+    'link_required_if' => 'يرجى تحديد الرابط',
 ];

@@ -19,6 +19,7 @@ return [
     'user_validated' => 'Compte validé avec succès',
     'password_reset' => 'Mot de passe réinitialisé avec succès',
     'already_validated' => 'Compte déjà validé',
+    'subscribed_users_found' => 'Utilisateurs récupérés avec succès',
     //Token
     'token_invalid' => 'Token invalide or expiré',
     'token_expired' => 'Token expiré',
@@ -63,11 +64,19 @@ return [
     'password_regex' => 'Le mot de passe doit comporter au moins 8 caractères, une lettre majuscule, une lettre minuscule et un chiffre',
     'password_confirmation_required' => 'La confirmation du mot de passe est requise',
     'account_type_required' => 'Le type de compte est requis',
+// validation courses
     'course_title_required' => 'Le titre du cours est requis',
     'course_category_required' => 'La catégorie du cours est requise',
     'course_description_required' => 'La description du cours est requise',
     'language_required' => 'La langue est requise',
     'course_is_paid_required' => 'Merci de préciser si le cours est payant ou non',
-    'course_price_required' => 'Merci de préciser le prix du cours',
-
+    'course_price_required_if' => 'Le champ prix est requis lorsque le cours est marqué comme payant',
+    'teaching_type_required' => 'Le type d\'enseignement est requis lorsqu\'un facilitateur est choisi',
+    'facilitator_id_exists' => 'L\'identifiant du facilitateur n\'existe pas',
+    'selectedUserIds_required_if' => 'Les utilisateurs sélectionnés sont requis lorsque le cours est marqué comme privé',
+    'selectedUserIds_exists' => 'Un ou plusieurs utilisateurs sélectionnés n\'existent pas',
+    'course_media_max' => 'Le média du cours doit être inférieur à 5 mégaoctets',
+    'course_media_mimes' => 'Le média du cours doit être image, vidéo, audio ou document',
+    'place_required_if' => 'Vous devez spécifier le lieu',
+    'link_required_if' => 'Vous devez spécifier le lien de Google Meet',
 ];

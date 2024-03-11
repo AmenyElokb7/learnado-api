@@ -57,7 +57,7 @@ class GetUserByIdController extends Controller
         } catch (Exception $exception) {
 
             Log::error($exception->getMessage());
-            return $this->returnErrorResponse(__('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->returnErrorResponse(__('user_not_found'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

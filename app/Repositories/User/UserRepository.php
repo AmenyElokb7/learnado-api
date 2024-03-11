@@ -11,15 +11,14 @@ use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
 use Exception;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -36,6 +35,10 @@ class UserRepository
         return User::create($data);
     }
 
+    /**
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
         $UserQuery = User::with('media')->newQuery();
@@ -55,12 +58,6 @@ class UserRepository
     public final function findById(int $UserId): User|Builder|Model
     {
         $user = User::with('media')->where('id', $UserId)->first();
-        if ($user) {
-            $profilePicture = $user->media->first() ? Storage::url($user->media->first()->file_name) : null;
-            $user->profile_picture = $profilePicture;
-        } else {
-            throw new Exception(__('messages.user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
-        }
         return $user;
     }
 
@@ -98,40 +95,37 @@ class UserRepository
      * @throws Exception
      */
 
-    public final function updateProfile(array $data): User
+    public final function updateProfile(array $data): Authenticatable
     {
         $user = Auth::user();
         if (!$user) {
             throw new Exception(__('user_authenticated_failed'), ResponseAlias::HTTP_NOT_FOUND);
         }
-        if ($user instanceof User) {
-            $user->fill($data);
-            $user->save();
 
-            $profilePicture = $data['profile_picture'] ?? null;
+        $user->fill($data);
+        $user->save();
 
-            if ($user->media->first()) {
-                if (isset($data['profile_picture'])) {
-                    MediaRepository::updateMediaFromModel($user, $profilePicture, $user->media->first()->id ?? null);
-                } else {
-                    MediaRepository::detachMediaFromModel($user, $user->media->first()->id);
-                }
+        $profilePicture = $data['profile_picture'] ?? null;
 
+        if ($user->media->first()) {
+            if (isset($data['profile_picture'])) {
+                MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture, $user->media->first()->id ?? null);
             } else {
-                if ($profilePicture instanceof UploadedFile) {
-                    MediaRepository::attachMediaToModel($user, $profilePicture);
-                }
+                MediaRepository::detachMediaFromModel($user, $user->media->first()->id);
             }
 
-
+        } else {
+            if ($profilePicture) {
+                MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture);
+            }
         }
         return $user;
     }
 
-
     /**
      * Reset user password
-     *
+     * @param $email
+     * @throws Exception
      */
 
     public final function sendPasswordResetMail($email): void
@@ -146,6 +140,10 @@ class UserRepository
 
     }
 
+    /**
+     * @param $email
+     * @throws Exception
+     */
     private static function createPasswordResetToken($email): void
     {
         PasswordResetToken::create([
@@ -157,6 +155,8 @@ class UserRepository
     }
 
     /**
+     * @param $token
+     * @param $newPassword
      * @throws Exception
      */
     public final function updateUserPassword($token, $newPassword): void
@@ -179,7 +179,6 @@ class UserRepository
 
         $user->password = bcrypt($newPassword);
         $user->save();
-
         PasswordResetToken::where('token', $passwordResetToken->token)->delete();
 
     }

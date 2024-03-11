@@ -609,7 +609,7 @@
                 "security": []
             }
         },
-        "/api/concepteur/affect-course/{course_id}/{facilitator_id}": {
+        "/api/designer/affect-course/{course_id}/{facilitator_id}": {
             "post": {
                 "tags": [
                     "Course"
@@ -715,7 +715,7 @@
                 ]
             }
         },
-        "/api/concepteur/create-course": {
+        "/api/designer/create-course": {
             "post": {
                 "tags": [
                     "Course"

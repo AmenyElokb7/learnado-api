@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\ApplyQueryScopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -107,6 +108,14 @@ class User extends Authenticatable implements JWTSubject
             return $query->where('email', 'like', "%$email%");
         }
         return $query;
+    }
+
+    /**
+     * @return BelongsToMany
+     */
+    public function subscribedCourses()
+    {
+        return $this->belongsToMany(Course::class, 'course_subscription_users', 'user_id', 'course_id');
     }
 
 }

@@ -18,7 +18,7 @@ trait PaginationParams
      */
     public final function getPaginationParams(Request $request): array
     {
-        $paginationParams = [
+        return [
             'PAGE' => $request->input('page', config('constants.PAGINATE.DEFAULT_PAGE')),
             'PER_PAGE' => $request->input('per_page', config('constants.PAGINATE.DEFAULT_PER_PAGE')),
             'ORDER_BY' => $request->input('order_by', config('constants.PAGINATE.DEFAULT_ORDER_BY')),
@@ -26,7 +26,6 @@ trait PaginationParams
             'PAGINATION' => (bool)$request->input('pagination', config('constants.PAGINATE.DEFAULT_PAGINATION')),
             'KEYWORD' => $request->input('keyword', ''),
         ];
-        return $paginationParams;
     }
 
     /**

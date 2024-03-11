@@ -56,15 +56,14 @@ class DeleteAccountController extends Controller
 
     /**
      * @param Request $request
-     * @param int $userId
+     * @param int $user_id
      * @return JsonResponse
      */
 
-    public function __invoke(Request $request, int $userId): JsonResponse
+    public function __invoke(Request $request, int $user_id): JsonResponse
     {
-        $accountType = $request->account_type;
         try {
-            $this->adminRepository->deleteUserAccount($userId);
+            $this->adminRepository->deleteUserAccount($user_id);
             return $this->returnSuccessResponse(__('user_deleted'), null, ResponseAlias::HTTP_OK);
         } catch (Exception $exception) {
             Log::error($exception->getMessage());

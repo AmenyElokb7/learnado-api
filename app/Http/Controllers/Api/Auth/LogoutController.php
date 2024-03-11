@@ -29,6 +29,7 @@ class LogoutController extends Controller
                 Log::info('Refresh token: ' . $refreshToken);
                 JWTAuth::setToken($refreshToken)->invalidate();
             }
+
             Auth::logout();
             return $this->returnSuccessResponse(__('user_logout'), null, ResponseAlias::HTTP_OK);
         } catch (Exception $e) {

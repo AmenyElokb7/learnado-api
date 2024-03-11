@@ -29,7 +29,7 @@ class RegistrationRequest extends FormRequest
             'email' => 'required|string|email|max:' . config('constants.MAX_STRING_LENGTH') . '|unique:users,email',
             'password' => 'required|string|min:' . config('constants.MIN_PASSWORD_LENGTH') . '|confirmed|regex:' . config('constants.PASSWORD_REGEX'),
             'profile_picture' => 'sometimes|file|image|max:' . config('constants.MAX_FILE_SIZE') . '|mimes: ' . config('constants.MIME_TYPES'),
-            'role' => 'required|int|in:' . UserRoleEnum::USER->value . ',' . UserRoleEnum::CONCEPTEUR->value . ',' . UserRoleEnum::FACILITATOR->value,
+            'role' => 'required|int|in:' . UserRoleEnum::USER->value . ',' . UserRoleEnum::DESIGNER->value . ',' . UserRoleEnum::FACILITATOR->value,
         ];
     }
 

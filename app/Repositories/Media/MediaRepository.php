@@ -9,20 +9,6 @@ use Illuminate\Support\Facades\Storage;
 
 class MediaRepository
 {
-    public static function attachMediaToModel(Model $model, UploadedFile $file): Media
-    {
-        $storagePath = config('media-path.' . get_class($model) . '.path', 'api/default');
-        $disk = config('media-path.' . get_class($model) . '.disk', 'public');
-        $path = $file->store($storagePath, $disk);
-        $fullUrl = Storage::url($path);
-        $mediaData = [
-            'file_name' => $fullUrl,
-            'mime_type' => $file->getMimeType(),
-            'model_type' => get_class($model),
-            'model_id' => $model->getKey(),
-        ];
-        return Media::create($mediaData);
-    }
 
     public static function detachMediaFromModel(Model $model, int $mediaId): void
     {
@@ -32,28 +18,34 @@ class MediaRepository
         }
     }
 
-    /**
-     * @param Model $model
-     * @param UploadedFile $file
-     * @param int $mediaId
-     * @return Media
-     */
-    public static function updateMediaFromModel(Model $model, UploadedFile $file, int $mediaId): Media
+    public static function attachOrUpdateMediaForModel(Model $model, UploadedFile $file, ?int $mediaId = null, $title = null): Media
     {
-        $media = Media::find($mediaId);
-        $storagePath = config('media-path.' . $media->model_type . '.path', 'api/default');
-        $disk = config('media-path.' . $media->model_type . '.disk', 'public');
+        $disk = config('media-path.' . get_class($model) . '.disk', 'public');
+        $storagePath = config('media-path.' . get_class($model) . '.path', 'default');
+
         $path = $file->store($storagePath, $disk);
-        $fullUrl = Storage::url($path);
+        $fullUrl = Storage::disk($disk)->url($path);
 
-        if ($media && $media->model_id === $model->getKey() && $media->model_type === get_class($model)) {
+        $mediaData = [
+            'file_name' => $fullUrl,
+            'mime_type' => $file->getMimeType(),
+            'model_type' => get_class($model),
+            'model_id' => $model->getKey(),
+            'title' => $title,
 
-            $media->file_name = $fullUrl;
-            $media->mime_type = $file->getMimeType();
-            $media->save();
-            return $media;
+        ];
+
+        $media = $mediaId ? Media::find($mediaId) : new Media;
+
+        if ($media) {
+            $media->fill($mediaData);
+
+            if ($media->isDirty()) {
+                $media->save();
+            }
         }
-        return new Media();
+
+        return $media;
     }
 }
 

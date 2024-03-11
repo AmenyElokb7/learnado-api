@@ -54,7 +54,7 @@ class AdminRepository
      */
     public final function suspendUserAccount(int $id): User
     {
-        $user = User::where('id', $id)->first();
+        $user = User::find($id);
         if ($user) {
             if ($user->is_valid) {
                 $user->is_valid = false;
@@ -95,7 +95,7 @@ class AdminRepository
         // profile picture
         $profilePicture = $data['profile_picture'] ?? null;
         if ($profilePicture instanceof UploadedFile) {
-            MediaRepository::attachMediaToModel($user, $profilePicture);
+            MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture);
         }
         return $user;
     }
@@ -145,18 +145,14 @@ class AdminRepository
         $account->save();
         $currentMedia = $account->media->first();
 
-        if ($currentMedia) {
-            // update or add new profile picture
-            if (array_key_exists('profile_picture', $data)) {
-                MediaRepository::updateMediaFromModel($account, $data['profile_picture'], $currentMedia->id);
-            } // remove profile picture
-            else {
-                MediaRepository::detachMediaFromModel($account, $currentMedia->id);
-            }
-        } elseif (array_key_exists('profile_picture', $data)) {
-            MediaRepository::attachMediaToModel($account, $data['profile_picture']);
-        }
+        if (array_key_exists('profile_picture', $data)) {
 
+            $mediaId = $currentMedia ? $currentMedia->id : null;
+            MediaRepository::attachOrUpdateMediaForModel($account, $data['profile_picture'], $mediaId);
+        } elseif ($currentMedia) {
+
+            MediaRepository::detachMediaFromModel($account, $currentMedia->id);
+        }
         return $account;
     }
 

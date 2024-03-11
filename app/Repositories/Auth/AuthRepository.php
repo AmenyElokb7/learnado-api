@@ -38,7 +38,7 @@ class AuthRepository
         $profilePicture = $data['profile_picture'] ?? null;
         if ($profilePicture instanceof UploadedFile) {
 
-            MediaRepository::attachMediaToModel($user, $profilePicture);
+            MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture);
 
 
         }
@@ -74,7 +74,6 @@ class AuthRepository
         return [
             'access_token' => $token,
             'refresh_token' => $refreshToken,
-            'refresh_token_expires_in' => call_user_func(config('constants.REFRESH_TOKEN_EXPIRATION_IN_DAYS')),
             'user' => $user
         ];
     }
@@ -89,7 +88,8 @@ class AuthRepository
     {
         try {
             $customClaims = ['token_type' => 'refresh'];
-            JWTAuth::factory()->setTTL(10080);
+            $refreshTTL = config('jwt.refresh_ttl');
+            JWTAuth::factory()->setTTL($refreshTTL);
             return JWTAuth::claims($customClaims)->fromUser($user);
         } catch (Exception $exception) {
             Log::error($exception->getMessage());

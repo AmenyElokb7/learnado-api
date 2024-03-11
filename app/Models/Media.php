@@ -17,7 +17,7 @@ class Media extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['model_type', 'model_id', 'file_name', 'mime_type', 'external_url'];
+    protected $fillable = ['model_type', 'model_id', 'file_name', 'mime_type', 'external_url', 'title'];
 
     public function model()
     {

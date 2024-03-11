@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Concepteur
+class Designer
 {
     use ErrorResponse;
 
@@ -19,7 +19,7 @@ class Concepteur
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->user()->role === UserRoleEnum::CONCEPTEUR->value) {
+        if (auth()->user()->role === UserRoleEnum::DESIGNER->value) {
             return $next($request);
         }
         return $this->returnErrorResponse(__('user_not_authorized'), Response::HTTP_FORBIDDEN);

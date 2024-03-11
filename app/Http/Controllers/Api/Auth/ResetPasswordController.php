@@ -29,7 +29,6 @@ class ResetPasswordController extends Controller
         $token = $request->query('token');
         $newPassword = $request->input('password');
         try {
-
             $this->userRepository->updateUserPassword($token, $newPassword);
             return $this->returnSuccessResponse(__('password_reset'), null, ResponseAlias::HTTP_OK);
         } catch (Exception $e) {

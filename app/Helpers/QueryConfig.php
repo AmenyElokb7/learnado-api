@@ -8,6 +8,8 @@ class QueryConfig
      */
     const SORT_ASC = 'ASC';
     const SORT_DESC = 'DESC';
+    const DEFAULT_PAGE = 10;
+    const PAGE = 1;
     /**
      * Pagination
      * @var bool $paginated
@@ -17,12 +19,12 @@ class QueryConfig
      * paginate per page
      * @var int $perPage
      */
-    private int $perPage = 10;
+    private int $perPage = self::DEFAULT_PAGE;
     /**
      * paginate page number
      * @var int $page
      */
-    private int $page = 1;
+    private int $page = self::PAGE;
     /**
      * Filters
      * @var array $filters

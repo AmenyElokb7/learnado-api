@@ -77,7 +77,7 @@ class CreateAccountController extends Controller
                 return $this->returnerrorResponse(__('user_not_authorized'), ResponseAlias::HTTP_UNAUTHORIZED);
             }
             $user = $this->adminRepository->createUserAccount($validatedData);
-            return $this->returnSuccessResponse(_('user_created'), $user, ResponseAlias::HTTP_OK);
+            return $this->returnSuccessResponse(__('user_created'), $user, ResponseAlias::HTTP_OK);
         } catch (Exception $e) {
             Log::error('User not created', ['error' => $e->getMessage()]);
             return $this->returnErrorResponse(__('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);

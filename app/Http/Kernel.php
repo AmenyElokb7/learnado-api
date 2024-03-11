@@ -4,7 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\Admin;
 use App\Http\Middleware\Authenticate;
-use App\Http\Middleware\Concepteur;
+use App\Http\Middleware\Designer;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
@@ -95,7 +95,7 @@ class Kernel extends HttpKernel
         'throttle' => ThrottleRequests::class,
         'verified' => EnsureEmailIsVerified::class,
         'admin' => Admin::class,
-        'concepteur' => Concepteur::class,
+        'designer' => Designer::class,
         'user' => User::class,
     ];
 }

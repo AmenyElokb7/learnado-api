@@ -5,6 +5,7 @@ namespace App\Repositories\Media;
 use App\Models\Media;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class MediaRepository
@@ -32,7 +33,6 @@ class MediaRepository
             'model_type' => get_class($model),
             'model_id' => $model->getKey(),
             'title' => $title,
-
         ];
 
         $media = $mediaId ? Media::find($mediaId) : new Media;
@@ -42,6 +42,8 @@ class MediaRepository
 
             if ($media->isDirty()) {
                 $media->save();
+            } else {
+                Log::info('Media is not dirty');
             }
         }
 

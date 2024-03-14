@@ -46,6 +46,15 @@ return [
     'course_updated' => 'Cours mis à jour avec succès',
     'course_exception' => 'Quelque chose s\'est mal passé, veuillez réessayer plus tard',
     'course_not_found' => 'Cours non trouvé',
+    'course_found' => 'Cours trouvé',
+
+    //steps
+    'step_created' => 'Etape créée avec succès',
+    'steps_found' => 'Sections trouvées avec succés',
+    'step_updated' => 'Etape mise à jour avec succès',
+
+    //quiz
+    'quiz_updated' => 'Quiz mis à jour avec succès',
 
     // validation
     'profile_picture_image' => 'La photo de profil doit être un fichier image',
@@ -79,4 +88,29 @@ return [
     'course_media_mimes' => 'Le média du cours doit être image, vidéo, audio ou document',
     'place_required_if' => 'Vous devez spécifier le lieu',
     'link_required_if' => 'Vous devez spécifier le lien de Google Meet',
+    'step_required' => 'Au moins une étape est requise.',
+    'step_title_required' => 'Le titre de chaque étape est requis.',
+    'step_description_required' => 'La description de chaque étape est requise.',
+    'step_duration_required' => 'La durée de chaque étape est requise.',
+    'step_duration_integer' => 'La durée de chaque étape doit être un entier.',
+    'step_media_files_file' => 'Le média doit être un fichier.',
+    'step_media_files_mimes' => 'Le média doit être un fichier de type : jpg, jpeg, png, bmp, gif, svg, webp, mp4, mp3.',
+    'step_media_urls_url' => 'L’URL du média doit être une URL valide.',
+    'step_media_urls_required' => 'L’URL du média est requise.',
+    'step_media_titles_required_if' => 'Le titre du média est requis si des médias sont présents.',
+    'step_quiz_required' => 'Un quiz est requis pour l’étape.',
+    'step_quiz_title_required_with' => 'Le titre du quiz est requis lorsque un quiz est présent.',
+    'step_quiz_title_string' => 'Le titre du quiz doit être une chaîne de caractères.',
+    'step_quiz_title_max' => 'Le titre du quiz dépasse la longueur maximale autorisée.',
+    'step_quiz_questions_question_required_with' => 'La question du quiz est requise lorsque un quiz est présent.',
+    'step_quiz_questions_question_string' => 'La question du quiz doit être une chaîne de caractères.',
+    'step_quiz_questions_type_required_with' => 'Le type de question du quiz est requis lorsque un quiz est présent.',
+    'step_quiz_questions_type_string' => 'Le type de question du quiz doit être une chaîne de caractères.',
+    'step_quiz_questions_type_in' => 'Le type de question du quiz n’est pas valide.',
+    'step_quiz_questions_is_valid_required_if' => 'La validité de la question du quiz est requise pour les questions binaires.',
+    'step_quiz_questions_is_valid_boolean' => 'La validité de la question du quiz doit être un booléen.',
+    'step_quiz_questions_answers_answer_required_if' => 'La réponse à la question du quiz est requise pour les types spécifiés.',
+    'step_quiz_questions_answers_answer_string' => 'La réponse à la question du quiz doit être une chaîne de caractères.',
+    'step_quiz_questions_answers_is_valid_required_if' => 'La validité de la réponse est requise pour les réponses QCM.',
+    'step_quiz_questions_answers_is_valid_boolean' => 'La validité de la réponse doit être un booléen.',
 ];

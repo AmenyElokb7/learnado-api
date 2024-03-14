@@ -9,15 +9,14 @@ use App\Traits\ErrorResponse;
 use App\Traits\SuccessResponse;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * @OA\Post(
- *     path="/api/concepteur/create-course",
+ *     path="/api/designer/create-course",
  *     summary="Create a new course",
- *     tags={"Course"},
+ *     tags={"Designer"},
  *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -25,18 +24,26 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *             mediaType="multipart/form-data",
  *             @OA\Schema(
  *                 type="object",
+ *                 required={"title", "category", "description", "language", "is_paid", "is_public"},
  *                 @OA\Property(property="title", type="string", example="Introduction to Laravel"),
- *                 @OA\Property(property="category", type="string", example="Technology"),
+ *                 @OA\Property(property="category", type="integer", description="Category ID", example=1),
  *                 @OA\Property(property="description", type="string", example="This course is an introduction to Laravel"),
  *                 @OA\Property(property="prerequisites", type="string", example="Basic knowledge of PHP"),
  *                 @OA\Property(property="course_for", type="string", example="Beginners"),
- *                 @OA\Property(property="language", type="string", example="English"),
+ *                 @OA\Property(property="language", type="integer", description="Language ID", example=1),
  *                 @OA\Property(property="duration", type="string", example="2 weeks"),
- *                 @OA\Property(property="is_paid", type="boolean", example="true"),
- *                 @OA\Property(property="price", type="number", format="double", example="100.00"),
- *                 @OA\Property(property="discount", type="number", format="double", example="10.00"),
- *                 @OA\Property(property="facilitator_id", type="integer", example="1"),
+ *                 @OA\Property(property="is_paid", type="boolean", example=true),
+ *                 @OA\Property(property="price", type="number", format="double", example=100.00),
+ *                 @OA\Property(property="discount", type="number", format="double", example=10.00),
+ *                 @OA\Property(property="facilitator_id", type="integer", example=1),
+ *                 @OA\Property(property="is_public", type="boolean", example=true),
+ *                 @OA\Property(property="selectedUserIds", type="array", @OA\Items(type="integer")),
  *                 @OA\Property(property="course_media", type="array", @OA\Items(type="string", format="binary")),
+ *                 @OA\Property(property="teaching_type", type="integer", example=1),
+ *                 @OA\Property(property="link", type="string", example="https://example.com/course"),
+ *                 @OA\Property(property="start_time", type="string", format="date-time", example="2023-01-01T00:00:00Z"),
+ *                 @OA\Property(property="end_time", type="string", format="date-time", example="2023-01-15T00:00:00Z"),
+ *                 @OA\Property(property="latitude", type="string", example="40.712776"),
  *             )
  *         )
  *     ),
@@ -57,7 +64,6 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *         )
  *     ),
  * )
- *
  */
 class CreateCourseController extends Controller
 {
@@ -72,23 +78,21 @@ class CreateCourseController extends Controller
     /**
      * @param CreateCourseRequest $request
      * @return JsonResponse
+     * @throws Exception
      */
 
     public function __invoke(CreateCourseRequest $request): JsonResponse
     {
         $data = $this->getAttributes($request);
-        try {
-            $course = $this->courseRepository->createCourse($data);
-            if ($course) {
-                return $this->returnSuccessResponse(__('course_created'), ResponseAlias::HTTP_OK, $course);
-            } else {
-                return $this->returnErrorResponse(__('user_not_authorized'), ResponseAlias::HTTP_FORBIDDEN);
-            }
-        } catch (Exception $e) {
 
-            Log::error($e->getMessage());
-            return $this->returnErrorResponse(__('course_creation_failed'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+
+        $course = $this->courseRepository->createCourse($data);
+        if ($course) {
+            return $this->returnSuccessResponse(__('course_created'), $course, ResponseAlias::HTTP_OK);
+        } else {
+            return $this->returnErrorResponse(__('user_not_authorized'), ResponseAlias::HTTP_FORBIDDEN);
         }
+
     }
 
     private function getAttributes(CreateCourseRequest $request): array

@@ -46,6 +46,15 @@ return [
     'course_updated' => 'تم تحديث الدورة بنجاح',
     'course_exception' => 'حدث خطأ ما، يرجى المحاولة مرة أخرى لاحقًا',
     'course_not_found' => 'الدورة غير موجودة',
+    'course_found' => 'تم العثور على الدورة',
+
+//steps
+    'step_created' => 'تم إنشاء الخطوة بنجاح',
+    'steps_found' => 'تم استرداد الخطوات بنجاح',
+    'step_updated' => 'تم تحديث الخطوة بنجاح',
+
+//quiz
+    'quiz_updated' => 'تم تحديث الاختبار بنجاح',
 
 // validation users
     'profile_picture_image' => 'يجب أن تكون صورة الملف الشخصي ملف صورة',
@@ -79,4 +88,29 @@ return [
     'course_media_mimes' => 'يجب أن تكون الوسائط من نوع ',
     'place_required_if' => 'يجب عليك تحديد المكان',
     'link_required_if' => 'يرجى تحديد الرابط',
+    'step_required' => 'مطلوب خطوة واحدة على الأقل.',
+    'step_title_required' => 'عنوان كل خطوة مطلوب.',
+    'step_description_required' => 'وصف كل خطوة مطلوب.',
+    'step_duration_required' => 'مدة كل خطوة مطلوبة.',
+    'step_duration_integer' => 'يجب أن تكون مدة كل خطوة عدد صحيح.',
+    'step_media_files_file' => 'يجب أن يكون الملف وسيطة.',
+    'step_media_files_mimes' => 'يجب أن يكون الملف من نوع: jpg, jpeg, png, bmp, gif, svg, webp, mp4, mp3.',
+    'step_media_urls_url' => 'يجب أن تكون عنوان URL للوسيط صالحًا.',
+    'step_media_urls_required' => 'عنوان URL للوسيط مطلوب.',
+    'step_media_titles_required_if' => 'عنوان الوسيط مطلوب إذا كانت الوسائط موجودة.',
+    'step_quiz_required' => 'اختبار مطلوب للخطوة.',
+    'step_quiz_title_required_with' => 'عنوان الاختبار مطلوب عند وجود اختبار.',
+    'step_quiz_title_string' => 'يجب أن يكون عنوان الاختبار سلسلة من الأحرف.',
+    'step_quiz_title_max' => 'عنوان الاختبار يتجاوز الطول الأقصى المسموح به.',
+    'step_quiz_questions_question_required_with' => 'سؤال الاختبار مطلوب عند وجود اختبار.',
+    'step_quiz_questions_question_string' => 'يجب أن يكون سؤال الاختبار سلسلة من الأحرف.',
+    'step_quiz_questions_type_required_with' => 'نوع سؤال الاختبار مطلوب عند وجود اختبار.',
+    'step_quiz_questions_type_string' => 'يجب أن يكون نوع سؤال الاختبار سلسلة من الأحرف.',
+    'step_quiz_questions_type_in' => 'نوع سؤال الاختبار غير صالح.',
+    'step_quiz_questions_is_valid_required_if' => 'صحة سؤال الاختبار مطلوبة للأسئلة الثنائية.',
+    'step_quiz_questions_is_valid_boolean' => 'يجب أن تكون صحة سؤال الاختبار بوليانية.',
+    'step_quiz_questions_answers_answer_required_if' => 'إجابة سؤال الاختبار مطلوبة للأنواع المحددة.',
+    'step_quiz_questions_answers_answer_string' => 'يجب أن تكون إجابة سؤال الاختبار سلسلة من الأحرف.',
+    'step_quiz_questions_answers_is_valid_required_if' => 'صحة الإجابة مطلوبة لإجابات QCM.',
+    'step_quiz_questions_answers_is_valid_boolean' => 'يجب أن تكون صحة الإجابة بوليانية.',
 ];

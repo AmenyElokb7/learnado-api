@@ -50,6 +50,11 @@ return [
 
     //steps
     'step_created' => 'step created successfully',
+    'steps_found' => 'Steps fetched successfully',
+    'step_updated' => 'Step updated successfully',
+
+    //quiz
+    'quiz_updated' => 'Quiz updated successfully',
 
     // validation
     'profile_picture_image' => 'Profile picture must be an image file.',
@@ -91,4 +96,21 @@ return [
     'step_media_files_file' => 'The media must be a file.',
     'step_media_files_mimes' => 'The media must be a file of type: jpg, jpeg, png, bmp, gif, svg, webp, mp4, mp3.',
     'step_media_urls_url' => 'The media URL must be a valid URL.',
+    'step_media_urls_required' => 'The media URL is required.',
+    'step_media_titles_required_if' => 'The media title is required when the media URL is not empty.',
+    'step_quiz_required' => 'The quiz is required.',
+    'step_quiz_title_required_with' => 'The quiz title is required when the quiz is not empty.',
+    'step_quiz_title_string' => 'The quiz title must be a string.',
+    'step_quiz_title_max' => 'The quiz title may not be greater than 255 characters.',
+    'step_quiz_questions_question_required_with' => 'The question is required when the quiz is not empty.',
+    'step_quiz_questions_question_string' => 'The question must be a string.',
+    'step_quiz_questions_type_required_with' => 'The question type is required when the quiz is not empty.',
+    'step_quiz_questions_type_string' => 'The question type must be a string.',
+    'step_quiz_questions_type_in' => 'The question type must be one of: binary, QCM, open.',
+    'step_quiz_questions_is_valid_required_if' => 'The answer validity is required when the question type is binary.',
+    'step_quiz_questions_is_valid_boolean' => 'The answer validity must be a boolean.',
+    'step_quiz_questions_answers_answer_required_if' => 'The answer is required when the question type is QCM or open.',
+    'step_quiz_questions_answers_answer_string' => 'The answer must be a string.',
+    'step_quiz_questions_answers_is_valid_required_if' => 'The answer validity is required when the question type is QCM.',
+    'step_quiz_questions_answers_is_valid_boolean' => 'The answer validity must be a boolean.',
 ];

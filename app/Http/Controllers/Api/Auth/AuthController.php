@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AuthenticateUserRequest;
 use App\Repositories\Auth\AuthRepository;
@@ -12,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+
 
 /**
  * @OA\Post(
@@ -56,7 +58,13 @@ class AuthController extends Controller
             return $this->returnSuccessResponse(__('user_authenticated'), $result, ResponseAlias::HTTP_OK);
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
-            return $this->returnErrorResponse($exception->getMessage() ?: __('general_error'), $exception->getCode() ?: ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            $errorDetails = json_decode($exception->getMessage(), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($errorDetails)) {
+                return response()->json(['errors' => $errorDetails], $exception->getCode() ?: ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            } else {
+                return $this->returnErrorResponse( $exception->getMessage() ?: __('general_error'), $exception->getCode() ?:ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
         }
     }
 

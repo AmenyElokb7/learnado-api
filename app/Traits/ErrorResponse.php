@@ -18,7 +18,7 @@ trait ErrorResponse
         $response = [
             'message' => __('messages.' . $message),
         ];
-
         return response()->json($response, $status);
     }
+
 }

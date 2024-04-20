@@ -23,6 +23,7 @@ trait ApplyQueryScopes
             if (self::isValidFilter($filter)) {
                 $methodName = 'scopeBy' . Str::studly($filter);
                 if (method_exists($self, $methodName)) {
+
                     $self->{$methodName}($query, $value);
                 }
             }

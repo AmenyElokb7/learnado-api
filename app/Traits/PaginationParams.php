@@ -13,9 +13,6 @@ use Illuminate\Support\Collection;
  */
 trait PaginationParams
 {
-    /**
-     * @return array
-     */
     public final function getPaginationParams(Request $request): array
     {
         return [

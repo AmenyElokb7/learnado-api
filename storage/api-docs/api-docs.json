@@ -3,6 +3,10 @@
     "info": {
         "title": "Learnado API",
         "description": "This is a simple API for an e-learning application",
+        "contact": {
+            "name": "Support Team",
+            "email": "support@learnado.com"
+        },
         "version": "1.0.0"
     },
     "paths": {
@@ -22,8 +26,6 @@
                                     "first_name",
                                     "last_name",
                                     "email",
-                                    "password",
-                                    "password_confirmation",
                                     "role"
                                 ],
                                 "properties": {
@@ -40,16 +42,6 @@
                                         "format": "email",
                                         "example": "JohnDoe@example.com"
                                     },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "12345678"
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "12345678"
-                                    },
                                     "role": {
                                         "description": "User role",
                                         "type": "integer",
@@ -57,7 +49,8 @@
                                     },
                                     "profile_picture": {
                                         "description": "Profile picture of the user",
-                                        "type": "file"
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -67,7 +60,20 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "User account created successfully"
+                        "description": "User account created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User account created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Invalid request due to incorrect input or missing fields"
@@ -95,7 +101,8 @@
                         "description": "The ID of the user account to delete",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 123
                         }
                     }
                 ],
@@ -122,10 +129,451 @@
                     "404": {
                         "description": "User not found"
                     },
+                    "401": {
+                        "description": "Unauthorized - User not authorized to perform this action"
+                    },
                     "500": {
                         "description": "Internal Server Error - Failed to delete user account"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/accepted-users": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "List accepted users with optional pagination and filters",
+                "operationId": "getAcceptedUsers",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "Search keyword for user details",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "PER_PAGE",
+                        "in": "query",
+                        "description": "Number of users to return per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "ORDER_BY",
+                        "in": "query",
+                        "description": "Column to order the results by",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "DIRECTION",
+                        "in": "query",
+                        "description": "Direction to order users",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "asc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "PAGINATION",
+                        "in": "query",
+                        "description": "Boolean to specify if pagination is enabled",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful retrieval of users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Users retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "John"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "JohnDoe@example.com"
+                                                    },
+                                                    "role": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "profile_picture": {
+                                                        "type": "string",
+                                                        "example": "url_to_picture"
+                                                    },
+                                                    "is_valid": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2021-01-01T00:00:00.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "example": "2021-01-01T00:00:00.000000Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "count": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "total_pages": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/pending-users": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "List pending user accounts with optional pagination and filters",
+                "operationId": "getPendingUsers",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "Search keyword for user details",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "PER_PAGE",
+                        "in": "query",
+                        "description": "Number of users to return per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "ORDER_BY",
+                        "in": "query",
+                        "description": "Column to order the results by",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "DIRECTION",
+                        "in": "query",
+                        "description": "Direction to order users",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "asc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "PAGE",
+                        "in": "query",
+                        "description": "Page number to retrieve",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "PAGINATION",
+                        "in": "query",
+                        "description": "Boolean to specify if pagination is enabled",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful retrieval of pending users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pending users retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "John"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "JohnDoe@example.com"
+                                                    },
+                                                    "role": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "profile_picture": {
+                                                        "type": "string",
+                                                        "example": "url_to_picture"
+                                                    },
+                                                    "is_valid": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2021-01-01 00:00:00"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2021-01-01 00:00:00"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get a list of users",
+                "operationId": "f1e0fc2e414a2125b07788640ae8a172",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "Filter users by keyword",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter users by role; multiple roles can be specified as comma-separated values (e.g., 1,2)",
+                        "required": false
+                    },
+                    {
+                        "name": "PER_PAGE",
+                        "in": "query",
+                        "description": "Number of users per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "ORDER_BY",
+                        "in": "query",
+                        "description": "Attribute to order users by",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "created_at"
+                        }
+                    },
+                    {
+                        "name": "DIRECTION",
+                        "in": "query",
+                        "description": "Direction of sorting, asc or desc",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "asc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "PAGINATION",
+                        "in": "query",
+                        "description": "Enable pagination (true or false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Users retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "John"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "JohnDoe@example.com"
+                                                    },
+                                                    "role": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "profile_picture": {
+                                                        "type": "string",
+                                                        "example": "url_to_picture"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/admin/suspend-account/{id}": {
@@ -164,24 +612,68 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request - Invalid ID supplied"
+                        "description": "Bad Request - Invalid ID supplied",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid ID supplied."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Not Found - User account not found"
+                        "description": "Not Found - User account not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Internal Server Error"
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while suspending the account."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/api/update-user-account/{id}": {
+        "/api/admin/update-user-account/{id}": {
             "patch": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Update a user account",
-                "operationId": "8bec63a16bd9441cd934b77f00fa7936",
+                "operationId": "b153486cf20488c44af7d8a43f33cd4e",
                 "parameters": [
                     {
                         "name": "id",
@@ -194,17 +686,12 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Optional data for updating a user account. At least one field must be provided.",
+                    "description": "Optional data for updating a user account. At least one field must be provided, excluding email.",
                     "required": false,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "user@example.com"
-                                    },
                                     "first_name": {
                                         "type": "string",
                                         "example": "John"
@@ -214,9 +701,14 @@
                                         "example": "Doe"
                                     },
                                     "profile_picture": {
-                                        "description": "Profile picture of the user in specified MIME types",
+                                        "description": "Profile picture of the user",
                                         "type": "string",
                                         "format": "binary"
+                                    },
+                                    "role": {
+                                        "description": "User role",
+                                        "type": "integer",
+                                        "example": 1
                                     }
                                 },
                                 "type": "object"
@@ -237,6 +729,28 @@
                                         },
                                         "user": {
                                             "description": "The updated user object.",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "John"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Doe"
+                                                },
+                                                "profile_picture": {
+                                                    "type": "string",
+                                                    "example": "url_to_picture"
+                                                },
+                                                "role": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -246,18 +760,75 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request due to incorrect input or validation failure"
+                        "description": "Invalid request due to incorrect input or validation failure",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error messages"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized to update this account"
+                        "description": "Unauthorized - User not authorized to perform this action",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized access"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "User account not found"
+                        "description": "User account not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Internal server error"
+                        "description": "Internal Server Error - Failed to update user account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An internal server error has occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/admin/validate-user-account/{id}": {
@@ -296,15 +867,59 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request - Invalid ID supplied or other request error"
+                        "description": "Bad Request - Invalid ID supplied",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid ID supplied."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Not Found - User account not found"
+                        "description": "Not Found - User account not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Internal Server Error - Unable to validate user account due to server error"
+                        "description": "Internal Server Error - Unable to validate user account due to server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An internal server error has occurred."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/login": {
@@ -466,104 +1081,6 @@
                                         },
                                         "errors": {
                                             "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/password-reset": {
-            "post": {
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Reset a user's password",
-                "operationId": "f4e22e0ace5fa8d5aa83745fe14c3004",
-                "parameters": [
-                    {
-                        "name": "token",
-                        "in": "query",
-                        "description": "Reset token received in the user's email",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "password",
-                                    "password_confirmation"
-                                ],
-                                "properties": {
-                                    "password": {
-                                        "description": "New password for the user. Must adhere to defined password rules.",
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "NewSecurePassword123!"
-                                    },
-                                    "password_confirmation": {
-                                        "description": "Password confirmation, must match the new password.",
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "NewSecurePassword123!"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Password reset successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Password reset successfully."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invalid token or password does not meet criteria."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "An error occurred while processing your request."
                                         }
                                     },
                                     "type": "object"
@@ -1022,9 +1539,9 @@
                             "schema": {
                                 "required": [
                                     "title",
-                                    "category",
+                                    "category_id",
                                     "description",
-                                    "language",
+                                    "language_id",
                                     "is_paid",
                                     "is_public"
                                 ],
@@ -1033,7 +1550,7 @@
                                         "type": "string",
                                         "example": "Introduction to Laravel"
                                     },
-                                    "category": {
+                                    "category_id": {
                                         "description": "Category ID",
                                         "type": "integer",
                                         "example": 1
@@ -1050,7 +1567,7 @@
                                         "type": "string",
                                         "example": "Beginners"
                                     },
-                                    "language": {
+                                    "language_id": {
                                         "description": "Language ID",
                                         "type": "integer",
                                         "example": 1
@@ -1081,13 +1598,15 @@
                                         "type": "boolean",
                                         "example": true
                                     },
-                                    "selectedUserIds": {
+                                    "selected_user_ids": {
+                                        "description": "User IDs for whom the course is specifically created",
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
                                         }
                                     },
                                     "course_media": {
+                                        "description": "Media files for the course",
                                         "type": "array",
                                         "items": {
                                             "type": "string",
@@ -1115,6 +1634,10 @@
                                     "latitude": {
                                         "type": "string",
                                         "example": "40.712776"
+                                    },
+                                    "longitude": {
+                                        "type": "string",
+                                        "example": "-74.006058"
                                     }
                                 },
                                 "type": "object"
@@ -1260,7 +1783,7 @@
                     "Course"
                 ],
                 "summary": "Get course details by ID",
-                "operationId": "3d7f277f638b51f0e0bf1fa183585ddb",
+                "operationId": "4f3f813753c62da9b9c1b01be20fec6f",
                 "parameters": [
                     {
                         "name": "id",
@@ -1363,109 +1886,13 @@
                 }
             }
         },
-        "/api/designer/subscribed-users/{id}": {
-            "get": {
-                "tags": [
-                    "Designer"
-                ],
-                "summary": "Get list of users subscribed to a course",
-                "operationId": "0aed2e14b402cc43cc117146cf050962",
-                "parameters": [
-                    {
-                        "name": "course_id",
-                        "in": "path",
-                        "description": "The ID of the course to retrieve subscribed users for",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Subscribed users found successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Subscribed users found"
-                                        },
-                                        "users": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "John Doe"
-                                                    },
-                                                    "email": {
-                                                        "type": "string",
-                                                        "format": "email",
-                                                        "example": "john.doe@example.com"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Course not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Course not found"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "An error occurred while processing your request."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/courses": {
             "get": {
                 "tags": [
                     "Course"
                 ],
                 "summary": "List all courses with optional filtering and pagination",
-                "operationId": "5777621acc49f651964023f261d8102b",
+                "operationId": "b99b1b970571e4f792737ea90b77bfd4",
                 "parameters": [
                     {
                         "name": "title",
@@ -2021,7 +2448,7 @@
                     "Designer"
                 ],
                 "summary": "Delete a quiz from a specific step",
-                "operationId": "0739ec7ab0af01cefd6e2c5a39d5a829",
+                "operationId": "7f1396ceabdc2e1edec7eafec043a3e4",
                 "parameters": [
                     {
                         "name": "stepId",
@@ -2107,7 +2534,7 @@
                     "Designer"
                 ],
                 "summary": "Update a quiz for a specific step",
-                "operationId": "8a2318b061d95f40c5ec8c6643026ae4",
+                "operationId": "9a779116877e58f3a7af150c4b3b4de5",
                 "parameters": [
                     {
                         "name": "stepId",
@@ -2524,96 +2951,6 @@
                 }
             }
         },
-        "/api/designer/courses/{course_id}/steps": {
-            "get": {
-                "tags": [
-                    "Designer"
-                ],
-                "summary": "Get all steps for a specific course",
-                "operationId": "1ddfa69521c0be41c8153da926c8ef48",
-                "parameters": [
-                    {
-                        "name": "course_id",
-                        "in": "path",
-                        "description": "The ID of the course for which steps are being retrieved",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully retrieved steps for the course",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Steps found"
-                                        },
-                                        "steps": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "title": {
-                                                        "type": "string",
-                                                        "example": "Introduction to Course"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "An overview of the course content"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Course not found or no steps available",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Course not found or no steps available for the specified course"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "An error occurred while processing your request"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/designer/update-steps/{step_id}": {
             "patch": {
                 "tags": [
@@ -2902,95 +3239,6 @@
                 }
             }
         },
-        "/api/admin/users": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Get a list of users",
-                "operationId": "bae07159b7f2d6682efe7911b6b0b401",
-                "parameters": [
-                    {
-                        "name": "first_name",
-                        "in": "query",
-                        "description": "Filter users by first name",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "last_name",
-                        "in": "query",
-                        "description": "Filter users by last name",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "email",
-                        "in": "query",
-                        "description": "Filter users by email",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "PER_PAGE",
-                        "in": "query",
-                        "description": "Number of users per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "ORDER_BY",
-                        "in": "query",
-                        "description": "Attribute to order users by",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "DIRECTION",
-                        "in": "query",
-                        "description": "Direction of sorting, asc or desc",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "asc",
-                                "desc"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "PAGINATION",
-                        "in": "query",
-                        "description": "Enable pagination (true or false)",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {}
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request"
-                    }
-                }
-            }
-        },
         "/api/update-profile": {
             "patch": {
                 "tags": [
@@ -3102,6 +3350,27 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        }
+    },
+    "components": {
+        "responses": {
+            "400": {
+                "description": "Bad request - The request could not be understood by the server due to malformed syntax."
+            },
+            "401": {
+                "description": "Unauthorized - User not authorized to perform this action"
+            },
+            "500": {
+                "description": "Internal Server Error - Failed to retrieve user list"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Enter JWT Bearer token **_only_**",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
             }
         }
     }

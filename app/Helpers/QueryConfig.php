@@ -15,6 +15,13 @@ class QueryConfig
      * @var bool $paginated
      */
     private bool $paginated = true;
+
+    /**
+     * Pagination Mode (Paginate with count or not)
+     * @var mixed
+     */
+
+    protected mixed $paginationMode = true;
     /**
      * paginate per page
      * @var int $perPage
@@ -45,6 +52,14 @@ class QueryConfig
      * @var string $selectedRaw
      */
     private string $selectedRaw = '';
+
+    /**
+     * Filters
+     * @var  array
+     */
+    protected array $relations = [];
+    private array $appends = [];
+
     /**
      * Order by direction
      * @var string $orderDirection
@@ -56,6 +71,14 @@ class QueryConfig
      */
     public function __construct()
     {
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPaginationMode(): mixed
+    {
+        return $this->paginationMode;
     }
 
     public final function getPage(): int
@@ -84,6 +107,7 @@ class QueryConfig
         $this->orderBy = $orderBy;
         return $this;
     }
+
 
     public final function getFilters(): array
     {
@@ -122,4 +146,11 @@ class QueryConfig
     {
         return $this->paginated;
     }
+
+    public final function setPage(int $page): static
+    {
+        $this->page = $page;
+        return $this;
+    }
+
 }

@@ -1,7 +1,7 @@
 <?php
 return [
     'user_authenticated' => 'User authenticated successfully',
-    'user_registered' => 'User registered successfully',
+    'user_registered' => 'Account created successfully, please wait until it is validated by the admin',
     'user_logout' => 'User logout successfully',
     'user_authenticated_failed' => 'Please check your credentials and try again',
     'user_not_validated' => 'Account is not validated. Please contact support',
@@ -19,6 +19,7 @@ return [
     'user_validated' => 'Account validated successfully',
     'password_reset' => 'Password reset successfully',
     'already_validated' => 'Account already validated',
+    'password_incorrect' => 'Password incorrect',
     //Token
     'token_invalid' => 'Token invalid or expired',
     'token_expired' => 'Token expired',

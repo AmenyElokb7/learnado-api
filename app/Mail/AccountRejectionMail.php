@@ -2,29 +2,27 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class SetPasswordMail extends Mailable
+class AccountRejectionMail extends Mailable
 {
     use Queueable, SerializesModels;
+    public $user;
 
     /**
      * Create a new message instance.
      */
-    public $token;
-    public $email;
-
-    public function __construct($token, $email)
+    public function __construct(User $user)
     {
-        $this->token = $token;
-        $this->email = $email;
-    }
+        $this->user = $user;
 
+    }
 
     /**
      * Get the message envelope.
@@ -32,7 +30,7 @@ class SetPasswordMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Set Password Mail',
+            subject: 'Account Rejection Mail',
         );
     }
 
@@ -42,14 +40,14 @@ class SetPasswordMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            markdown: 'emails.users.account_rejection',
         );
     }
 
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, Attachment>
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
     public function attachments(): array
     {
@@ -58,13 +56,7 @@ class SetPasswordMail extends Mailable
 
     public function build()
     {
-        $resetUrl = config('app.frontend_url') . '/auth/password-set/?token=' . $this->token;
-        return $this->subject('Set Your Password')
-            ->markdown('emails.users.set-password')
-
-            ->with([
-                'resetUrl' => $resetUrl,
-                'email' => $this->email,
-            ]);
+        return $this->markdown('emails.users.account_rejection')
+            ->subject('Account Rejection Notice');
     }
 }

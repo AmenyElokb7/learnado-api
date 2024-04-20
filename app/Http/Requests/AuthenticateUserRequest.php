@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AuthenticateUserRequest extends FormRequest
 {
@@ -36,4 +38,5 @@ class AuthenticateUserRequest extends FormRequest
             'password.required' => __('messages.password_required'),
         ];
     }
+
 }

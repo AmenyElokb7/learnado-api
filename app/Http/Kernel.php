@@ -6,10 +6,13 @@ use App\Http\Middleware\Admin;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\Designer;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\Facilitator;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\RefreshTokenMiddleware;
 use App\Http\Middleware\SetLocaleMiddleware;
+use App\Http\Middleware\SubscribedMiddleware;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\User;
@@ -97,5 +100,8 @@ class Kernel extends HttpKernel
         'admin' => Admin::class,
         'designer' => Designer::class,
         'user' => User::class,
+        'facilitator' => Facilitator::class,
+        'refreshToken' => RefreshTokenMiddleware::class,
+        'subscribed' => SubscribedMiddleware::class,
     ];
 }

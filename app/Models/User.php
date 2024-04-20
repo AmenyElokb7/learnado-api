@@ -70,6 +70,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->morphMany(Media::class, 'model');
     }
 
+
+    public function courses()
+    {
+        return $this->hasMany(Course::class, 'facilitator_id');
+    }
+
     /**
      * @param Builder $query
      * @param string|null $firstName
@@ -117,5 +123,37 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Course::class, 'course_subscription_users', 'user_id', 'course_id');
     }
+
+    public function subscribedLearningPaths()
+    {
+        return $this->belongsToMany(LearningPath::class, 'learning_path_subscriptions', 'user_id', 'learning_path_id');
+    }
+
+    public function scopeByKeyword($query, $keyword)
+    {
+
+        if (!is_null($keyword)) {
+            return $query->where('first_name', 'like', "%$keyword%")
+                ->orWhere('last_name', 'like', "%$keyword%")
+                ->orWhere('email', 'like', "%$keyword%");
+        }
+        return $query;
+    }
+
+    public function scopeByRole($query, $role)
+    {
+        if (!is_null($role)) {
+            return $query->whereIn('role', $role);
+        }
+        return $query;
+    }
+    public function scopeByIsValid($query, $isValid)
+    {
+        if (!is_null($isValid)) {
+            return $query->where('is_valid', $isValid);
+        }
+        return $query;
+    }
+
 
 }

@@ -1,7 +1,7 @@
 <?php
 return [
     'user_authenticated' => 'Utilisateur authentifié avec succès',
-    'user_registered' => 'Utilisateur enregistré avec succès',
+    'user_registered' => 'Utilisateur enregistré avec succès, veuillez attendre qu\'il soit validé par l\'administrateur',
     'user_logout' => 'Utilisateur déconnecté avec succès',
     'user_authenticated_failed' => 'Veuillez vérifier vos identifiants et réessayer',
     'user_not_validated' => 'Compte non validé. Veuillez contacter le support',
@@ -20,6 +20,7 @@ return [
     'password_reset' => 'Mot de passe réinitialisé avec succès',
     'already_validated' => 'Compte déjà validé',
     'subscribed_users_found' => 'Utilisateurs récupérés avec succès',
+    'password_incorrect' => 'Mot de passe incorrect',
     //Token
     'token_invalid' => 'Token invalide or expiré',
     'token_expired' => 'Token expiré',

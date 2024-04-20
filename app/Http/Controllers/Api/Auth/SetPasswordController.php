@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * @OA\Post(
- *     path="/api/users/password/set",
+ *     path="/api/password-set",
  *     summary="Set a user password",
  *     tags={"Auth"},
  *     @OA\RequestBody(

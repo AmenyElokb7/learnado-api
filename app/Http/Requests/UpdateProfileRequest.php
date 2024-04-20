@@ -27,6 +27,7 @@ class UpdateProfileRequest extends FormRequest
             'last_name' => 'sometimes|string|max:' . config('constants.MAX_STRING_LENGTH'),
             'password' => 'sometimes|string|min:' . config('constants.MIN_PASSWORD_LENGTH') . '|confirmed|regex:' . config('constants.PASSWORD_REGEX'),
             'profile_picture' => 'sometimes|file|image|max:' . config('constants.MAX_FILE_SIZE') . '|mimes: ' . config('constants.MIME_TYPES'),
+            'delete_profile_picture'=> 'sometimes|boolean',
         ];
     }
 

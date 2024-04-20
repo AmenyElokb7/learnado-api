@@ -39,14 +39,18 @@ class UserRepository
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|Collection
      */
+
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
-        $UserQuery = User::with('media')->newQuery();
+
+        $UserQuery = User::with('media')->withCount('courses')->newQuery();
+
         User::applyFilters($queryConfig->getFilters(), $UserQuery);
         $users = $UserQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($users, $queryConfig);
         }
+
         return $users;
     }
 
@@ -57,7 +61,11 @@ class UserRepository
      */
     public final function findById(int $UserId): User|Builder|Model
     {
+
         $user = User::with('media')->where('id', $UserId)->first();
+        if(!$user){
+            throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+        }
         return $user;
     }
 
@@ -98,8 +106,12 @@ class UserRepository
     public final function updateProfile(array $data): Authenticatable
     {
         $user = Auth::user();
+        $password = $data['password'] ?? null;
         if (!$user) {
             throw new Exception(__('user_authenticated_failed'), ResponseAlias::HTTP_NOT_FOUND);
+        }
+        if(isset($password)){
+            $data['password'] = bcrypt($password);
         }
 
         $user->fill($data);
@@ -110,7 +122,7 @@ class UserRepository
         if ($user->media->first()) {
             if (isset($data['profile_picture'])) {
                 MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture, $user->media->first()->id ?? null);
-            } else {
+            } else if(isset($data['delete_profile_picture'])) {
                 MediaRepository::detachMediaFromModel($user, $user->media->first()->id);
             }
 
@@ -131,13 +143,13 @@ class UserRepository
     public final function sendPasswordResetMail($email): void
     {
         $user = User::where('email', $email)->first();
+
         if (!$user) {
-            throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+            throw new Exception(json_encode(['email' => __('messages.user_not_found')]), ResponseAlias::HTTP_UNAUTHORIZED);
         }
         self::createPasswordResetToken($email);
         $token = PasswordResetToken::where('email', $email)->first()->token;
         Mail::to($user->email)->send(new ResetPasswordMail($token, $user->email));
-
     }
 
     /**
@@ -152,35 +164,6 @@ class UserRepository
             'created_at' => now(),
             'expires_at' => now()->addMinutes(15),
         ]);
-    }
-
-    /**
-     * @param $token
-     * @param $newPassword
-     * @throws Exception
-     */
-    public final function updateUserPassword($token, $newPassword): void
-    {
-        $passwordResetToken = PasswordResetToken::where('token', $token)
-            ->first();
-
-        if ($passwordResetToken->expires_at < now()) {
-            PasswordResetToken::where('token', $passwordResetToken->token)->delete();
-
-            throw new Exception(__('token_expired'), ResponseAlias::HTTP_BAD_REQUEST);
-        }
-        $email = $passwordResetToken->email;
-
-        $user = User::where('email', $email)->first();
-
-        if (!$user) {
-            throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
-        }
-
-        $user->password = bcrypt($newPassword);
-        $user->save();
-        PasswordResetToken::where('token', $passwordResetToken->token)->delete();
-
     }
 }
 

@@ -127,7 +127,7 @@ class IndexCategoriesController extends Controller
         $search = new QueryConfig();
 
         $filters = [
-            'category' => $request->input('category'),
+            'category ' => $request->input('keyword'),
         ];
 
         $search->setFilters($filters)

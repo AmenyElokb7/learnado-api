@@ -5,8 +5,9 @@ namespace App\Repositories\Category;
 
 use App\Helpers\QueryConfig;
 use App\Models\Category;
+use App\Repositories\Media\MediaRepository;
 use App\Traits\PaginationParams;
-use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Collection\Collection;
 
@@ -21,7 +22,15 @@ class CategoryRepository
      */
     public final function createCategory($data): Category
     {
-        return Category::create($data);
+        $mediaFile = $data['media'] ?? null;
+        unset($data['media']);
+        $category = Category::create($data);
+        if ($mediaFile instanceof UploadedFile) {
+
+            $media = MediaRepository::attachOrUpdateMediaForModel($category, $mediaFile);
+            $category->media()->save($media);
+        }
+        return $category;
     }
 
     /**
@@ -37,13 +46,14 @@ class CategoryRepository
 
     /**
      * @param QueryConfig $queryConfig
-     * @return LengthAwarePaginator|Builder|Collection
+     * @return LengthAwarePaginator|Collection
      */
 
-    public final function indexCategories(QueryConfig $queryConfig): LengthAwarePaginator|Builder|Collection
+    public final function indexCategories(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
     {
-        $query = Category::query();
-        $categories = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+        $query = Category::with('media')->withCount('courses')->newQuery();
+        Category::applyFilters($queryConfig->getFilters(), $query);
+        $categories = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($categories, $queryConfig);
         }

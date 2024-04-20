@@ -13,19 +13,22 @@ class sendSubscriptionMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $courseId;
-    public $courseTitle;
+    public $isCourse;
+    public $title;
+    public $entityId;
+
 
     /**
      * Create a new message instance.
      *
-     * @param int $courseId
-     * @param string $courseTitle
+     * @param $isCourse
+     * @param $title
      */
-    public function __construct($courseId, $courseTitle)
+    public function __construct($isCourse, $title, $entityId)
     {
-        $this->courseId = $courseId;
-        $this->courseTitle = $courseTitle;
+        $this->isCourse = $isCourse;
+        $this->title = $title;
+        $this->entityId = $entityId;
     }
 
 
@@ -66,12 +69,14 @@ class sendSubscriptionMail extends Mailable
      */
     public function build()
     {
+        $url = $this->isCourse ? url("/api/get-course/{$this->entityId}") : url("/api/get-learning-path/{$this->entityId}");
+
         return $this->subject('Subscription Confirmation')
             ->view('emails.users.subscription')
             ->with([
-                'courseId' => $this->courseId,
-                'courseTitle' => $this->courseTitle,
-                'courseUrl' => url("/api/get-course/{$this->courseId}")
+                'isCourse' => $this->isCourse,
+                'title' => $this->title,
+                'url' => $url,
             ]);
     }
 }

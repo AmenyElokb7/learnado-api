@@ -3,6 +3,7 @@
 namespace App\Repositories\Admin;
 
 use App\Mail\AccountInvalidationMail;
+use App\Mail\AccountRejectionMail;
 use App\Mail\AccountValidated;
 use App\Mail\SetPasswordMail;
 use App\Models\Admin;
@@ -24,56 +25,12 @@ class AdminRepository
 {
     use SuccessResponse, ErrorResponse, PaginationParams;
 
-    /**
-     * @param int $id
-     * @return User
-     * @throws Exception
-     */
-    public final function validateUserAccount(int $id): User
-    {
-        $user = User::where('id', $id)->first();
-        $username = $user->first_name . ' ' . $user->last_name;
-        if ($user) {
-            if (!$user->is_valid) {
-                $user->is_valid = true;
-                $user->save();
-                Mail::to($user->email)->send(new AccountValidated($user->email, $username));
-                return $user;
-
-            } else {
-                throw new Exception(__('already_validated'), ResponseAlias::HTTP_BAD_REQUEST);
-            }
-        }
-        throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
-    }
-
-    /**
-     * @param int $id
-     * @return User
-     * @throws Exception
-     */
-    public final function suspendUserAccount(int $id): User
-    {
-        $user = User::find($id);
-        if ($user) {
-            if ($user->is_valid) {
-                $user->is_valid = false;
-                $user->save();
-                Mail::to($user->email)->send(new AccountInvalidationMail($user));
-                return $user;
-            } else {
-                throw new Exception(__('already_validated'), ResponseAlias::HTTP_BAD_REQUEST);
-            }
-        }
-        throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
-    }
-
-    /**
+    /** create a user account with a password reset token and email the user
      * @param array $data
-     * @return User
+     * @return array
      * @throws Exception
      */
-    public final function createUserAccount(array $data): User
+    public final function createUserAccount(array $data): array
     {
 
         $user = User::create([
@@ -97,10 +54,11 @@ class AdminRepository
         if ($profilePicture instanceof UploadedFile) {
             MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture);
         }
-        return $user;
+        return [$user,
+            $user->media()->first(),];
     }
 
-    /**
+    /** create a password reset token
      * @param $email
      * @return void
      */
@@ -115,18 +73,23 @@ class AdminRepository
         ]);
     }
 
-    /**
+    /** delete a user account
      * @param int $userId
      * @return void
+     * @throws Exception
      */
     public final function deleteUserAccount(int $userId): void
     {
         $user = User::where('id', $userId)->first();
-        $user->with('media')->delete();
+        if ($user) {
+            $user->media()->delete();
+            $user->delete();
+        }
+        else throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
 
     }
 
-    /**
+    /** update a user account
      * @param int $accountId
      * @param array $data
      * @return Model
@@ -134,27 +97,89 @@ class AdminRepository
      */
     public final function updateUserAccount(int $accountId, array $data): Model
     {
-
         $account = User::find($accountId);
         if (!$account) {
             throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
         }
-        // Update basic user information
+
         unset($data['password']);
         $account->fill($data);
         $account->save();
-        $currentMedia = $account->media->first();
 
-        if (array_key_exists('profile_picture', $data)) {
+        $profilePicture = $data['profile_picture'] ?? null;
 
-            $mediaId = $currentMedia ? $currentMedia->id : null;
-            MediaRepository::attachOrUpdateMediaForModel($account, $data['profile_picture'], $mediaId);
-        } elseif ($currentMedia) {
-
-            MediaRepository::detachMediaFromModel($account, $currentMedia->id);
+        if ($account->media->first()) {
+            if ($profilePicture) {
+                if ($profilePicture instanceof UploadedFile) {
+                    MediaRepository::attachOrUpdateMediaForModel($account, $profilePicture, $account->media->first()->id ?? null);
+                } else {
+                    MediaRepository::detachMediaFromModel($account, $account->media->first()->id);
+                }
+            }
+        } else {
+            if ($profilePicture) {
+                MediaRepository::attachOrUpdateMediaForModel($account, $profilePicture);
+            }
         }
+
         return $account;
     }
 
-}
+    /** validate a user account
+     * @param int $id
+     * @return User
+     * @throws Exception
+     */
+    public final function validateUserAccount(int $id): User
+    {
+        $user = User::where('id', $id)->first();
+        $username = $user->first_name . ' ' . $user->last_name;
+        if ($user) {
+            if (!$user->is_valid) {
+                $user->is_valid = true;
+                $user->save();
+                Mail::to($user->email)->send(new AccountValidated($user->email, $username));
+                return $user;
+            } else {
+                throw new Exception(__('already_validated'), ResponseAlias::HTTP_BAD_REQUEST);
+            }
+        }
+        throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+    }
 
+    /** suspend a user account
+     * @param int $id
+     * @return User
+     * @throws Exception
+     */
+    public final function suspendUserAccount(int $id): User
+    {
+        $user = User::find($id);
+        if ($user) {
+            if ($user->is_valid) {
+                $user->is_valid = false;
+                $user->save();
+                Mail::to($user->email)->send(new AccountInvalidationMail($user));
+                return $user;
+            } else {
+                throw new Exception(__('already_validated'), ResponseAlias::HTTP_BAD_REQUEST);
+            }
+        }
+        throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+    }
+
+    /** reject user account *
+     * @param int $id
+     * @return void
+     * @throws Exception
+     */
+
+    public final function rejectUserAccount(int $id): void
+    {
+    $user = User::find($id);
+    if (!$user) {
+        throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+    }
+        Mail::to($user->email)->send(new AccountRejectionMail($user));
+    }
+}

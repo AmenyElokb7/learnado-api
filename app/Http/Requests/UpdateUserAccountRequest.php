@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enum\UserRoleEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -23,9 +24,10 @@ class UpdateUserAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'sometimes|string|max:' . config('constants.MAX_STRING_LENGTH'),
-            'last_name' => 'sometimes|string|max:' . config('constants.MAX_STRING_LENGTH'),
-            'profile_picture' => 'image|mimes:' . config('constants.MIME_TYPES') . '|max:' . config('constants.MAX_FILE_SIZE'),
+            'first_name' => 'string|max:' . config('constants.MAX_STRING_LENGTH'),
+            'last_name' => 'string|max:' . config('constants.MAX_STRING_LENGTH'),
+            'role' => 'int|in:' . UserRoleEnum::USER->value . ',' . UserRoleEnum::DESIGNER->value . ',' . UserRoleEnum::FACILITATOR->value,
+            'profile_picture' => 'sometimes|nullable|image|mimes:' . config('constants.MIME_TYPES') . '|max:' . config('constants.MAX_FILE_SIZE'),
         ];
     }
 
@@ -39,6 +41,9 @@ class UpdateUserAccountRequest extends FormRequest
             'first_name.max' => __('messages.first_name_max'),
             'last_name.sometimes' => __('messages.last_name_required'),
             'last_name.max' => __('messages.last_name_max'),
+            'role.required' => __('messages.account_type_required'),
+            'role.in' => __('messages.account_type_invalid'),
+
 
         ];
     }

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
+
 /**
  * @OA\Post(
  *     path="/api/admin/create-user",
@@ -24,32 +25,39 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *             @OA\MediaType(
  *                 mediaType="multipart/form-data",
  *                 @OA\Schema(
- *                     type="object",
- *                     @OA\Property(property="first_name",type="string",example="John"),
- *                     @OA\Property(property="last_name",type="string",example="Doe"),
- *                     @OA\Property(property="email",type="string",example="JohnDoe@example.com"),
- *                     @OA\Property(property="password",type="string",format="password",example="12345678"),
- *                     @OA\Property(property="password_confirmation",type="string",format="password",example="12345678"),
- *                     @OA\Property(property="profile_picture",type="string",format="binary",description="Profile picture of the user"),
+ *                     required={"first_name", "last_name", "email", "role"},
+ *                     @OA\Property(property="first_name", type="string", example="John"),
+ *                     @OA\Property(property="last_name", type="string", example="Doe"),
+ *                     @OA\Property(property="email", type="string", format="email", example="JohnDoe@example.com"),
+ *                     @OA\Property(property="role", type="integer", description="User role", example=1),
+ *                     @OA\Property(property="profile_picture", type="string", format="binary", description="Profile picture of the user"),
  *                 )
  *             ),
  *         }
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Successful operation",
- *              content={
- *              @OA\MediaType(
- *                  mediaType="application/json",
- *              ),
- *          }
+ *         description="User account created successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="User account created successfully"),
+ *         )
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid request"
+ *         description="Invalid request due to incorrect input or missing fields"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized - User not authorized to perform this action"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error - Failed to create user account"
  *     )
  * )
  */
+
 class CreateAccountController extends Controller
 {
     protected $adminRepository;
@@ -67,21 +75,19 @@ class CreateAccountController extends Controller
     /**
      * @param CreateUserAccountRequest $request
      * @return ResponseAlias
+     * @throws Exception
      */
     public function __invoke(CreateUserAccountRequest $request): ResponseAlias
     {
         $validatedData = $this->getAttributes($request);
         $accountType = $request->input('role');
-        try {
+
             if ($accountType === UserRoleEnum::ADMIN->value) {
                 return $this->returnerrorResponse(__('user_not_authorized'), ResponseAlias::HTTP_UNAUTHORIZED);
             }
             $user = $this->adminRepository->createUserAccount($validatedData);
             return $this->returnSuccessResponse(__('user_created'), $user, ResponseAlias::HTTP_OK);
-        } catch (Exception $e) {
-            Log::error('User not created', ['error' => $e->getMessage()]);
-            return $this->returnErrorResponse(__('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
-        }
+
     }
 
     private function getAttributes(CreateUserAccountRequest $request): array

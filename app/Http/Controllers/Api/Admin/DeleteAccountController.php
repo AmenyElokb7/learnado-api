@@ -15,35 +15,51 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * @OA\Delete(
- *     path="/api/admin/delete-user-account/{email}",
+ *     path="/api/admin/delete-user-account/{id}",
  *     summary="Delete a user account",
  *     tags={"Admin"},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
- *         name="email",
+ *         name="id",
  *         in="path",
  *         required=true,
- *         description="The email of the user to delete",
- *         @OA\Schema(type="string")
+ *         description="The ID of the user account to delete",
+ *         @OA\Schema(
+ *             type="integer",
+ *             example=123
+ *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Successful operation",
- *         content={
- *         @OA\MediaType(
- *         mediaType="application/json",
- *               ),
- *           }
+ *         description="User account deleted successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="User account deleted successfully."
+ *             )
+ *         )
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid request"
+ *         description="Invalid request due to incorrect input or missing user ID"
  *     ),
  *     @OA\Response(
  *         response=404,
  *         description="User not found"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized - User not authorized to perform this action"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error - Failed to delete user account"
  *     )
  * )
  */
+
 class DeleteAccountController extends Controller
 {
     protected $adminRepository;
@@ -55,15 +71,14 @@ class DeleteAccountController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param int $user_id
+     * @param int $userId
      * @return JsonResponse
      */
 
-    public function __invoke(Request $request, int $user_id): JsonResponse
+    public function __invoke(int $userId): JsonResponse
     {
         try {
-            $this->adminRepository->deleteUserAccount($user_id);
+            $this->adminRepository->deleteUserAccount($userId);
             return $this->returnSuccessResponse(__('user_deleted'), null, ResponseAlias::HTTP_OK);
         } catch (Exception $exception) {
             Log::error($exception->getMessage());

@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
                 'email' => 'testuser' . $i . '@example.com',
                 'role' => 0,
                 'password' => bcrypt('12345678'),
-                'is_valid' => false,
+                'is_valid' => true,
 
             ]);
         }

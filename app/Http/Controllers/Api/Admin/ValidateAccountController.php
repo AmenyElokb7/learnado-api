@@ -14,40 +14,69 @@ use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
- * @OA\Info(
- *     title="Learnado API",
- *     version="1.0.0",
- *     description="This is a simple API for an e-learning application",
- *    ),
  * @OA\Post(
- *     path="/api/admin/validate-user-account",
- *     summary="Suspend a user account",
+ *     path="/api/admin/validate-user-account/{id}",
+ *     summary="Validate a user account",
  *     tags={"Admin"},
- *     @OA\RequestBody(
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
  *         required=true,
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 type="object",
- *                 required={"email"},
- *                 @OA\Property(
- *                     property="email",
- *                     type="string",
- *                     format="email",
- *                     example="testuser@example.com"
- *                 ),
+ *         description="The ID of the user account to validate",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="User account validated successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="User account validated successfully."
  *             )
  *         )
  *     ),
- *     @OA\Response(response=200, description="User account suspended successfully",
- *              content={
- *          @OA\MediaType(
- *          mediaType="application/json",
- *                ),
- *            }
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad Request - Invalid ID supplied",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Invalid ID supplied."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not Found - User account not found",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="User account not found."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error - Unable to validate user account due to server error",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="An internal server error has occurred."
+ *             )
+ *         )
  *     )
- * ),
+ * )
  */
+
 class ValidateAccountController extends Controller
 {
     protected $adminRepository;

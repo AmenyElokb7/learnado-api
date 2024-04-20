@@ -34,12 +34,14 @@ class LanguageRepository
 
     /**
      * @param QueryConfig $queryConfig
-     * @return LengthAwarePaginator|Builder|Collection
+     * @return LengthAwarePaginator|\Illuminate\Support\Collection
      */
-    public final function indexLanguages(QueryConfig $queryConfig): LengthAwarePaginator|Builder|Collection
+    public final function indexLanguages(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
     {
         $query = Language::query();
-        $languages = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+        Language::applyFilters($queryConfig->getFilters(), $query);
+
+        $languages = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($languages, $queryConfig);
         }

@@ -136,7 +136,8 @@ class IndexLanguagesController extends Controller
             ->setPerPage($paginationParams['PER_PAGE'])
             ->setOrderBy($paginationParams['ORDER_BY'])
             ->setDirection($paginationParams['DIRECTION'])
-            ->setPaginated($paginationParams['PAGINATION']);
+            ->setPaginated($paginationParams['PAGINATION'])
+            ->setPage($paginationParams['PAGE']);
         return $search;
     }
 }

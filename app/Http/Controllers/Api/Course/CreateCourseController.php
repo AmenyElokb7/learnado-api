@@ -24,26 +24,27 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *             mediaType="multipart/form-data",
  *             @OA\Schema(
  *                 type="object",
- *                 required={"title", "category", "description", "language", "is_paid", "is_public"},
+ *                 required={"title", "category_id", "description", "language_id", "is_paid", "is_public"},
  *                 @OA\Property(property="title", type="string", example="Introduction to Laravel"),
- *                 @OA\Property(property="category", type="integer", description="Category ID", example=1),
+ *                 @OA\Property(property="category_id", type="integer", description="Category ID", example=1),
  *                 @OA\Property(property="description", type="string", example="This course is an introduction to Laravel"),
  *                 @OA\Property(property="prerequisites", type="string", example="Basic knowledge of PHP"),
  *                 @OA\Property(property="course_for", type="string", example="Beginners"),
- *                 @OA\Property(property="language", type="integer", description="Language ID", example=1),
+ *                 @OA\Property(property="language_id", type="integer", description="Language ID", example=1),
  *                 @OA\Property(property="duration", type="string", example="2 weeks"),
  *                 @OA\Property(property="is_paid", type="boolean", example=true),
  *                 @OA\Property(property="price", type="number", format="double", example=100.00),
  *                 @OA\Property(property="discount", type="number", format="double", example=10.00),
  *                 @OA\Property(property="facilitator_id", type="integer", example=1),
  *                 @OA\Property(property="is_public", type="boolean", example=true),
- *                 @OA\Property(property="selectedUserIds", type="array", @OA\Items(type="integer")),
- *                 @OA\Property(property="course_media", type="array", @OA\Items(type="string", format="binary")),
+ *                 @OA\Property(property="selected_user_ids", type="array", @OA\Items(type="integer"), description="User IDs for whom the course is specifically created"),
+ *                 @OA\Property(property="course_media", type="array", @OA\Items(type="string", format="binary"), description="Media files for the course"),
  *                 @OA\Property(property="teaching_type", type="integer", example=1),
  *                 @OA\Property(property="link", type="string", example="https://example.com/course"),
  *                 @OA\Property(property="start_time", type="string", format="date-time", example="2023-01-01T00:00:00Z"),
  *                 @OA\Property(property="end_time", type="string", format="date-time", example="2023-01-15T00:00:00Z"),
  *                 @OA\Property(property="latitude", type="string", example="40.712776"),
+ *                 @OA\Property(property="longitude", type="string", example="-74.006058"),
  *             )
  *         )
  *     ),
@@ -65,6 +66,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     ),
  * )
  */
+
 class CreateCourseController extends Controller
 {
     protected $courseRepository;
@@ -83,16 +85,17 @@ class CreateCourseController extends Controller
 
     public function __invoke(CreateCourseRequest $request): JsonResponse
     {
+
         $data = $this->getAttributes($request);
 
 
-        $course = $this->courseRepository->createCourse($data);
-        if ($course) {
+        try {
+            $course = $this->courseRepository->createCourse($data);
             return $this->returnSuccessResponse(__('course_created'), $course, ResponseAlias::HTTP_OK);
-        } else {
-            return $this->returnErrorResponse(__('user_not_authorized'), ResponseAlias::HTTP_FORBIDDEN);
-        }
 
+        } catch (Exception $e) {
+            return $this->returnErrorResponse($e->getMessage() ?: __('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     private function getAttributes(CreateCourseRequest $request): array

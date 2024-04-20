@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Course;
 
+use App\Helpers\QueryConfig;
 use App\Http\Controllers\Controller;
 use App\Repositories\Course\CourseRepository;
 use App\Traits\ErrorResponse;
+use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
-use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -69,10 +69,10 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     )
  * )
  */
-class GetCourseByIdController extends Controller
+class GetCourseByIdForUserController extends Controller
 {
     protected $courseRepository;
-    use ErrorResponse, SuccessResponse;
+    use ErrorResponse, SuccessResponse, PaginationParams;
 
     public function __construct(CourseRepository $courseRepository)
     {
@@ -85,13 +85,22 @@ class GetCourseByIdController extends Controller
      */
     public function __invoke($id): JsonResponse
     {
-        try {
-            $course = $this->courseRepository->getCourseWithMediaById($id);
-            return $this->returnSuccessResponse(__('course_found'), $course, ResponseAlias::HTTP_OK);
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            return $this->returnErrorResponse(__('course_not_found'), ResponseAlias::HTTP_NOT_FOUND);
-        }
+        $course = $this->getAttributes();
+
+        $course = $this->courseRepository->getCourseById($id, $course);
+        return $this->returnSuccessResponse(__('course_found'), $course, ResponseAlias::HTTP_OK);
+
+    }
+
+    private function getAttributes(): QueryConfig
+    {
+        $filters = [
+            'is_active' => true,
+            'is_public' => true,
+        ];
+        $search = new QueryConfig();
+        $search->setFilters($filters);
+        return $search;
 
     }
 }

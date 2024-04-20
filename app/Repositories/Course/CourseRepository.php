@@ -22,31 +22,36 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
-
 class CourseRepository
 {
     use PaginationParams;
 
     /** add course with Media and Subscribed users and facilitator
      * @param $data
-     * @return array
+     * @return Course
      * @throws Exception
      */
-    public final function createCourse($data): array
+    public final function createCourse($data): Course
     {
         $mediaFiles = $data['course_media'] ?? [];
         unset($data['course_media']);
         $data['added_by'] = Auth::user()->id;
 
         $course = Course::create($data);
-
-        $selectedUserIds = $data['selectedUserIds'] ?? [];
-
-        if (isset($data['is_public']) && !$data['is_public']) {
-            self::subscribeCourseToUsers($course->id, $selectedUserIds);
-        }
-        if (!empty($selectedUserIds)) {
-            self::subscribeCourseToUsers($course->id, $selectedUserIds);
+    if (isset($data['selected_user_ids'])) {
+        $selectedUserIdsString = trim($data['selected_user_ids'], "[]") ;
+        $selectedUserIds = explode(',', $selectedUserIdsString);
+        $selectedUserIds = array_map('trim', $selectedUserIds);
+        $selectedUserIds = array_filter($selectedUserIds, 'is_numeric');
+    }else {
+        $selectedUserIds = [];
+    }
+        if (isset($data['is_public']) && !$data['is_public'])
+        {
+            if (!empty($selectedUserIds))
+            {
+            self::subscribeCourseToUsers($course->id, $selectedUserIds, true);
+            }
         }
 
 
@@ -58,26 +63,20 @@ class CourseRepository
             $filename = "course-{$course->id}.ics";
             Storage::disk('local')->put($filename, $icsContent);
             $pathToFile = storage_path('app/' . $filename);
-
             $googleMeetLink = $data['link'];
             $subscribedUsers = User::findMany($selectedUserIds)->all();
-
             foreach ($subscribedUsers as $user) {
                 Mail::to($user->email)->send(new GoogleMeetConfirmation($course, $googleMeetLink, $pathToFile));
             }
-
             Storage::disk('local')->delete($filename);
         }
+        self::processCourseMedia($course->id, $mediaFiles);
 
-        $mediaNames = self::processCourseMedia($course->id, $mediaFiles);
-
-        return [
-            'course' => $course->toArray(),
-            'media' => $mediaNames
-        ];
+        return $course;
     }
 
     /**
+     * generate google meet link and calendar and send email to subscribed users
      * @param $course
      * @return string
      */
@@ -108,6 +107,26 @@ class CourseRepository
     }
 
     /**
+     * add media files to a course
+     * @param $course_id
+     * @param $files
+     * @return array|null
+     */
+    private static function addMediaToCourse($course_id, $files): array|null
+    {
+        $course = Course::find($course_id);
+        if (!$course) {
+            return null;
+        }
+        $mediaItems = [];
+        foreach ($files as $file) {
+            $media = MediaRepository::attachOrUpdateMediaForModel($course, $file);
+            $mediaItems[] = $media->file_name;
+        }
+        return $mediaItems;
+    }
+    /**
+     * add media files to a course
      * @param $courseId
      * @param $mediaFiles
      * @return array
@@ -120,7 +139,7 @@ class CourseRepository
         return [];
     }
 
-    /**
+    /** Assign course to facilitator and send email notification
      * @param $course_id
      * @param $facilitator_id
      * @return void
@@ -140,42 +159,79 @@ class CourseRepository
             Mail::to($user->email)->send(new CourseAssignedMail($course->title, $user->name));
         }
 
-
     }
 
-    /**
+    /** Subscribe users to course if the course is private and send email notification
      * @param $courseId
-     * @param array $usersIds
-     * @return void
+     * @param array $userIds
+     * @param bool $byAdmin
+     * @return Course
+     * @throws Exception
      */
-    private static function subscribeCourseToUsers($courseId, array $usersIds): void
+    public static function subscribeCourseToUsers($courseId, array $userIds, bool $byAdmin = false): Course
     {
-        $subscriptions = [];
-        foreach ($usersIds as $userId) {
-            $subscriptions[] = [
-                'course_id' => $courseId,
-                'user_id' => $userId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-            $course = Course::find($courseId);
-            $user = User::find($userId);
-            if ($user) {
+        $course = Course::find($courseId);
 
-                Mail::to($user->email)->send(new sendSubscriptionMail($courseId, $course->title));
-            }
+
+        if (!$course) {
+            throw new Exception(__("course_not_found"));
         }
 
-        DB::table('course_subscription_users')->insert($subscriptions);
+        if (!$byAdmin && !$course->is_public) {
+            throw new Exception(__('user_not_authorized'));
+        }
+
+
+        $validUsers = User::whereIn('id', $userIds)
+            ->where('role', UserRoleEnum::USER->value)
+            ->where('is_valid', 1)
+            ->get();
+        $validUserIds = $validUsers->pluck('id')->toArray();
+
+        $subscriptions = [];
+
+        foreach ($validUserIds as $userId) {
+            $existingSubscription = DB::table('course_subscription_users')
+                ->where('course_id', $courseId)
+                ->where('user_id', $userId)
+                ->exists();
+
+            if (!$existingSubscription) {
+                $subscriptions[] = [
+                    'course_id' => $courseId,
+                    'user_id' => $userId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                $user = $validUsers->firstWhere('id', $userId);
+                if ($user) {
+                    Mail::to($user->email)->queue(new sendSubscriptionMail(true, $course->title, $courseId));
+                }
+            } else {
+                throw new Exception(__('user_already_subscribed'));
+            }
+        }
+        if (!empty($subscriptions)) {
+            DB::table('course_subscription_users')->insert($subscriptions);
+        }
+        return $course;
     }
 
-    /**
+    /** delete the course and its relations
      * @param $course_id
      * @return void
      * @throws Exception
      */
 
-    public final function deleteCourse($course_id): void
+    /**
+     * Delete a course and all its relations.
+     *
+     * @param int $course_id The ID of the course to delete.
+     * @return void
+     * @throws Exception
+     */
+    public final function deleteCourse(int $course_id): void
     {
         $manager_id = Auth::user()->id;
         $course = Course::where('added_by', $manager_id)->find($course_id);
@@ -188,27 +244,14 @@ class CourseRepository
 
     /**
      * @param $course_id
-     * @return Model
-     * @throws Exception
+     * @param $mediaIds
+     * @return void
      */
-    public final function getCourseWithMediaById($course_id): Model
+    private static function deleteMediaFromCourse($course_id, $mediaIds): void
     {
-        $user = auth()->user();
-        $query = Course::with('media')->find($course_id);
-        if ($user && $user->role === UserRoleEnum::DESIGNER->value) {
-            // Allow designers to see their own courses
-            $query->where(function ($q) use ($user) {
-                $q->where('added_by', $user->id)
-                    ->orWhere(function ($q) {
-                        $q->where('is_active', true)->where('is_public', true);
-                    });
-            });
-        } else {
-            // For other users or unauthenticated access, only active and public courses are available
-            $query->where('is_active', true)->where('is_public', true);
-        }
-        return $query;
-
+        Media::whereIn('id', $mediaIds)
+            ->where('course_id', $course_id)
+            ->delete();
     }
 
     /** Designer can update his own courses
@@ -220,7 +263,7 @@ class CourseRepository
      * @return Course|null
      * @throws Exception
      */
-    public final function updateCourseWithMedia($course_id, $data, array $newMediaFiles = [], array $mediaToDelete = [], array $usersToSubscribe = []): Course|null
+    public final function updateCourse($course_id, $data, array $newMediaFiles = [], array $mediaToDelete = [], array $usersToSubscribe = []): Course|null
     {
         $user = Auth::user();
         $course = Course::find($course_id);
@@ -248,94 +291,90 @@ class CourseRepository
         }
     }
 
-    /**
-     * @param $course_id
-     * @param $files
-     * @return array|null
-     */
-    private static function addMediaToCourse($course_id, $files): array|null
-    {
-        $course = Course::find($course_id);
-        if (!$course) {
-            return null;
-        }
-        $mediaItems = [];
-        foreach ($files as $file) {
-            $media = MediaRepository::attachOrUpdateMediaForModel($course, $file);
-            $mediaItems[] = $media->file_name;
-        }
-        return $mediaItems;
-    }
-
-    /**
-     * @param $course_id
-     * @param $mediaIds
-     * @return void
-     */
-    private static function deleteMediaFromCourse($course_id, $mediaIds): void
-    {
-        Media::whereIn('id', $mediaIds)
-            ->where('course_id', $course_id)
-            ->delete();
-    }
-
     /** Get all validated and public courses for users and designer's own courses
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|Collection
      */
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
-        $CourseQuery = Course::with('media')->newQuery();
-
-        $user = Auth::user();
-
-        $CourseQuery->where(function ($query) use ($user) {
-            $query->where(function ($q) {
-                $q->where('is_active', true)->where('is_public', true);
-            });
-        });
-
-        // if role is designer then show only his courses
-        if ($user && $user->role === UserRoleEnum::DESIGNER->value) {
-
-            $CourseQuery->where(function ($query) use ($user) {
-                $query->where('added_by', $user->id);
-
-            });
-        }
+        $CourseQuery = Course::with([
+            'media',
+            'steps',
+            'steps.media',
+            'steps.quiz',
+            'steps.quiz.questions',
+            'steps.quiz.questions.answers',
+            'subscribers',
+            'facilitator' => function ($query) {
+                $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+            },
+            'language'
+        ])
+            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+            ->newQuery();
         Course::applyFilters($queryConfig->getFilters(), $CourseQuery);
-
         $courses = $CourseQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
+        $courses->each(function ($course) {
+            $course->lessons_count = $course->steps->count();
+
+            $course->duration = $course->steps->sum('duration');
+        });
+        $courses->each(function ($course) {
+            $course->subscribed_users_count = $course->subscribers->count();
+        });
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($courses, $queryConfig);
         }
-
         return $courses;
     }
 
     /**
+     * Fetch a course by ID, optionally applying filters.
+     *
+     * @param int $courseId The ID of the course.
+     * @param QueryConfig|null $queryConfig Optional filters and settings for the query.
+     * @return Model The course model instance.
      * @throws Exception
      */
-    public final function getSubscribedUsersByCourse($course_id): Collection
+    public final function getCourseById(int $courseId, ?QueryConfig $queryConfig = null): Model
     {
-        $user = Auth::user();
-        $designer = Course::find($course_id)->added_by;
-        if ($user->id !== $designer) {
-            throw new Exception(__('user_not_authorized'));
+        $query = Course::with([
+            'media',
+            'steps',
+            'steps.media',
+            'steps.quiz',
+            'steps.quiz.questions',
+            'steps.quiz.questions.answers',
+            'subscribers',
+            'facilitator' => function ($query) {
+                $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+            },
+            'language'
+        ])
+            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+            ->newQuery();
+
+
+        $user = auth()->user();
+        if ($user && $user->role == UserRoleEnum::USER) {
+            $query->with("subscribers")->newQuery();
         }
-        $course = Course::with('subscribedUsers')->find($course_id);
 
-        $subscribedUsers = $course->subscribedUsers;
+        if ($queryConfig) {
+            Course::applyFilters($queryConfig->getFilters(), $query);
+        }
+        $course = $query->find($courseId);
 
-        return
-            $subscribedUsers->map(function ($user) {
-                return [
-                    'username' => $user->first_name . ' ' . $user->last_name,
-                    'media' => $user->with('media')
-                ];
-            });
+        $course?->each(function ($course) {
+            $course->lessons_count = $course->steps->count();
+            $course->duration = $course->steps->sum('duration');
+        });
 
+        $course->each(function ($course) {
+            $course->subscribed_users_count = $course->subscribers->count();
+        });
 
+        return $query->find($courseId);
     }
 
 }

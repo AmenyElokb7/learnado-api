@@ -13,12 +13,12 @@ return new class extends Migration {
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->unsignedBigInteger('category');
-            $table->foreign('category')->references('id')->on('categories')->onDelete('cascade');
+            $table->unsignedBigInteger('category_id');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->text('description');
             $table->foreignId('added_by')->constrained('users')->onDelete('cascade');
-            $table->unsignedBigInteger('language');
-            $table->foreign('language')->references('id')->on('languages')->onDelete('cascade');
+            $table->unsignedBigInteger('language_id');
+            $table->foreign('language_id')->references('id')->on('languages')->onDelete('cascade');
             $table->boolean('is_paid');
             $table->decimal('price', 8, 2)->nullable();
             $table->integer('discount')->nullable();

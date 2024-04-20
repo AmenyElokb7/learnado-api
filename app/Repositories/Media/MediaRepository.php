@@ -6,7 +6,6 @@ use App\Models\Media;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class MediaRepository
 {
@@ -25,10 +24,10 @@ class MediaRepository
         $storagePath = config('media-path.' . get_class($model) . '.path', 'default');
 
         $path = $file->store($storagePath, $disk);
-        $fullUrl = Storage::disk($disk)->url($path);
+
 
         $mediaData = [
-            'file_name' => $fullUrl,
+            'file_name' => $path,
             'mime_type' => $file->getMimeType(),
             'model_type' => get_class($model),
             'model_id' => $model->getKey(),

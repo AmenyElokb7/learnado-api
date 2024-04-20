@@ -125,7 +125,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     )
  * )
  */
-class IndexCoursesController extends Controller
+class IndexCoursesForDesignerController extends Controller
 {
     use ErrorResponse, SuccessResponse, PaginationParams;
 
@@ -134,7 +134,7 @@ class IndexCoursesController extends Controller
      * @return JsonResponse
      */
 
-    public function __invoke(Request $request)
+    public function __invoke(Request $request): JsonResponse
     {
         $paginationParams = $this->getAttributes($request);
         try {
@@ -152,20 +152,16 @@ class IndexCoursesController extends Controller
         $paginationParams = $this->getPaginationParams($request);
 
         $filters = [
-            'title' => $request->input('title'),
-            'category' => $request->input('category'),
-            'language' => $request->input('language'),
-            'is_paid' => $request->input('is_paid'),
-            'price' => $request->input('price'),
-            'discount' => $request->input('discount'),
-            'teaching_type' => $request->input('teaching_type'),
+            'added_by' => auth()->user(),
+
         ];
         $search = new QueryConfig();
         $search->setFilters($filters)
             ->setPerPage($paginationParams['PER_PAGE'])
             ->setOrderBy($paginationParams['ORDER_BY'])
             ->setDirection($paginationParams['DIRECTION'])
-            ->setPaginated($paginationParams['PAGINATION']);
+            ->setPaginated($paginationParams['PAGINATION'])
+            ->setPage($paginationParams['PAGE']);
         return $search;
 
     }

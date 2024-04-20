@@ -1,24 +1,6 @@
 <?php
 
 namespace App\Models;
-/**
- * @property string title
- * @property string category
- * @property string description
- * @property string prerequisites
- * @property string course_for
- * @property string added_at
- * @property int added_by
- * @property string language
- * @property string duration
- * @property boolean is_paid
- * @property double price
- * @property double discount
- * @property int facilitator_id
- * @property User admin
- * @property User facilitator
- * @property Media media
- */
 
 use App\Traits\ApplyQueryScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -48,7 +30,7 @@ use Illuminate\Notifications\Notifiable;
  * @property User admin
  * @property User facilitator
  * @property Media media
- * @property User[] subscribedUsers
+ * @property User[] subscribers
  */
 class Course extends Model
 {
@@ -56,10 +38,10 @@ class Course extends Model
 
     protected $fillable = [
         'title',
-        'category',
+        'category_id',
         'description',
         'added_by',
-        'language',
+        'language_id',
         'is_paid',
         'price',
         'discount',
@@ -102,7 +84,7 @@ class Course extends Model
 
     // App\Models\Course.php
 
-    public function subscribedUsers()
+    public function subscribers()
     {
         return $this->belongsToMany(User::class, 'course_subscription_users', 'course_id', 'user_id');
     }
@@ -114,13 +96,14 @@ class Course extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'id');
+        return $this->belongsTo(Category::class);
     }
 
     public function language()
     {
-        return $this->belongsTo(Language::class, 'id');
+        return $this->belongsTo(Language::class);
     }
+
 
     public function deleteWithRelations()
     {
@@ -129,7 +112,7 @@ class Course extends Model
 
         // Delete subscribed users associations
 
-        $this->subscribedUsers()->detach();
+        $this->subscribers()->detach();
 
         // Delete related steps and their quizzes, questions, and answers
         foreach ($this->steps as $step) {
@@ -148,60 +131,82 @@ class Course extends Model
         return $query;
     }
 
-    public function scopeByTitle($query, $title)
+
+    public function scopeByAddedBy($query, $DesignerId)
     {
-        if ($title) {
-            return $query->where('title', 'like', '%' . $title . '%');
+        if (!$DesignerId) {
+            return $query->where('added_by', $DesignerId);
         }
         return $query;
     }
 
-    public function scopeByCategory($query, $category)
+    public function scopeByIsPublic($query, $isPublic)
     {
-        if ($category) {
-            return $query->where('category', 'like', '%' . $category . '%');
+        if ($isPublic) {
+            return $query->where('is_public', $isPublic);
         }
         return $query;
     }
 
-    public function scopeByLanguage($query, $language)
+    public function scopeByIsActive($query, $isActive)
     {
-        if ($language) {
-            return $query->where('language', 'like', '%' . $language . '%');
+        if ($isActive) {
+            return $query->where('is_active', $isActive);
+        }
+        return $query;
+    }
+
+    public function scopeByStartTime($query, $startTime)
+    {
+        if ($startTime) {
+            return $query->where('start_time', $startTime);
+        }
+        return $query;
+    }
+
+    public function scopeBySubscribedUser($query, $userId)
+    {
+        if ($userId) {
+            return $query->whereHas('subscribers', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            });
+        }
+        return $query;
+    }
+
+    public function scopeByKeyWord($query, $keyword)
+    {
+        if ($keyword) {
+            return $query->where('title', 'like', '%' . $keyword . '%')
+                ->orWhere('description', 'like', '%' . $keyword . '%');
         }
         return $query;
     }
 
     public function scopeByIsPaid($query, $isPaid)
     {
-        if ($isPaid) {
+        if ($isPaid !== null) {
+
             return $query->where('is_paid', $isPaid);
-        }
-        return $query;
-    }
-
-    public function scopeByPrice($query, $price)
-    {
-        if ($price) {
-            return $query->where('price', 'like', '%' . $price . '%');
-        }
-        return $query;
-    }
-
-    public function scopeByDiscount($query, $discount)
-    {
-        if ($discount) {
-            return $query->where('discount', 'like', '%' . $discount . '%');
         }
         return $query;
     }
 
     public function scopeByTeachingType($query, $teachingType)
     {
-        if ($teachingType) {
-            return $query->where('teaching_type', 'like', '%' . $teachingType . '%');
+        if ($teachingType !== null) {
+            return $query->where('teaching_type', $teachingType);
         }
         return $query;
     }
+
+    public function scopeByCategory($query, $categorieId)
+    {
+        if ($categorieId !== null) {
+            return $query->where('category_id', $categorieId);
+        }
+        return $query;
+    }
+
 
 }

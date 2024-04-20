@@ -19,6 +19,15 @@ return [
         'path' => 'media_steps',
 
     ],
+    'App\Models\LearningPath' => [
+        'path' => 'media_learning_paths',
+
+    ],
+
+    'App\Models\Category' => [
+        'path' => 'media_categories',
+
+    ],
 
 
 ];

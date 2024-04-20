@@ -14,42 +14,73 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * @OA\Post(
- *     path="/api/admin/suspend-account",
+ *     path="/api/admin/suspend-account/{id}",
  *     summary="Suspend a user account",
  *     tags={"Admin"},
- *     @OA\RequestBody(
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
  *         required=true,
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 type="object",
- *                 required={"email"},
- *                 @OA\Property(
- *                     property="email",
- *                     type="string",
- *                     format="email",
- *                     example="testuser@example.com"
- *                 ),
+ *         description="The ID of the user account to suspend",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="User account suspended successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="User account suspended successfully."
  *             )
  *         )
  *     ),
- *     @OA\Response(response=200, description="User account suspended successfully",
- *              content={
- *          @OA\MediaType(
- *          mediaType="application/json",
- *                ),
- *            }
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad Request - Invalid ID supplied",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Invalid ID supplied."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not Found - User account not found",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="User account not found."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="An error occurred while suspending the account."
+ *             )
+ *         )
  *     )
- * ),
+ * )
  */
+
 class SuspendUserAccountController extends Controller
 {
     protected $adminRepository;
     use SuccessResponse, ErrorResponse;
 
-    /**
-     * Handle the incoming request.
-     */
     public function __construct(AdminRepository $adminRepository)
     {
         $this->adminRepository = $adminRepository;

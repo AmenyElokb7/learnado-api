@@ -114,4 +114,27 @@ return [
     'step_quiz_questions_answers_answer_string' => 'The answer must be a string.',
     'step_quiz_questions_answers_is_valid_required_if' => 'The answer validity is required when the question type is QCM.',
     'step_quiz_questions_answers_is_valid_boolean' => 'The answer validity must be a boolean.',
+
+    // validation categories
+    'category_required' => 'Category is required.',
+    'category_max' => 'Category may not be greater than 255 characters.',
+    'category_already_exists' => 'Category already exists.',
+    'media_file' => 'Media must be a file.',
+    'media_image' => 'Media must be an image file.',
+    'media_max_size' => 'Media must be less in MB than ',
+    'media_mimes' => 'Media must be of type jpg, jpeg, png, gif, bmp, svg, webp, mp4, mp3, pdf, doc, docx, xls, xlsx, ppt, pptx, txt, csv, rtf, html, zip, tar, rar, 7z, gz, bz2, odt, ods, odp, odg, odf, mp4, webm, ogg, mp3, wav, flac, aac, m4a, wma, avi, mov, wmv, mpg, flv, 3gp, 3g2, mkv.',
+    'category_not_found' => 'Category not found',
+    'category_deleted' => 'Category deleted successfully',
+    'category_creation_failed' => 'Category creation failed',
+    'category_deletion_failed' => 'Category deletion failed',
+    'category_update_failed' => 'Category update failed',
+    'category_update' => 'Category updated successfully',
+    'category_created' => 'Category created successfully',
+    'category_found' => 'Category found',
+    'categories_found' => 'Categories found',
+    'categories_not_found' => 'Categories not found',
+    'category_unique' => 'Category already exists',
+    'category_retrieved' => 'Category retrieved successfully',
+
+
 ];

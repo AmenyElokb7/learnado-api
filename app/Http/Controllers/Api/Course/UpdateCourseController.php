@@ -97,7 +97,9 @@ class UpdateCourseController extends Controller
 
     public function __invoke(UpdateCourseRequest $request, int $course_id): JsonResponse
     {
+
         $data = $this->getAttributes($request);
+
         try {
             $course = $this->courseRepository->updateCourse($course_id, $data);
             return $this->returnSuccessResponse(__('course_updated'), $course, ResponseAlias::HTTP_OK);

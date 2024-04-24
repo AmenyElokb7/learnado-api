@@ -98,7 +98,7 @@ class CreateCategoryController extends Controller
             return $this->returnSuccessResponse(__('category_created'), $category, ResponseAlias::HTTP_CREATED);
         } catch (Exception $e) {
             Log::error($e->getMessage());
-            return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->returnErrorResponse($e->getMessage() ?: __('general_error'), $e->getCode() ?: ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

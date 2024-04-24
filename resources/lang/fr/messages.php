@@ -114,4 +114,26 @@ return [
     'step_quiz_questions_answers_answer_string' => 'La réponse à la question du quiz doit être une chaîne de caractères.',
     'step_quiz_questions_answers_is_valid_required_if' => 'La validité de la réponse est requise pour les réponses QCM.',
     'step_quiz_questions_answers_is_valid_boolean' => 'La validité de la réponse doit être un booléen.',
+
+    // validation categories
+    'category_required' => 'Le nom de la catégorie est requis',
+    'category_already_exists' => 'La catégorie existe déjà',
+    'category_max_length' => 'Le nom de la catégorie ne doit pas dépasser la longueur maximale autorisée',
+    'media_file' => 'Le média doit être un fichier',
+    'media_image' => 'Le média doit être une image',
+    'media_max_size' => 'Le média ne doit pas dépasser la taille maximale autorisée',
+    'media_mimes' => 'Le média doit être une image, une vidéo, un audio ou un document',
+    'category_created' => 'Catégorie créée avec succès',
+    'category_deleted' => 'Catégorie supprimée avec succès',
+    'category_not_found' => 'Catégorie non trouvée',
+    'category_updated' => 'Catégorie mise à jour avec succès',
+    'category_deletion_failed' => 'Echec de suppression de la catégorie',
+    'category_creation_failed' => 'Echec de création de la catégorie',
+    'category_update_failed' => 'Echec de mise à jour de la catégorie',
+    'category_retrieved' => 'Catégorie récupérée avec succès',
+    'category_found' => 'Catégorie trouvée',
+    'categories_found' => 'Catégories trouvées',
+    'categories_not_found' => 'Catégories non trouvées',
+    'category_unique' => 'La catégorie existe déjà',
+
 ];

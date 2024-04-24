@@ -113,4 +113,17 @@ return [
     'step_quiz_questions_answers_answer_string' => 'يجب أن تكون إجابة سؤال الاختبار سلسلة من الأحرف.',
     'step_quiz_questions_answers_is_valid_required_if' => 'صحة الإجابة مطلوبة لإجابات QCM.',
     'step_quiz_questions_answers_is_valid_boolean' => 'يجب أن تكون صحة الإجابة بوليانية.',
+
+    // validation categories
+    'category_required' => 'الفئة مطلوبة',
+    'category_max_length' => 'الفئة لا يجب أن تتجاوز الحد الأقصى لطول السلسلة المحدد في التكوين',
+    'category_already_exists' => 'الفئة موجودة بالفعل',
+    'media_file' => 'يجب أن يكون الوسائط ملفًا',
+    'media_image' => 'يجب أن تكون الوسائط صورة',
+    'media_max' => 'يجب أن تكون الوسائط أقل من 5 ميغابايت',
+    'media_mimes' => 'يجب أن تكون الوسائط صورة أو فيديو أو صوت أو مستند',
+    'media_required' => 'الوسائط مطلوبة',
+    'media_max_size' => 'يجب أن تكون الوسائط أقل من 5 ميغابايت',
+
+
 ];

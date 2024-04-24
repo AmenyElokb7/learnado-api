@@ -24,21 +24,20 @@ class CreateCategoryRequest extends FormRequest
     {
         return [
             'category' => 'required|string|unique:categories,category|max:' . config('constants.MAX_STRING_LENGTH'),
-            'media' => 'nullable|file|image|max:' . config('constants.MAX_FILE_SIZE') . '|mimes:' . config('constants.MEDIA_MIMES'),
+            'media' => 'required|file|image|max:' . config('constants.MAX_FILE_SIZE') . '|mimes:' . config('constants.MEDIA_MIMES'),
         ];
     }
 
     public function messages(): array
     {
         return [
-            'category.required' => __('category_required'),
-            'category.unique' => __('category_already_exists'),
-            'category.max' => __('category_max_length'),
-            'media.file' => __('media_file'),
-            'media.image' => __('media_image'),
-            'media.max' => __('media_max_size'),
-            'media.mimes' => __('media_mimes'),
-
+            'category.required' => __('messages.category_required'),
+            'category.unique' => __('messages.category_already_exists'),
+            'category.max' => __('messages.category_max_length'),
+            'media.file' => __('messages.media_file'),
+            'media.image' => __('messages.media_image'),
+            'media.max' => __('messages.media_max_size'),
+            'media.mimes' => __('messages.media_mimes'),
         ];
     }
 }

@@ -60,5 +60,23 @@ class CategoryRepository
         return $categories;
     }
 
+    public final function getCategory($categoryId): Category
+    {
+        return Category::find($categoryId)->load('media');
+    }
+
+    public final function updateCategory($categoryId, $data): Category
+    {
+        $category = Category::find($categoryId);
+        $mediaFile = $data['media'] ?? null;
+        unset($data['media']);
+        $category->update($data);
+        if ($mediaFile instanceof UploadedFile) {
+            $media = MediaRepository::attachOrUpdateMediaForModel($category, $mediaFile);
+            $category->media()->save($media);
+        }
+        return $category;
+
+}
 
 }

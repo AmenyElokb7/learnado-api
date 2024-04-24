@@ -129,7 +129,7 @@ class IndexLanguagesController extends Controller
     {
         $paginationParams = $this->getPaginationParams($request);
         $filters = [
-            'language' => $request->input('language') ?? '',
+            'language' => $request->input('keyword')
         ];
         $search = new QueryConfig();
         $search->setFilters($filters)

@@ -15,6 +15,7 @@ use App\Repositories\Media\MediaRepository;
 use App\Traits\PaginationParams;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -171,8 +172,6 @@ class CourseRepository
     public static function subscribeCourseToUsers($courseId, array $userIds, bool $byAdmin = false): Course
     {
         $course = Course::find($courseId);
-
-
         if (!$course) {
             throw new Exception(__("course_not_found"));
         }
@@ -181,43 +180,25 @@ class CourseRepository
             throw new Exception(__('user_not_authorized'));
         }
 
-
-        $validUsers = User::whereIn('id', $userIds)
+        $validUserIds = User::whereIn('id', $userIds)
             ->where('role', UserRoleEnum::USER->value)
             ->where('is_valid', 1)
-            ->get();
-        $validUserIds = $validUsers->pluck('id')->toArray();
+            ->pluck('id')
+            ->toArray();
 
-        $subscriptions = [];
+        $currentSubscribers = $course->subscribers()->pluck('users.id')->toArray();
+        $newSubscribers = array_diff($validUserIds, $currentSubscribers);
 
-        foreach ($validUserIds as $userId) {
-            $existingSubscription = DB::table('course_subscription_users')
-                ->where('course_id', $courseId)
-                ->where('user_id', $userId)
-                ->exists();
-
-            if (!$existingSubscription) {
-                $subscriptions[] = [
-                    'course_id' => $courseId,
-                    'user_id' => $userId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-
-                $user = $validUsers->firstWhere('id', $userId);
-                if ($user) {
-                    Mail::to($user->email)->queue(new sendSubscriptionMail(true, $course->title, $courseId));
-                }
-            } else {
-                throw new Exception(__('user_already_subscribed'));
+        foreach ($newSubscribers as $userId) {
+            $user = User::find($userId);
+            if ($user) {
+                Mail::to($user->email)->queue(new sendSubscriptionMail(true, $course->title, $courseId));
             }
         }
-        if (!empty($subscriptions)) {
-            DB::table('course_subscription_users')->insert($subscriptions);
-        }
+
+        $course->subscribers()->sync($validUserIds);
         return $course;
     }
-
     /** delete the course and its relations
      * @param $course_id
      * @return void
@@ -257,38 +238,46 @@ class CourseRepository
     /** Designer can update his own courses
      * @param $course_id
      * @param $data
-     * @param array $newMediaFiles
-     * @param array $mediaToDelete
-     * @param array $usersToSubscribe
      * @return Course|null
      * @throws Exception
      */
-    public final function updateCourse($course_id, $data, array $newMediaFiles = [], array $mediaToDelete = [], array $usersToSubscribe = []): Course|null
+    public final function updateCourse($course_id, $data): Course|null
     {
-        $user = Auth::user();
-        $course = Course::find($course_id);
-        if (!$course) {
-            throw new Exception(__('course_not_found'));
-        }
-        if ($user->id === $course->added_by) {
+        DB::beginTransaction();
+        try{
+            $course = Course::find($course_id);
+            if (!$course) {
+                throw new Exception(__('course_not_found'));
+            }
+            if (Auth::id() != $course->added_by) {
+                throw new Exception(__('user_not_authorized'));
+            }
             // Update course details
             $course->update($data);
-            // Handle media deletion
-            if (!empty($mediaToDelete)) {
-                self::deleteMediaFromCourse($course_id, $mediaToDelete);
-            }
-            // Handle new media addition
-            if (!empty($newMediaFiles)) {
-                self::addMediaToCourse($course_id, $newMediaFiles);
-            }
+                // Handle update course media
+                if (isset($data['course_media']) && $data['course_media'] instanceof UploadedFile) {
+                    $currentMedia = $course->media()->first();
+                    MediaRepository::attachOrUpdateMediaForModel($course, $data['course_media'], $currentMedia ? $currentMedia->id : null);
+                }
+                if (isset($data['selected_user_ids'])) {
+                    $selectedUserIdsString = trim($data['selected_user_ids'], "[]") ;
+                    $selectedUserIds = explode(',', $selectedUserIdsString);
+                    $selectedUserIds = array_map('trim', $selectedUserIds);
+                    $selectedUserIds = array_filter($selectedUserIds, 'is_numeric');
+                }else {
+                    $selectedUserIds = [];
+                }
+                if (!empty($selectedUserIds))
+                {
+                    self::subscribeCourseToUsers($course->id, $selectedUserIds, true);
+                }
 
-            if (!empty($usersToSubscribe)) {
-                self::subscribeCourseToUsers($course_id, $usersToSubscribe);
+                DB::commit();
+                return $course;
             }
-            return $course;
-        } else {
-            throw new Exception(__('user_not_authorized'));
-        }
+            catch (Exception $e) {
+            DB::rollBack();
+            throw $e;}
     }
 
     /** Get all validated and public courses for users and designer's own courses

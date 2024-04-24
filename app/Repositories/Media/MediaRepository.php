@@ -17,15 +17,11 @@ class MediaRepository
             $media->delete();
         }
     }
-
     public static function attachOrUpdateMediaForModel(Model $model, UploadedFile $file, ?int $mediaId = null, $title = null): Media
     {
         $disk = config('media-path.' . get_class($model) . '.disk', 'public');
         $storagePath = config('media-path.' . get_class($model) . '.path', 'default');
-
         $path = $file->store($storagePath, $disk);
-
-
         $mediaData = [
             'file_name' => $path,
             'mime_type' => $file->getMimeType(),
@@ -33,19 +29,15 @@ class MediaRepository
             'model_id' => $model->getKey(),
             'title' => $title,
         ];
-
         $media = $mediaId ? Media::find($mediaId) : new Media;
-
         if ($media) {
             $media->fill($mediaData);
-
             if ($media->isDirty()) {
                 $media->save();
             } else {
                 Log::info('Media is not dirty');
             }
         }
-
         return $media;
     }
 }

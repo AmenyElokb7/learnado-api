@@ -19,7 +19,7 @@ class UpdateCourseRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
@@ -33,14 +33,13 @@ class UpdateCourseRequest extends FormRequest
             'discount' => 'nullable|numeric|min:' . config('constants.CURRENCY_MIN_VALUE'),
             'facilitator_id' => 'nullable|exists:users,id',
             'is_public' => 'sometimes|boolean',
-            'selected_user_ids' => 'required_if:is_public,false|array',
+            'selected_user_ids' => 'required_if:is_public,false|string',
             'selected_user_ids.*' => 'exists:users,id',
-            'course_media' => 'nullable|array',
-            'course_media.*' => 'file|image|max:' . config('constants.MAX_FILE_SIZE') . '|mimes:' . config('constants.MIME_TYPES'),
+            'course_media' => 'file|max:' . config('constants.MAX_FILE_SIZE') . '|mimes:' . config('constants.MEDIA_MIMES'),
             'teaching_type' => 'nullable|integer',
             'link' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|string',
-            'start_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|date',
-            'end_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|date',
+            'start_time' => 'nullable|required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|date',
+            'end_time' => 'nullable|required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|date',
             'latitude' => 'required_if:teaching_type,' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
         ];
     }

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api\Step;
+namespace App\Http\Controllers\Api\Quiz;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\Step\StepRepository;
+use App\Repositories\Quiz\QuizRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\SuccessResponse;
 use Exception;
@@ -14,22 +14,22 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * @OA\Delete(
- *     path="/api/designer/delete-step/{step_id}",
- *     summary="Delete a step from a course",
+ *     path="/api/designer/delete-quiz/{step_id}",
+ *     summary="Delete a quiz from a specific step",
  *     tags={"Designer"},
  *     @OA\Parameter(
  *         name="stepId",
  *         in="path",
  *         required=true,
- *         description="The ID of the step to be deleted",
+ *         description="The ID of the step from which the quiz will be deleted",
  *         @OA\Schema(type="integer")
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Step deleted successfully",
+ *         description="Quiz deleted successfully",
  *         @OA\JsonContent(
  *             type="object",
- *             @OA\Property(property="message", type="string", example="Step deleted successfully")
+ *             @OA\Property(property="message", type="string", example="Quiz deleted successfully")
  *         )
  *     ),
  *     @OA\Response(
@@ -42,15 +42,15 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not Found - Step not found",
+ *         description="Not Found - Step or quiz not found",
  *         @OA\JsonContent(
  *             type="object",
- *             @OA\Property(property="message", type="string", example="Step not found")
+ *             @OA\Property(property="message", type="string", example="Step or quiz not found")
  *         )
  *     ),
  *     @OA\Response(
  *         response=500,
- *         description="Internal Server Error - Error deleting step",
+ *         description="Internal Server Error - Error deleting quiz",
  *         @OA\JsonContent(
  *             type="object",
  *             @OA\Property(property="message", type="string", example="An error occurred while processing your request.")
@@ -58,31 +58,27 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     )
  * )
  */
-class DeleteStepController extends Controller
+class DeleteQuizController extends Controller
 {
-    use ErrorResponse, SuccessResponse;
 
-    protected $stepRepository;
+    use SuccessResponse, ErrorResponse;
 
-    public function __construct(StepRepository $stepRepository)
+    protected $quizRepository;
+
+    public function __construct(QuizRepository $quizRepository)
     {
-        $this->stepRepository = $stepRepository;
+        $this->quizRepository = $quizRepository;
     }
 
-    /**
-     * delete step with its relations from the course
-     * @param $stepId
-     * @return JsonResponse
-     */
-
-    public function __invoke($stepId): JsonResponse
+    public function __invoke($quiz_id): JsonResponse
     {
         try {
-            $this->stepRepository->deleteStep($stepId);
-            return $this->returnSuccessResponse(__('step_deleted'), null, ResponseAlias::HTTP_OK);
+            $this->quizRepository->deleteQuiz($quiz_id);
+            return $this->returnSuccessResponse(__('quiz_deleted'), null, ResponseAlias::HTTP_OK);
         } catch (Exception $e) {
             Log::error($e->getMessage());
-            return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->returnErrorResponse($e->getMessage() ?: __('general_error'), $e->getCode() ?: ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
+
     }
 }

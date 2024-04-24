@@ -69,6 +69,10 @@ class UserRepository
         return $user;
     }
 
+    public final function getAuthenticatedUser(): User {
+        return Auth::user()->load('media');
+    }
+
     /**
      * @param $token
      * @param $password
@@ -106,31 +110,29 @@ class UserRepository
     public final function updateProfile(array $data): Authenticatable
     {
         $user = Auth::user();
-        $password = $data['password'] ?? null;
+
         if (!$user) {
             throw new Exception(__('user_authenticated_failed'), ResponseAlias::HTTP_NOT_FOUND);
         }
+
+        $password = $data['password'] ?? null;
         if(isset($password)){
             $data['password'] = bcrypt($password);
         }
 
-        $user->fill($data);
-        $user->save();
-
+        $currentMedia = $user->media->first();
         $profilePicture = $data['profile_picture'] ?? null;
 
-        if ($user->media->first()) {
-            if (isset($data['profile_picture'])) {
-                MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture, $user->media->first()->id ?? null);
-            } else if(isset($data['delete_profile_picture'])) {
-                MediaRepository::detachMediaFromModel($user, $user->media->first()->id);
+        if (array_key_exists('profile_picture', $data) && $profilePicture === null) {
+            if ($currentMedia) {
+                MediaRepository::detachMediaFromModel($user, $currentMedia->id);
             }
-
-        } else {
-            if ($profilePicture) {
-                MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture);
-            }
+        } elseif ($profilePicture !== null) {
+            MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture, $currentMedia->id ?? null);
         }
+
+        $user->fill($data);
+        $user->save();
         return $user;
     }
 

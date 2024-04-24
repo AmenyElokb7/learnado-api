@@ -38,9 +38,9 @@ class CreateCourseRequest extends FormRequest
             'course_media' => 'required|array',
             'course_media.*' => 'file|max:' . config('constants.MAX_FILE_SIZE') . '|mimes:' . config('constants.MEDIA_MIMES'),
             'teaching_type' => 'nullable|integer',
-            '!m o' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|string',
-            'start_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|date',
-            'end_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|date',
+            'start_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . ',' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
+            'end_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . ',' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
+            'link' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|string',
             'latitude' => 'required_if:teaching_type,' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
             'longitude' => 'required_if:teaching_type,' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
         ];

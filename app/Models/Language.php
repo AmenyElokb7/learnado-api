@@ -19,4 +19,10 @@ class Language extends Model
     {
         return $this->hasMany(Course::class);
     }
+
+
+    public function scopeByLanguage($query, $keyword)
+    {
+        return $query->where('language', 'like', "%$keyword%");
+    }
 }

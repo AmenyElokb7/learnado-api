@@ -122,7 +122,9 @@ class CreateStepController extends Controller
 
     public function __invoke(CreateStepRequest $request, $course_id): JsonResponse
     {
+
         try {
+
             $data = $this->getAttributes($request);
             $step = $this->stepRepository->createStep($data, $course_id);
             return $this->returnSuccessResponse(__('step_created'), $step, ResponseAlias::HTTP_CREATED);

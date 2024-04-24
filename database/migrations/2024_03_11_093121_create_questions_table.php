@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('quiz_id')->constrained('quizzes')->onDelete('cascade');
             $table->text('question');
-            $table->enum('type', ['binary', 'QCM', 'open']);
+            $table->enum('type', ['BINARY', 'QCM', 'OPEN']);
             $table->boolean('is_valid')->nullable();
             $table->softDeletes();
             $table->timestamps();

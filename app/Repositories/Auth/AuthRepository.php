@@ -62,11 +62,11 @@ class AuthRepository
         }
 
         $token = Auth::setTTL(config('jwt.ttl'))
-            ->claims(['is_refresh-token' => false])
+            ->claims(['refresh_token' => false])
             ->login($user);
 
         $refreshToken = Auth::setTTL(config('jwt.refresh_ttl'))
-            ->claims(['is_refresh-token' => true])
+            ->claims(['refresh_token' => true])
             ->login($user);
 
         return [
@@ -80,10 +80,10 @@ class AuthRepository
     {
         $user = auth()->user();
         $token = auth()->setTTL(config('jwt.ttl'))
-            ->claims(['is_refresh-token' => false])
+            ->claims(['refresh_token' => false])
             ->login($user);
         $refreshToken = auth()->setTTL(config('jwt.refresh_ttl'))
-            ->claims(['is_refresh-token' => true])
+            ->claims(['refresh_token' => true])
             ->login($user);
         return [
             'access_token' => $token,

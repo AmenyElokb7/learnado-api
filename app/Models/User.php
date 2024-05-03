@@ -76,6 +76,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Course::class, 'facilitator_id');
     }
 
+    public function certificates()
+    {
+        return $this->hasMany(CourseCertificate::class);
+    }
+
     /**
      * @param Builder $query
      * @param string|null $firstName
@@ -132,10 +137,12 @@ class User extends Authenticatable implements JWTSubject
     public function scopeByKeyword($query, $keyword)
     {
 
-        if (!is_null($keyword)) {
-            return $query->where('first_name', 'like', "%$keyword%")
-                ->orWhere('last_name', 'like', "%$keyword%")
-                ->orWhere('email', 'like', "%$keyword%");
+        if ($keyword) {
+            return $query->where(function ($query) use ($keyword) {
+                $query->where('first_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('last_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('email', 'like', '%' . $keyword . '%');
+            });
         }
         return $query;
     }

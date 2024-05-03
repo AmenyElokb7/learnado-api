@@ -26,5 +26,10 @@ class Quiz extends Model
     {
         return $this->hasMany(Question::class);
     }
+    public function latestAttempt()
+    {
+        return $this->hasOne(QuizAttempt::class)->latest();
+    }
+
 
 }

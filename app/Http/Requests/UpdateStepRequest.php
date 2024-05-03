@@ -26,9 +26,7 @@ class UpdateStepRequest extends FormRequest
             'title' => 'sometimes|string|max:' . config('constants.MAX_STRING_LENGTH'),
             'description' => 'sometimes|string',
             'duration' => 'sometimes|integer',
-            'media_files.*' => 'sometimes|file|mimes:' . config('constants.MEDIA_MIMES'),
-            'media_to_remove.*' => 'sometimes|exists:media,id',
-            'media_urls.*' => 'sometimes',
+
         ];
     }
 
@@ -41,9 +39,7 @@ class UpdateStepRequest extends FormRequest
             'title.sometimes' => __('messages.step_title_required'),
             'description.sometimes' => __('messages.step_description_required'),
             'duration.sometimes' => __('messages.step_duration_required'),
-            'media_files.*.file' => __('messages.step_media_files_file'),
-            'media_files.*.mimes' => __('messages.step_media_files_mimes'),
-            'media_to_remove.*.exists' => __('messages.step_media_to_remove_valid'),
+
         ];
     }
 }

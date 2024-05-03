@@ -19,10 +19,12 @@ class RefreshTokenMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $check = auth()->check();
+
+
         try {
-            $isRefreshToken = JWTAuth::setToken(JWTAuth::getToken())->getPayload()->get('is_refresh-token');
-            if (!$check || !$isRefreshToken) {
+
+            $isRefreshToken = JWTAuth::setToken(JWTAuth::getToken())->getPayload()->get('refresh_token');
+            if (!$isRefreshToken) {
                 throw new UnauthorizedException(__('messages.user_not_authorized'));
             }
             return $next($request);

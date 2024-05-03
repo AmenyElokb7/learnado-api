@@ -132,7 +132,7 @@ class UpdateStepController extends Controller
     {
         $data = $this->getAttributes($request);
         try {
-            $step = $this->stepRepository->updateCourseStep($step_id, $data);
+            $step = $this->stepRepository->updateStep($step_id, $data);
             return $this->returnSuccessResponse(__('step_updated'), $step, ResponseAlias::HTTP_CREATED);
         } catch (Exception $e) {
             Log::error($e->getMessage());

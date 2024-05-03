@@ -63,7 +63,7 @@ class TokenController extends Controller
             return $this->returnSuccessResponse(__('token_refreshed'), $refresh, ResponseAlias::HTTP_OK);
         } catch (Exception $e) {
             Log::error($e->getMessage());
-            return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_UNAUTHORIZED);
+            return $this->returnErrorResponse($e->getMessage(), $e->getCode() ? : ResponseAlias::HTTP_UNAUTHORIZED);
         }
     }
 }

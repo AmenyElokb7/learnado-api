@@ -57,6 +57,21 @@ class CategoryRepository
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($categories, $queryConfig);
         }
+        dump($categories);
+        return $categories;
+    }
+    // get categories which have at least number of courses 1
+    public final function indexCategoriesWithCourses(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    {
+
+        $query = Category::with('media')->whereHas('courses', function ($query) {
+            $query->where('is_active', true);
+        })->newQuery();
+        Category::applyFilters($queryConfig->getFilters(), $query);
+        $categories = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
+        if ($queryConfig->getPaginated()) {
+            return self::applyPagination($categories, $queryConfig);
+        }
         return $categories;
     }
 

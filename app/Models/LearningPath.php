@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\ApplyQueryScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LearningPath extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes, ApplyQueryScopes;
 
-    protected $fillable = ['title', 'description', 'language_id', 'category_id', 'added_by'];
+    protected $fillable = ['title', 'description', 'language_id', 'category_id', 'added_by', 'is_public'];
 
     public function language()
     {
@@ -39,6 +41,19 @@ class LearningPath extends Model
     public function media()
     {
         return $this->morphMany(Media::class, 'model');
+    }
+
+    public function subscribedUsersLearningPath()
+    {
+        return $this->belongsToMany(User::class, 'learning_path_subscriptions', 'learning_path_id', 'user_id');
+    }
+
+    public function scopeByAddedBy($query, $DesignerId)
+    {
+        if (!$DesignerId) {
+            return $query->where('added_by', $DesignerId);
+        }
+        return $query;
     }
 
 }

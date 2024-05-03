@@ -3,11 +3,14 @@
 namespace App\Repositories\Quiz;
 
 
+use App\Helpers\QueryConfig;
 use App\Models\Answer;
 use App\Models\Question;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Collection\Collection;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -98,7 +101,6 @@ class QuizRepository
         }
     }
 
-
     /**
      * @param $quiz
      * @param $questionData
@@ -155,7 +157,6 @@ class QuizRepository
         }
     }
 
-
     /**
      * Deletes the quiz associated with the given entity (Step or Learning Path).
      *
@@ -209,5 +210,56 @@ class QuizRepository
         }
     }
 
+    /**
+    * @param $quiz_id
+    * @param $user_id
+    * @return int|bool
+     */
+    public final function getQuizScoreForUser($quiz_id,$user_id): int| bool
+    {
+        $quizAttempt= QuizAttempt::where('quiz_id',$quiz_id)->where('user_id',$user_id)->first();
+        if($quizAttempt){
+            return $quizAttempt->score;
+        }
+        return false;
+    }
+    public final function indexQuizAttempts(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    {
+        // index quiz attempts for user with the course title and the section related to that quiz title and the score and whether the user passed or not
+        $user_id = auth()->id();
+        $quizQuery = QuizAttempt::with('quiz.step.course')->where('user_id', $user_id);
+        QuizAttempt::applyFilters($queryConfig->getFilters(), $quizQuery);
+
+        $quizQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+
+        // Decide whether to get a paginated result or a collection
+        return $queryConfig->isPaginated() ? $quizQuery->paginate($queryConfig->getPerPage()) : $quizQuery->get();
+    }
+
+    public final function indexQuizScores(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    {
+        // index quiz scores for user with the course title and the section related to that quiz title and the score and whether the user passed or not
+        $user_id = auth()->id();
+        // just the course title and the section related to that quiz title and the score and whether the user passed or not
+        $quizQuery = QuizAttempt::with(['quiz' => function($query) {
+            $query->select('id', 'step_id')  // Assuming 'id' and 'title' are columns in 'quizzes'
+            ->with(['step' => function($query) {
+                $query->select('id', 'course_id', 'title')  // Assuming 'id' is a column in 'steps'
+                ->with(['course' => function($query) {
+                    $query->select('id', 'title');  // Assuming 'id' and 'title' are columns in 'courses'
+                }]);
+            }]);
+        }])
+            ->where('user_id', $user_id)
+            ->select('id', 'user_id', 'quiz_id', 'score','total_score_possible', 'passed');
+
+        QuizAttempt::applyFilters($queryConfig->getFilters(), $quizQuery);
+
+        $quizQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+
+        // decide whether to get a paginated result or a collection
+        return $queryConfig->isPaginated() ? $quizQuery->paginate($queryConfig->getPerPage()) : $quizQuery->get();
+
+    }
 
 }

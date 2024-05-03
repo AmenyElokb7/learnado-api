@@ -13,7 +13,7 @@ class AdminSeeder extends Seeder
             'first_name' => 'Test',
             'last_name' => 'Admin',
             'email' => 'testadmin@example.com',
-            'password' => bcrypt('12345678'),
+            'password' => bcrypt('123456aA'),
             'role' => 1,
             'is_valid' => true,
         ]);

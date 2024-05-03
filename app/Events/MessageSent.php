@@ -31,6 +31,6 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('admin-notifications');
+        return new Channel('admin-notifications');
     }
 }

@@ -98,6 +98,7 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/create-category', CreateCategoryController::class);
         Route::post('/update-category/{id}', \App\Http\Controllers\Api\Category\UpdateCategoryController::class);
         Route::delete('/delete-category/{id}', DeleteCategoryController::class);
+        Route::get('/notifications', \App\Http\Controllers\Api\Admin\AdminNotificationController::class);
     });
 
     Route::middleware('designer')->prefix(

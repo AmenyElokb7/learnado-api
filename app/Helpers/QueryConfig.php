@@ -7,7 +7,6 @@ class QueryConfig
     /**
      * Pagination constants
      */
-
     const SORT_ASC = 'ASC';
     const SORT_DESC = 'DESC';
 

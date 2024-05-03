@@ -42,7 +42,7 @@ return [
     |
     */
 
-    'debug' => (bool) env('APP_DEBUG', false),
+    'debug' => (bool)env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -126,6 +126,9 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:8000'),
+
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver
@@ -168,6 +171,10 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
+        L5Swagger\L5SwaggerServiceProvider::class,
+
+
     ])->toArray(),
 
     /*

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\ApplyQueryScopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -33,7 +34,7 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
-    protected $fillable = ['first_name', 'last_name', 'email', 'password', 'is_valid'];
+    protected $fillable = ['first_name', 'last_name', 'email', 'role', 'password', 'is_valid'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -69,9 +70,15 @@ class User extends Authenticatable implements JWTSubject
         return $this->morphMany(Media::class, 'model');
     }
 
+
+    public function courses()
+    {
+        return $this->hasMany(Course::class, 'facilitator_id');
+    }
+
     /**
      * @param Builder $query
-     * @param string $firstName
+     * @param string|null $firstName
      * @return Builder
      */
 
@@ -85,7 +92,7 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * @param Builder $query
-     * @param string $lastName
+     * @param string|null $lastName
      * @return Builder
      */
     public function scopeByLastName(Builder $query, ?string $lastName): Builder
@@ -98,7 +105,7 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * @param Builder $query
-     * @param string $email
+     * @param string|null $email
      * @return Builder
      */
     public function scopeByEmail(Builder $query, ?string $email): Builder
@@ -108,5 +115,45 @@ class User extends Authenticatable implements JWTSubject
         }
         return $query;
     }
+
+    /**
+     * @return BelongsToMany
+     */
+    public function subscribedCourses()
+    {
+        return $this->belongsToMany(Course::class, 'course_subscription_users', 'user_id', 'course_id');
+    }
+
+    public function subscribedLearningPaths()
+    {
+        return $this->belongsToMany(LearningPath::class, 'learning_path_subscriptions', 'user_id', 'learning_path_id');
+    }
+
+    public function scopeByKeyword($query, $keyword)
+    {
+
+        if (!is_null($keyword)) {
+            return $query->where('first_name', 'like', "%$keyword%")
+                ->orWhere('last_name', 'like', "%$keyword%")
+                ->orWhere('email', 'like', "%$keyword%");
+        }
+        return $query;
+    }
+
+    public function scopeByRole($query, $role)
+    {
+        if (!is_null($role)) {
+            return $query->whereIn('role', $role);
+        }
+        return $query;
+    }
+    public function scopeByIsValid($query, $isValid)
+    {
+        if (!is_null($isValid)) {
+            return $query->where('is_valid', $isValid);
+        }
+        return $query;
+    }
+
 
 }

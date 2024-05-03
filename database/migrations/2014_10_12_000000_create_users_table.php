@@ -16,6 +16,9 @@ return new class extends Migration {
             $table->string('last_name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            /** ENUM */
+            $table->integer('role');
+            /** end ENUM */
             $table->string('password')->nullable();
             $table->boolean('is_valid')->default(false);
             $table->softDeletes();

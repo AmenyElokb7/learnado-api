@@ -36,7 +36,8 @@ class IndexCoursesForFacilitator extends Controller
         $paginationParams = $this->getPaginationParams($request);
 
         $filters = [
-            'facilitator_id' => auth()->user()->id,
+            'facilitator' => auth()->user()->id,
+            'keyword' => $paginationParams['KEYWORD'] ?? '',
         ];
 
         $search = new QueryConfig();
@@ -44,7 +45,8 @@ class IndexCoursesForFacilitator extends Controller
             ->setPerPage($paginationParams['PER_PAGE'])
             ->setOrderBy($paginationParams['ORDER_BY'])
             ->setDirection($paginationParams['DIRECTION'])
-            ->setPaginated($paginationParams['PAGINATION']);
+            ->setPaginated($paginationParams['PAGINATION'])
+            ->setPage($paginationParams['PAGE']);
         return $search;
 
     }

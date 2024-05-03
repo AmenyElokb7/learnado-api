@@ -103,6 +103,10 @@ class Course extends Model
     {
         return $this->belongsTo(Language::class);
     }
+    public function certificates()
+    {
+        return $this->hasMany(CourseCertificate::class);
+    }
 
 
     public function deleteWithRelations()
@@ -125,6 +129,7 @@ class Course extends Model
 
     public function scopeByFacilitator($query, $facilitatorId)
     {
+
         if ($facilitatorId) {
             return $query->where('facilitator_id', $facilitatorId);
         }
@@ -177,8 +182,10 @@ class Course extends Model
     public function scopeByKeyWord($query, $keyword)
     {
         if ($keyword) {
-            return $query->where('title', 'like', '%' . $keyword . '%')
-                ->orWhere('description', 'like', '%' . $keyword . '%');
+            return $query->where(function($query) use ($keyword) {
+                $query->where('title', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%');
+            });
         }
         return $query;
     }

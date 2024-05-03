@@ -153,6 +153,7 @@ class IndexCoursesForDesignerController extends Controller
 
         $filters = [
             'added_by' => auth()->user(),
+            'keyword' => $paginationParams['KEYWORD'] ?? '',
 
         ];
         $search = new QueryConfig();

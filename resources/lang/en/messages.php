@@ -48,6 +48,7 @@ return [
     'course_exception' => 'Something went wrong, please try again later',
     'course_not_found' => 'Course not found',
     'course_found' => 'Course found',
+    'course_certificates_found' => 'Course certificates found',
 
     //steps
     'step_created' => 'step created successfully',

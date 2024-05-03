@@ -48,6 +48,7 @@ return [
     'course_exception' => 'Quelque chose s\'est mal passé, veuillez réessayer plus tard',
     'course_not_found' => 'Cours non trouvé',
     'course_found' => 'Cours trouvé',
+    'course_certificates_found' => 'Certificats de cours trouvés',
 
     //steps
     'step_created' => 'Etape créée avec succès',

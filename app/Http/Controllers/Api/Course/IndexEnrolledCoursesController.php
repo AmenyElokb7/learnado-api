@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-class IndexEnrolledCourses extends Controller
+class IndexEnrolledCoursesController extends Controller
 {
     use SuccessResponse, ErrorResponse, PaginationParams;
 
@@ -22,7 +22,7 @@ class IndexEnrolledCourses extends Controller
     {
         $paginationParams = $this->getAttributes($request);
         try {
-            $courses = CourseRepository::index($paginationParams);
+            $courses = CourseRepository::indexCoursesForEnrolledUsers($paginationParams);
             return $this->returnSuccessPaginationResponse(__('course_found'), $courses, ResponseAlias::HTTP_OK, $paginationParams->isPaginated()
             );
         } catch (Exception $exception) {
@@ -37,8 +37,8 @@ class IndexEnrolledCourses extends Controller
         $userId = auth()->user()->id;
         $filters = [
             'subscribers' => $userId,
+            'keyword' => $paginationParams['KEYWORD'] ?? '',
         ];
-
         $search = new QueryConfig();
         $search->setFilters($filters)
             ->setPerPage($paginationParams['PER_PAGE'])

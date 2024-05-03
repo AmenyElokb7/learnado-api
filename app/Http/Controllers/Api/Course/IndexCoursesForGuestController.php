@@ -8,17 +8,17 @@ use App\Repositories\Course\CourseRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
-use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-class IndexCoursesForUsersController extends Controller
+class IndexCoursesForGuestController extends Controller
 {
+    /**
+     * Handle the incoming request.
+     */
     use SuccessResponse, ErrorResponse, PaginationParams;
-
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request)
     {
         $paginationParams = $this->getAttributes($request);
         try {
@@ -51,7 +51,6 @@ class IndexCoursesForUsersController extends Controller
 
         ];
         $orderByField = in_array($paginationParams['ORDER_BY'], $order_by) ? $paginationParams['ORDER_BY'] : 'created_at';
-
 
         $search = new QueryConfig();
         $search->setFilters($filters)

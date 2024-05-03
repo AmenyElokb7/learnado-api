@@ -26,7 +26,7 @@ return new class extends Migration {
             $table->foreign('facilitator_id')->references('id')->on('users')->onDelete('set null');
             $table->boolean('is_public')->default(true);
             $table->boolean('sequential')->default(false);
-            $table->boolean('is_active')->default(true);
+            $table->boolean('is_active')->default(false);
             $table->integer('teaching_type')->default(0);
             $table->string('link')->nullable();
             $table->timestamp('start_time')->nullable();

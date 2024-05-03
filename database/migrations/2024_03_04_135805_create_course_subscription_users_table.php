@@ -12,8 +12,10 @@ return new class extends Migration {
     {
         Schema::create('course_subscription_users', function (Blueprint $table) {
             $table->id();
+            $table->unique(['course_id', 'user_id']);
             $table->unsignedBigInteger('course_id');
             $table->unsignedBigInteger('user_id');
+            $table->boolean('is_completed')->default(false);
             $table->timestamps();
 
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');

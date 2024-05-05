@@ -97,13 +97,6 @@ class IndexLanguagesController extends Controller
 {
     use ErrorResponse, SuccessResponse, PaginationParams;
 
-    protected $languageRepository;
-
-    public function __construct(LanguageRepository $languageRepository,)
-    {
-        $this->languageRepository = $languageRepository;
-    }
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -113,7 +106,7 @@ class IndexLanguagesController extends Controller
         $paginationParams = $this->getAttributes($request);
 
         try {
-            $languages = $this->languageRepository->indexLanguages($paginationParams);
+            $languages = LanguageRepository::indexLanguages($paginationParams);
             return $this->returnSuccessPaginationResponse(__('language_fetched'), $languages, ResponseAlias::HTTP_OK, $paginationParams->isPaginated());
         } catch (Exception $e) {
             Log::error($e->getMessage());

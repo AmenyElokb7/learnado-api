@@ -224,7 +224,6 @@ class CourseRepository
                 {
                     self::subscribeCourseToUsers($course->id, $selectedUserIds, true);
                 }
-
                 DB::commit();
                 return $course;
             }
@@ -240,11 +239,9 @@ class CourseRepository
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
         $authUserId= Auth::id();
-
         $subscribedUserCourse= Course::whereHas('subscribers', function ($query) use ($authUserId) {
                 $query->where('users.id', $authUserId);
         })->get();
-
         $CourseQuery = Course::with([
             'media',
             'steps',
@@ -264,13 +261,10 @@ class CourseRepository
 
         $courses = $CourseQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
         if($authUserId){
-
             // select the courses that the user not enrolled in
             $courses->whereNotIn('id', $subscribedUserCourse->pluck('id'));
         }
         $courses = $courses->get();
-
-
         $courses->each(function ($course) {
             $course->lessons_count = $course->steps->count();
 
@@ -346,7 +340,7 @@ class CourseRepository
                 $course->is_completed= $course->subscribers()->wherePivot('user_id', $user->id)->wherePivot('is_completed', 1)->exists();
             } else {
                 // Handle the case where the user is not subscribed
-                $course->is_completed = false; // or handle appropriately
+                $course->is_completed = false;
             }
             foreach ($course->steps as $step) {
                 if ($step->quiz && $step->quiz->latestAttempt) {
@@ -369,13 +363,14 @@ class CourseRepository
                     }
                 }
             }
-
         }
         return $course;
     }
 
     /**
      * Fetch courses for enrolled users
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
      */
     public static function indexCoursesForEnrolledUsers(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
@@ -469,16 +464,14 @@ class CourseRepository
         $pdfPath = 'certificates/' . uniqid() . '.pdf';
         $pdf->save(storage_path('app/public/' . $pdfPath));
 
-        // Store the certificate record
         $course->certificates()->create([
             'user_id' => $user_id,
             'certificate_path' => $pdfPath
         ]);
-
         return $pdfPath;
     }
 
-    /**
+    /** get all certificates for a user
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|Collection
      */
@@ -488,8 +481,6 @@ class CourseRepository
 
         $certificateQuery = CourseCertificate::with(['course'])
             ->where('user_id', $authUserId);
-
-        // Apply any filters and ordering
         CourseCertificate::applyFilters($queryConfig->getFilters(), $certificateQuery);
         $certificateQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
 
@@ -505,7 +496,6 @@ class CourseRepository
 
         return $certificates;
     }
-
     /**
      * @throws Exception
      */
@@ -513,16 +503,16 @@ class CourseRepository
     {
         $certificate = CourseCertificate::findOrFail($certificateId);
         $filePath = storage_path('app/public/' . $certificate->certificate_path);
-
-        // Check if the file exists
         if (!file_exists($filePath)) {
             throw new \Exception('File not found.');
         }
-
         return $filePath;
     }
 
-    // index completed courses for enrolled students
+    /**
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
 
     public final function indexCompletedCourses(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
@@ -560,7 +550,68 @@ class CourseRepository
         return $queryConfig->getPaginated()
             ? $completedCoursesQuery->paginate($queryConfig->getPerPage())
             : $completedCoursesQuery->get();
+    }
 
+    /** get all courses in the cart
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
+    public static function indexCartCourses(QueryConfig $queryConfig): LengthAwarePaginator|Collection
+    {
+        $authUserId = Auth::id();
+        $cartCoursesQuery = Course::with([
+            'media',
+            'facilitator' => function ($query) {
+                $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+            },
+
+        ])
+            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price, cart.id as cart_id')
+            ->join('cart', 'courses.id', '=', 'cart.course_id')
+            ->where('cart.user_id', '=', $authUserId)
+            ->newQuery();
+
+        // Apply filters to the query
+        Course::applyFilters($queryConfig->getFilters(), $cartCoursesQuery);
+
+        // If authenticated, filter based on subscription status
+        if ($authUserId) {
+            // Get only completed courses from the course_subscription table
+            $cartCoursesQuery = $cartCoursesQuery->whereHas('usersInCart', function ($query) use ($authUserId) {
+                $query->where('users.id', $authUserId);
+            });
+        }
+
+        // Apply ordering
+        $cartCoursesQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+
+        // Decide whether to get a paginated result or a collection
+        $courses= $queryConfig->getPaginated()
+            ? $cartCoursesQuery->paginate($queryConfig->getPerPage())
+            : $cartCoursesQuery->get();
+        return $courses->map(function ($course) {
+            return [
+
+                    'course' => $course->toArray(),
+                    'cart_id' => $course->cart_id,  // Assuming 'cart_id' was correctly selected and available
+
+            ];
+        });
+
+    }
+
+    /** add course to cart
+     * @throws Exception
+     * @param $course_id
+     */
+    public static function addToCart($course_id): void
+    {
+        $authUserId = Auth::id();
+        $course = Course::findOrFail($course_id);
+        if (!$course) {
+            throw new Exception(__('course_not_found'));
+        }
+        $course->usersInCart()->attach($authUserId);
     }
 
 }

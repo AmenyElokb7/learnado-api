@@ -80,6 +80,11 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(CourseCertificate::class);
     }
+    public function cart()
+    {
+        return $this->belongsToMany(Course::class, 'cart');
+    }
+
 
     /**
      * @param Builder $query

@@ -17,6 +17,7 @@ class CategoryRepository
 
 
     /**
+     * create a new category
      * @param $data
      * @return Category
      */
@@ -34,6 +35,7 @@ class CategoryRepository
     }
 
     /**
+     * delete a category
      * @param $categoryId
      * @return void
      */
@@ -45,11 +47,12 @@ class CategoryRepository
     }
 
     /**
+     * get all categories
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|Collection
      */
 
-    public final function indexCategories(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    public static function indexCategories(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
     {
         $query = Category::with('media')->withCount('courses')->newQuery();
         Category::applyFilters($queryConfig->getFilters(), $query);
@@ -57,11 +60,14 @@ class CategoryRepository
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($categories, $queryConfig);
         }
-        dump($categories);
         return $categories;
     }
-    // get categories which have at least number of courses 1
-    public final function indexCategoriesWithCourses(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+
+    /** get categories which have at least one active course
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|\Illuminate\Support\Collection
+     */
+    public static function indexCategoriesWithCourses(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
     {
 
         $query = Category::with('media')->whereHas('courses', function ($query) {
@@ -75,11 +81,22 @@ class CategoryRepository
         return $categories;
     }
 
+    /**
+     * get a category by id
+     * @param $categoryId
+     * @return Category
+     */
+
     public final function getCategory($categoryId): Category
     {
         return Category::find($categoryId)->load('media');
     }
 
+    /** update a category
+     * @param $categoryId
+     * @param $data
+     * @return Category
+     */
     public final function updateCategory($categoryId, $data): Category
     {
         $category = Category::find($categoryId);

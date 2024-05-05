@@ -96,13 +96,6 @@ class IndexCategoriesController extends Controller
 {
     use SuccessResponse, ErrorResponse, PaginationParams;
 
-    protected $categoryRepository;
-
-    public function __construct(CategoryRepository $categoryRepository)
-    {
-        $this->categoryRepository = $categoryRepository;
-    }
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -111,16 +104,14 @@ class IndexCategoriesController extends Controller
     {
         $paginationParams = $this->getAttributes($request);
         try {
-            $categories = $this->categoryRepository->indexCategories($paginationParams);
+            $categories = CategoryRepository::indexCategories($paginationParams);
             return $this->returnSuccessPaginationResponse(__('categories_found'),
                 $categories,
                 ResponseAlias::HTTP_OK, $paginationParams->isPaginated());
         } catch (Exception $e) {
             return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
-
     }
-
     private function getAttributes(Request $request): QueryConfig
     {
         $paginationParams = $this->getPaginationParams($request);
@@ -134,7 +125,8 @@ class IndexCategoriesController extends Controller
             ->setPerPage($paginationParams['PER_PAGE'])
             ->setOrderBy($paginationParams['ORDER_BY'])
             ->setDirection($paginationParams['DIRECTION'])
-            ->setPaginated($paginationParams['PAGINATION']);
+            ->setPaginated($paginationParams['PAGINATION'])
+            ->setPage($paginationParams['PAGE']);
         return $search;
 
     }

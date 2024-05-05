@@ -16,7 +16,7 @@ class MessageRepository
 {
     use PaginationParams;
 
-    public final function saveMessage($userId, $data): void
+    public final function saveMessage($userId, $data): SupportMessage
     {
         $message = SupportMessage::create([
             'user_id' => $userId,
@@ -26,6 +26,7 @@ class MessageRepository
         event(new MessageSent($message));
         $user = User::find($userId);
         Mail::to($user)->send(new SupportMessageMail($user, $message));
+        return $message;
     }
 
     public static function indexAdminNotifications(QueryConfig $queryConfig): LengthAwarePaginator|Collection
@@ -34,10 +35,18 @@ class MessageRepository
         $query = SupportMessage::with('user.media')->newQuery();
         SupportMessage::applyFilters($queryConfig->getFilters(), $query);
         $messages = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
-        $messages->unread = $query->where('is_read', 0)->count();
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($messages, $queryConfig);
         }
         return $messages;
+    }
+    public final function MarkAsRead($messageId): void
+    {
+        $message = SupportMessage::find($messageId);
+        if (!$message) {
+            throw new LengthRequiredHttpException(__('message_not_found'));
+        }
+        $message->is_read = 1;
+        $message->save();
     }
 }

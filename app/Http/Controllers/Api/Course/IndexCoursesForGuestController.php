@@ -18,7 +18,7 @@ class IndexCoursesForGuestController extends Controller
      * Handle the incoming request.
      */
     use SuccessResponse, ErrorResponse, PaginationParams;
-    public function __invoke(Request $request)
+    public function __invoke(Request $request): \Illuminate\Http\JsonResponse
     {
         $paginationParams = $this->getAttributes($request);
         try {
@@ -26,7 +26,7 @@ class IndexCoursesForGuestController extends Controller
 
             return $this->returnSuccessPaginationResponse(__('course_found'), $courses, ResponseAlias::HTTP_OK, $paginationParams->isPaginated()
             );
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             Log::error($exception->getMessage());
             return $this->returnErrorResponse($exception->getMessage() ?: __('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }

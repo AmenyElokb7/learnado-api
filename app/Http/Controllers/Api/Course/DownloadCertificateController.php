@@ -15,24 +15,17 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 class DownloadCertificateController extends Controller
 {
     use SuccessResponse, ErrorResponse;
-    protected $courseRepository;
-
-    public function __construct(CourseRepository $courseRepository)
-    {
-        $this->courseRepository = $courseRepository;
-    }
 
     /**
-     * Handle the request to download a certificate.
-     *
-     * @param int $certificateId
+     * Handle the incoming request.
+     * @param $certificate_id
      * @return BinaryFileResponse|JsonResponse
      */
-    public function __invoke($certificateId): BinaryFileResponse|JsonResponse
+    public function __invoke($certificate_id): BinaryFileResponse|JsonResponse
     {
         try {
-            $filePath = $this->courseRepository->getCertificateFilePath($certificateId);
-            return response()->download($filePath);
+            $file_path = CourseRepository::getCertificateFilePath($certificate_id);
+            return response()->download($file_path);
         } catch (\Exception $e) {
             return $this->returnErrorResponse($e->getMessage() ?: __('general_error'), $e->getCode() ?: ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }

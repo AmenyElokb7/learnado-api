@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Course;
 
 use App\Helpers\QueryConfig;
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Repositories\Course\CourseRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
@@ -19,23 +20,17 @@ class IndexCompletedCoursesController extends Controller
      * Handle the incoming request.
      */
     use SuccessResponse, ErrorResponse,PaginationParams;
-    protected $courseRepository;
 
-    public function __construct(CourseRepository $courseRepository)
-    {
-        $this->courseRepository = $courseRepository;
-    }
     public function __invoke(Request $request) : JsonResponse
     {
         $paginationParams = $this->getAttributes($request);
         try {
-            $completedCourses = $this->courseRepository->indexCompletedCourses($paginationParams);
+            $completedCourses = CourseRepository::indexCompletedCourses($paginationParams);
             return $this->returnSuccessPaginationResponse(__('completed_courses_found'), $completedCourses, ResponseAlias::HTTP_OK, $paginationParams->isPaginated());
         } catch (\Exception $exception) {
             return $this->returnErrorResponse($exception->getMessage() ?: __('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     private function getAttributes(Request $request): QueryConfig
     {
         $paginationParams = $this->getPaginationParams($request);

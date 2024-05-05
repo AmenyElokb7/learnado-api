@@ -63,7 +63,6 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     )
  * )
  */
-
 class AddToCartController extends Controller
 {
     use ErrorResponse, SuccessResponse;

@@ -17,23 +17,16 @@ class IndexCourseCertificatesController extends Controller
      * Handle the incoming request.
      */
     use SuccessResponse, ErrorResponse, PaginationParams;
-    protected $courseRepository;
-
-    public function __construct(CourseRepository $courseRepository)
-    {
-        $this->courseRepository = $courseRepository;
-    }
     public function __invoke(Request $request): JsonResponse
     {
         $paginationParams = $this->getAttributes($request);
         try {
-            $courseCertificates = $this->courseRepository->indexCourseCertificates($paginationParams);
+            $courseCertificates = CourseRepository::indexCourseCertificates($paginationParams);
             return $this->returnSuccessPaginationResponse(__('course_certificates_found'), $courseCertificates, 200, $paginationParams->isPaginated());
         } catch (\Exception $exception) {
             return $this->returnErrorResponse($exception->getMessage() ?: __('general_error'), 500);
         }
     }
-
     private function getAttributes(Request $request): QueryConfig
     {
         $paginationParams = $this->getPaginationParams($request);
@@ -41,7 +34,6 @@ class IndexCourseCertificatesController extends Controller
         $filters = [
             'keyword' => $paginationParams['KEYWORD'] ?? '',
         ];
-
         $search = new QueryConfig();
         $search->setFilters($filters)
             ->setPerPage($paginationParams['PER_PAGE'])

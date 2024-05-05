@@ -17,16 +17,10 @@ class CompleteCourseController extends Controller
      * Handle the incoming request.
      */
     use SuccessResponse, ErrorResponse;
-    protected $courseRepository;
-
-     public function __construct(CourseRepository $courseRepository)
-     {
-         $this->courseRepository = $courseRepository;
-     }
     public function __invoke($course_id): JsonResponse
     {
         try{
-            $this->courseRepository->completeCourse($course_id);
+            CourseRepository::completeCourse($course_id);
             return $this->returnSuccessResponse(__('course_completed'), null, ResponseAlias::HTTP_OK);
         }catch(\Exception $e){
             return $this->returnErrorResponse(__('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);

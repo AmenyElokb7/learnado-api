@@ -81,13 +81,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  */
 class UpdateCourseController extends Controller
 {
-    protected $courseRepository;
     use SuccessResponse, ErrorResponse;
-
-    public function __construct(CourseRepository $courseRepository)
-    {
-        $this->courseRepository = $courseRepository;
-    }
 
     /**
      * @param UpdateCourseRequest $request
@@ -101,7 +95,7 @@ class UpdateCourseController extends Controller
         $data = $this->getAttributes($request);
 
         try {
-            $course = $this->courseRepository->updateCourse($course_id, $data);
+            $course = CourseRepository::updateCourse($course_id, $data);
             return $this->returnSuccessResponse(__('course_updated'), $course, ResponseAlias::HTTP_OK);
 
         } catch (Exception $e) {
@@ -114,6 +108,5 @@ class UpdateCourseController extends Controller
     {
         return $request->validated();
     }
-
 
 }

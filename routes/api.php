@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminNotificationController;
 use App\Http\Controllers\Api\Admin\CreateAccountController;
 use App\Http\Controllers\Api\Admin\DeleteAccountController;
+use App\Http\Controllers\Api\Admin\IndexAcceptedUsersController;
+use App\Http\Controllers\Api\Admin\IndexPendingUsersController;
 use App\Http\Controllers\Api\Admin\IndexUsersController;
+use App\Http\Controllers\Api\Admin\MarkAsReadNotificationController;
+use App\Http\Controllers\Api\Admin\RejectUserAccountController;
 use App\Http\Controllers\Api\Admin\SuspendUserAccountController;
 use App\Http\Controllers\Api\Admin\UpdateAccountController;
 use App\Http\Controllers\Api\Admin\ValidateAccountController;
@@ -14,16 +19,26 @@ use App\Http\Controllers\Api\Auth\SetPasswordController;
 use App\Http\Controllers\Api\Auth\TokenController;
 use App\Http\Controllers\Api\Category\CreateCategoryController;
 use App\Http\Controllers\Api\Category\DeleteCategoryController;
+use App\Http\Controllers\Api\Category\GetCategoryByIdController;
 use App\Http\Controllers\Api\Category\IndexCategoriesController;
+use App\Http\Controllers\Api\Category\IndexCategoriesWithCoursesController;
+use App\Http\Controllers\Api\Category\UpdateCategoryController;
+use App\Http\Controllers\Api\Course\CompleteCourseController;
 use App\Http\Controllers\Api\Course\CourseSubscriptionController;
 use App\Http\Controllers\Api\Course\CreateCourseController;
 use App\Http\Controllers\Api\Course\DeleteCourseController;
+use App\Http\Controllers\Api\Course\DownloadCertificateController;
 use App\Http\Controllers\Api\Course\GetCourseByIdForDesignerController;
 use App\Http\Controllers\Api\Course\GetCourseByIdForFacilitatorController;
+use App\Http\Controllers\Api\Course\GetCourseByIdForGuestController;
 use App\Http\Controllers\Api\Course\GetCourseByIdForUserController;
+use App\Http\Controllers\Api\Course\IndexCompletedCoursesController;
+use App\Http\Controllers\Api\Course\IndexCourseCertificatesController;
 use App\Http\Controllers\Api\Course\IndexCoursesForDesignerController;
 use App\Http\Controllers\Api\Course\IndexCoursesForFacilitator;
+use App\Http\Controllers\Api\Course\IndexCoursesForGuestController;
 use App\Http\Controllers\Api\Course\IndexCoursesForUsersController;
+use App\Http\Controllers\Api\Course\IndexEnrolledCoursesController;
 use App\Http\Controllers\Api\Course\UpdateCourseController;
 use App\Http\Controllers\Api\Language\CreateLanguageController;
 use App\Http\Controllers\Api\Language\DeleteLanguageController;
@@ -32,46 +47,33 @@ use App\Http\Controllers\Api\LearningPath\CreateLearningController;
 use App\Http\Controllers\Api\LearningPath\DeleteLearningPathController;
 use App\Http\Controllers\Api\LearningPath\LearningPathSubscriptionController;
 use App\Http\Controllers\Api\LearningPath\UpdateLearningPathController;
+use App\Http\Controllers\Api\Message\SupportMessageController;
+use App\Http\Controllers\Api\Quiz\DeleteAnswerController;
 use App\Http\Controllers\Api\Quiz\DeleteLearningPathQuizController;
+use App\Http\Controllers\Api\Quiz\DeleteQuestionController;
 use App\Http\Controllers\Api\Quiz\DeleteQuizController;
+use App\Http\Controllers\Api\Quiz\GetUserScoreController;
+use App\Http\Controllers\Api\Quiz\IndexQuizAttemptsController;
+use App\Http\Controllers\Api\Quiz\IndexQuizScoresController;
 use App\Http\Controllers\Api\Quiz\UpdateLearningPathQuizController;
 use App\Http\Controllers\Api\Quiz\UpdateStepQuizController;
 use App\Http\Controllers\Api\Step\CreateStepController;
 use App\Http\Controllers\Api\Step\DeleteStepController;
+use App\Http\Controllers\Api\Step\GetStepMediaByIdController;
 use App\Http\Controllers\Api\Step\UpdateStepController;
+use App\Http\Controllers\Api\Stripe\PaymentController;
+use App\Http\Controllers\Api\Stripe\StripeWebhookController;
+use App\Http\Controllers\Api\User\AddToCartController;
+use App\Http\Controllers\Api\User\ClearCartController;
 use App\Http\Controllers\Api\User\GetUserByIdController;
+use App\Http\Controllers\Api\User\IndexCartCoursesController;
 use App\Http\Controllers\Api\User\IndexFacilitatorsController;
+use App\Http\Controllers\Api\User\RemoveFromCartController;
 use App\Http\Controllers\Api\User\UpdateProfileController;
 use App\Http\Controllers\Api\User\UserAnswersController;
+use App\Http\Controllers\Api\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
-use \App\Http\Controllers\Api\Admin\RejectUserAccountController;
-use \App\Http\Controllers\Api\User\UserProfileController;
-use \App\Http\Controllers\Api\Category\GetCategoryByIdController;
-use \App\Http\Controllers\Api\User\AddToCartController;
-use \App\Http\Controllers\Api\User\IndexCartCoursesController;
-use \App\Http\Controllers\Api\Course\IndexCompletedCoursesController;
-use \App\Http\Controllers\Api\Quiz\IndexQuizScoresController;
-use \App\Http\Controllers\Api\Course\IndexCourseCertificatesController;
-use \App\Http\Controllers\Api\Course\CompleteCourseController;
-use \App\Http\Controllers\Api\Quiz\IndexQuizAttemptsController;
-use \App\Http\Controllers\Api\Quiz\GetUserScoreController;
-use \App\Http\Controllers\Api\Course\IndexEnrolledCoursesController;
-use \App\Http\Controllers\Api\Admin\IndexPendingUsersController;
-use \App\Http\Controllers\Api\Admin\IndexAcceptedUsersController;
-use \App\Http\Controllers\Api\Course\DownloadCertificateController;
-use \App\Http\Controllers\Api\Category\UpdateCategoryController;
-use \App\Http\Controllers\Api\Admin\AdminNotificationController;
-use \App\Http\Controllers\Api\Admin\MarkAsReadNotificationController;
-use \App\Http\Controllers\Api\Quiz\DeleteQuestionController;
-use \App\Http\Controllers\Api\Quiz\DeleteAnswerController;
-use \App\Http\Controllers\Api\Message\SupportMessageController;
-use \App\Http\Controllers\Api\Course\IndexCoursesForGuestController;
-use \App\Http\Controllers\Api\Course\GetCourseByIdForGuestController;
-use \App\Http\Controllers\Api\Step\GetStepMediaByIdController;
-use \App\Http\Controllers\Api\Category\IndexCategoriesWithCoursesController;
-use \App\Http\Controllers\Api\User\RemoveFromCartController;
-use \App\Http\Controllers\Api\User\ClearCartController;
-use \App\Http\Controllers\Api\User\PaymentController;
+
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -79,6 +81,7 @@ Route::post('/password-set', SetPasswordController::class);
 Route::post('/send-password-reset-mail', SendPasswordResetMailController::class);
 Route::post('/refresh-token', TokenController::class)->middleware('refreshToken');
 Route::get('/certificates/download/{certificateId}', DownloadCertificateController::class)->name('certificates.download');
+Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 
 Route::middleware('auth:user')->group(function () {
     Route::post('/logout', LogoutController::class);
@@ -102,6 +105,8 @@ Route::middleware('auth:user')->group(function () {
         Route::delete('/remove-from-cart/{course_id}', RemoveFromCartController::class);
         Route::post('/checkout', PaymentController::class)->name('stripe.checkout');
         Route::delete('/clear-cart', ClearCartController::class);
+
+
     });
     Route::middleware('admin')->prefix(
         'admin'

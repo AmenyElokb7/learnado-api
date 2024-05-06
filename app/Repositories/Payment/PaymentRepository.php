@@ -5,8 +5,11 @@ namespace App\Repositories\Payment;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\User;
+use Exception;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
+use Stripe\Checkout\Session as StripeSession;
+
 
 class PaymentRepository
 {
@@ -42,8 +45,8 @@ class PaymentRepository
             'payment_method_types' => ['card'],
             'line_items' => $lineItems->toArray(),
             'mode' => 'payment',
-            'success_url' => config('app.frontend_url') . '/success',
-            'cancel_url' => config('app.frontend_url') . '/failure',
+            'success_url' => config('app.frontend_url'),
+            'cancel_url' => config('app.frontend_url'),
         ]);
 
         $payment = new Payment([
@@ -54,11 +57,42 @@ class PaymentRepository
         ]);
         $payment->save();
 
-        foreach ($courses as $course) {
-            $course->subscribers()->sync($user->id);
+        return $session;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public final function handleCompletedSession(string $paymentIntentId) : void
+    {
+        $payment = Payment::where('stripe_payment_id', $paymentIntentId)->first();
+        if (!$payment) {
+            throw new \Exception('Payment not found');
+        }
+        if ($payment->status === 'completed') {
+            throw new \Exception('Payment already completed');
         }
 
-        return $session;
+        $user = $payment->user;
+
+        $payment->status = 'completed';
+        $payment->save();
+
+        // Subscribe the user to the courses that he paid for
+        $courses = $payment->courses;
+        $user->subscribedCourses()->attach($courses);
+
+        // Clear the user's cart
+        $user->cart()->detach();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public final function handleWebhook($event)
+    {
+        $paymentIntentId = $event->data->object->id;
+        $this->handleCompletedSession($paymentIntentId);
     }
 
 }

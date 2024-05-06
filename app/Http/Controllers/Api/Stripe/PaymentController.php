@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\User;
+namespace App\Http\Controllers\Api\Stripe;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Payment\PaymentRepository;

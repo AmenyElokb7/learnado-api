@@ -640,5 +640,4 @@ class CourseRepository
         $user = User::find($authUserId);
         $user->cart()->detach();
     }
-
 }

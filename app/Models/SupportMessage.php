@@ -20,19 +20,12 @@ class SupportMessage extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
     public final function scopeBySubject($query, $subject)
     {
         return $query->where('subject', 'like', "%$subject%");
     }
     public function scopeByIsRead($query, $isRead)
     {
-        if($isRead === 'true') {
-            $isRead = 1;
-        } elseif ($isRead === 'false') {
-            $isRead = 0;
-        }
         return $query->where('is_read', $isRead);
     }
-
 }

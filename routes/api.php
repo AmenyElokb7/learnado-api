@@ -70,7 +70,8 @@ use \App\Http\Controllers\Api\Course\GetCourseByIdForGuestController;
 use \App\Http\Controllers\Api\Step\GetStepMediaByIdController;
 use \App\Http\Controllers\Api\Category\IndexCategoriesWithCoursesController;
 use \App\Http\Controllers\Api\User\RemoveFromCartController;
-
+use \App\Http\Controllers\Api\User\ClearCartController;
+use \App\Http\Controllers\Api\User\PaymentController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -99,10 +100,9 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/cart', IndexCartCoursesController::class);
         Route::post('/add-to-cart/{course_id}', AddToCartController::class);
         Route::delete('/remove-from-cart/{course_id}', RemoveFromCartController::class);
-        Route::post('/checkout', \App\Http\Controllers\Api\User\PaymentController::class)->name('stripe.checkout');
-
+        Route::post('/checkout', PaymentController::class)->name('stripe.checkout');
+        Route::delete('/clear-cart', ClearCartController::class);
     });
-
     Route::middleware('admin')->prefix(
         'admin'
     )->group(function () {
@@ -154,7 +154,6 @@ Route::middleware('auth:user')->group(function () {
         Route::get('courses/{id}', GetCourseByIdForFacilitatorController::class);
     });
 });
-
 // Public routes for guests
 Route::get('/guest-courses', IndexCoursesForGuestController::class);
 Route::get('/guest-courses/{id}', GetCourseByIdForGuestController::class);

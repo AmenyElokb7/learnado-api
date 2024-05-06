@@ -630,4 +630,15 @@ class CourseRepository
         $course->usersInCart()->detach($authUserId);
     }
 
+    /**
+     * clear the cart
+     * @return void
+     */
+    public static function clearCart(): void
+    {
+        $authUserId = Auth::id();
+        $user = User::find($authUserId);
+        $user->cart()->detach();
+    }
+
 }

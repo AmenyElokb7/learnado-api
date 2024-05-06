@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
 use Stripe\Checkout\Session as StripeSession;
@@ -73,14 +74,18 @@ class PaymentRepository
             throw new \Exception('Payment already completed');
         }
 
-        $user = $payment->user;
 
         $payment->status = 'completed';
         $payment->save();
 
-        // Subscribe the user to the courses that he paid for
-        $courses = $payment->courses;
-        $user->subscribedCourses()->attach($courses);
+        $user = $payment->user;
+
+        $courses = $user->cart;
+
+        $uniqueCourseIds = $courses->pluck('id')->unique();
+
+        // the user is subscribed to the courses
+        $user->subscribedCourses()->syncWithoutDetaching($uniqueCourseIds);
 
         // Clear the user's cart
         $user->cart()->detach();

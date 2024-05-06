@@ -47,6 +47,29 @@ use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Api\Admin\RejectUserAccountController;
 use \App\Http\Controllers\Api\User\UserProfileController;
 use \App\Http\Controllers\Api\Category\GetCategoryByIdController;
+use \App\Http\Controllers\Api\User\AddToCartController;
+use \App\Http\Controllers\Api\User\IndexCartCoursesController;
+use \App\Http\Controllers\Api\Course\IndexCompletedCoursesController;
+use \App\Http\Controllers\Api\Quiz\IndexQuizScoresController;
+use \App\Http\Controllers\Api\Course\IndexCourseCertificatesController;
+use \App\Http\Controllers\Api\Course\CompleteCourseController;
+use \App\Http\Controllers\Api\Quiz\IndexQuizAttemptsController;
+use \App\Http\Controllers\Api\Quiz\GetUserScoreController;
+use \App\Http\Controllers\Api\Course\IndexEnrolledCoursesController;
+use \App\Http\Controllers\Api\Admin\IndexPendingUsersController;
+use \App\Http\Controllers\Api\Admin\IndexAcceptedUsersController;
+use \App\Http\Controllers\Api\Course\DownloadCertificateController;
+use \App\Http\Controllers\Api\Category\UpdateCategoryController;
+use \App\Http\Controllers\Api\Admin\AdminNotificationController;
+use \App\Http\Controllers\Api\Admin\MarkAsReadNotificationController;
+use \App\Http\Controllers\Api\Quiz\DeleteQuestionController;
+use \App\Http\Controllers\Api\Quiz\DeleteAnswerController;
+use \App\Http\Controllers\Api\Message\SupportMessageController;
+use \App\Http\Controllers\Api\Course\IndexCoursesForGuestController;
+use \App\Http\Controllers\Api\Course\GetCourseByIdForGuestController;
+use \App\Http\Controllers\Api\Step\GetStepMediaByIdController;
+use \App\Http\Controllers\Api\Category\IndexCategoriesWithCoursesController;
+use \App\Http\Controllers\Api\User\RemoveFromCartController;
 
 // Public routes
 Route::post('/login', AuthController::class);
@@ -54,30 +77,28 @@ Route::post('/register', RegisterController::class);
 Route::post('/password-set', SetPasswordController::class);
 Route::post('/send-password-reset-mail', SendPasswordResetMailController::class);
 Route::post('/refresh-token', TokenController::class)->middleware('refreshToken');
-Route::get('/certificates/download/{certificateId}', \App\Http\Controllers\Api\Course\DownloadCertificateController::class)->name('certificates.download');
-
-
+Route::get('/certificates/download/{certificateId}', DownloadCertificateController::class)->name('certificates.download');
 
 Route::middleware('auth:user')->group(function () {
-
     Route::post('/logout', LogoutController::class);
     Route::post('/update-profile', UpdateProfileController::class);
     Route::get('/profile', UserProfileController::class);
     Route::get('/courses', IndexCoursesForUsersController::class);
     Route::get('/courses/{id}', GetCourseByIdForUserController::class);
-
-
     Route::middleware('user')->group(function () {
         Route::post('/subscribe-learning-path/{id}', LearningPathSubscriptionController::class);
         Route::post('/subscribe-course/{id}', CourseSubscriptionController::class);
         Route::post('/quiz/submit/{quiz_id}', UserAnswersController::class)->middleware('subscribed');
-        Route::get('/enrolled-courses', \App\Http\Controllers\Api\Course\IndexEnrolledCoursesController::class);
-        Route::get('/quiz/score/{quiz_id}', \App\Http\Controllers\Api\Quiz\GetUserScoreController::class);
-        Route::get('/quiz-attempts', \App\Http\Controllers\Api\Quiz\IndexQuizAttemptsController::class);
-        Route::post('/complete-course/{course_id}', \App\Http\Controllers\Api\Course\CompleteCourseController::class);
-        Route::get('/course-certificate', \App\Http\Controllers\Api\Course\IndexCourseCertificatesController::class);
-        Route::get('/quiz-scores', \App\Http\Controllers\Api\Quiz\IndexQuizScoresController::class);
-        Route::get('/completed-courses', \App\Http\Controllers\Api\Course\IndexCompletedCoursesController::class);
+        Route::get('/enrolled-courses', IndexEnrolledCoursesController::class);
+        Route::get('/quiz/score/{quiz_id}', GetUserScoreController::class);
+        Route::get('/quiz-attempts', IndexQuizAttemptsController::class);
+        Route::post('/complete-course/{course_id}', CompleteCourseController::class);
+        Route::get('/course-certificate', IndexCourseCertificatesController::class);
+        Route::get('/quiz-scores', IndexQuizScoresController::class);
+        Route::get('/completed-courses', IndexCompletedCoursesController::class);
+        Route::get('/cart', IndexCartCoursesController::class);
+        Route::post('/add-to-cart/{course_id}', AddToCartController::class);
+        Route::delete('/remove-from-cart/{course_id}', RemoveFromCartController::class);
     });
 
     Route::middleware('admin')->prefix(
@@ -89,17 +110,18 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/reject-user-account/{id}', RejectUserAccountController::class);
         Route::delete('/delete-user-account/{id}', DeleteAccountController::class);
         Route::get('/users', IndexUsersController::class);
-        Route::get('/pending-users', \App\Http\Controllers\Api\Admin\IndexPendingUsersController::class);
-        Route::get('/accepted-users', \App\Http\Controllers\Api\Admin\IndexAcceptedUsersController::class);
+        Route::get('/pending-users', IndexPendingUsersController::class);
+        Route::get('/accepted-users', IndexAcceptedUsersController::class);
         Route::post('/update-user-account/{id}', UpdateAccountController::class);
         Route::get('/users/{id}', GetUserByIdController::class);
         Route::post('/create-language', CreateLanguageController::class);
         Route::delete('/delete-language/{id}', DeleteLanguageController::class);
         Route::post('/create-category', CreateCategoryController::class);
-        Route::post('/update-category/{id}', \App\Http\Controllers\Api\Category\UpdateCategoryController::class);
+        Route::post('/update-category/{id}', UpdateCategoryController::class);
         Route::delete('/delete-category/{id}', DeleteCategoryController::class);
+        Route::get('/notifications', AdminNotificationController::class);
+        Route::post('/mark-as-read/{messageId}', MarkAsReadNotificationController::class);
     });
-
     Route::middleware('designer')->prefix(
         'designer'
     )->group(function () {
@@ -119,34 +141,24 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/courses', IndexCoursesForDesignerController::class);
         Route::get('/users', \App\Http\Controllers\Api\Course\IndexUsersController::class);
         Route::get('courses/{id}', GetCourseByIdForDesignerController::class);
-        Route::delete('/delete-question/{question_id}', \App\Http\Controllers\Api\Quiz\DeleteQuestionController::class);
-        Route::delete('/delete-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\DeleteAnswerController::class);
-        Route::post('/support-message', \App\Http\Controllers\Api\Message\SupportMessageController::class);
-
-
-
+        Route::delete('/delete-question/{question_id}', DeleteQuestionController::class);
+        Route::delete('/delete-answer/{answer_id}', DeleteAnswerController::class);
+        Route::post('/support-message', SupportMessageController::class);
     });
     Route::middleware('facilitator')->prefix(
         'facilitator'
     )->group(function () {
         Route::get('/courses', IndexCoursesForFacilitator::class);
         Route::get('courses/{id}', GetCourseByIdForFacilitatorController::class);
-
     });
-
 });
 
-
 // Public routes for guests
-Route::get('/guest-courses', \App\Http\Controllers\Api\Course\IndexCoursesForGuestController::class);
-Route::get('/guest-courses/{id}', \App\Http\Controllers\Api\Course\GetCourseByIdForGuestController::class);
-Route::get('/steps/{id}', \App\Http\Controllers\Api\Step\GetStepMediaByIdController::class);
+Route::get('/guest-courses', IndexCoursesForGuestController::class);
+Route::get('/guest-courses/{id}', GetCourseByIdForGuestController::class);
+Route::get('/steps/{id}', GetStepMediaByIdController::class);
 Route::get('/categories', IndexCategoriesController::class);
-Route::get('/categories-filter', \App\Http\Controllers\Api\Category\IndexCategoriesWithCoursesController::class);
-
+Route::get('/categories-filter', IndexCategoriesWithCoursesController::class);
 Route::get('/categories/{id}', GetCategoryByIdController::class);
 Route::get('/languages', IndexLanguagesController::class);
 Route::get('/facilitators', IndexFacilitatorsController::class);
-
-
-

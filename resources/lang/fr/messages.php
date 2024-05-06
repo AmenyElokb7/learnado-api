@@ -136,5 +136,6 @@ return [
     'categories_found' => 'Catégories trouvées',
     'categories_not_found' => 'Catégories non trouvées',
     'category_unique' => 'La catégorie existe déjà',
+    'course_already_in_cart' => 'Le cours est déjà dans le panier',
 
 ];

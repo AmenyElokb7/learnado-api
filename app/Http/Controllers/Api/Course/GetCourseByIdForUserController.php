@@ -8,7 +8,9 @@ use App\Repositories\Course\CourseRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
+use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -71,25 +73,24 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  */
 class GetCourseByIdForUserController extends Controller
 {
-    protected $courseRepository;
-    use ErrorResponse, SuccessResponse, PaginationParams;
-
-    public function __construct(CourseRepository $courseRepository)
-    {
-        $this->courseRepository = $courseRepository;
-    }
+    use ErrorResponse, SuccessResponse;
 
     /**
      * @param $id
      * @return JsonResponse
+     * @throws Exception
      */
     public function __invoke($id): JsonResponse
     {
-        $course = $this->getAttributes();
-
-        $course = $this->courseRepository->getCourseById($id, $course);
-        return $this->returnSuccessResponse(__('course_found'), $course, ResponseAlias::HTTP_OK);
-
+       try{
+           $course = $this->getAttributes();
+           $course = CourseRepository::getCourseById($id, $course);
+           return $this->returnSuccessResponse(__('course_found'), $course, ResponseAlias::HTTP_OK);
+       }
+         catch(Exception $e){
+           Log::error($e->getMessage());
+           return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+         }
     }
 
     private function getAttributes(): QueryConfig

@@ -19,6 +19,7 @@ use App\Traits\PaginationParams;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -37,7 +38,7 @@ class CourseRepository
      * @return Course
      * @throws Exception
      */
-    public final function createCourse($data): Course
+    public static function createCourse($data): Course
     {
         $mediaFile = $data['course_media'] ?? "";
         unset($data['course_media']);
@@ -177,7 +178,7 @@ class CourseRepository
      * @return void
      * @throws Exception
      */
-    public final function deleteCourse(int $course_id): void
+    public static function deleteCourse(int $course_id): void
     {
         $manager_id = Auth::user()->id;
         $course = Course::where('added_by', $manager_id)->find($course_id);
@@ -194,7 +195,7 @@ class CourseRepository
      * @return Course|null
      * @throws Exception
      */
-    public final function updateCourse($course_id, $data): Course|null
+    public static function updateCourse($course_id, $data): Course|null
     {
         DB::beginTransaction();
         try{
@@ -224,7 +225,6 @@ class CourseRepository
                 {
                     self::subscribeCourseToUsers($course->id, $selectedUserIds, true);
                 }
-
                 DB::commit();
                 return $course;
             }
@@ -240,11 +240,9 @@ class CourseRepository
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
         $authUserId= Auth::id();
-
         $subscribedUserCourse= Course::whereHas('subscribers', function ($query) use ($authUserId) {
                 $query->where('users.id', $authUserId);
         })->get();
-
         $CourseQuery = Course::with([
             'media',
             'steps',
@@ -264,13 +262,10 @@ class CourseRepository
 
         $courses = $CourseQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
         if($authUserId){
-
             // select the courses that the user not enrolled in
             $courses->whereNotIn('id', $subscribedUserCourse->pluck('id'));
         }
         $courses = $courses->get();
-
-
         $courses->each(function ($course) {
             $course->lessons_count = $course->steps->count();
 
@@ -294,7 +289,7 @@ class CourseRepository
      * @return Model The course model instance.
      * @throws Exception
      */
-    public final function getCourseById(int $courseId, ?QueryConfig $queryConfig = null): Model
+    public static function getCourseById(int $courseId, ?QueryConfig $queryConfig = null): Model
     {
         $user = auth()->user();
 
@@ -346,7 +341,7 @@ class CourseRepository
                 $course->is_completed= $course->subscribers()->wherePivot('user_id', $user->id)->wherePivot('is_completed', 1)->exists();
             } else {
                 // Handle the case where the user is not subscribed
-                $course->is_completed = false; // or handle appropriately
+                $course->is_completed = false;
             }
             foreach ($course->steps as $step) {
                 if ($step->quiz && $step->quiz->latestAttempt) {
@@ -369,13 +364,14 @@ class CourseRepository
                     }
                 }
             }
-
         }
         return $course;
     }
 
     /**
      * Fetch courses for enrolled users
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
      */
     public static function indexCoursesForEnrolledUsers(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
@@ -430,7 +426,7 @@ class CourseRepository
      * @throws Exception
      */
 
-    public final function completeCourse($course_id) : void
+    public static function completeCourse($course_id) : void
     {
         $user_id = Auth::id();
         $user = Auth::user();
@@ -445,7 +441,7 @@ class CourseRepository
         }
         // update the course_subscription table and set is_completed to 1
         $course->subscribers()->updateExistingPivot($user_id, ['is_completed' => 1]);
-        $pdfPath = $this->generatePdfCertificate($course_id, $user_id);
+        $pdfPath = self::generatePdfCertificate($course_id, $user_id);
         Mail::to($user->email)->send(new SendCertificateMail($pdfPath, $user));
     }
 
@@ -454,7 +450,7 @@ class CourseRepository
     * @param $user_id
     * @return string
     */
-    private function generatePdfCertificate($course_id, $user_id): string
+    private static function generatePdfCertificate($course_id, $user_id): string
     {
         $course = Course::findOrFail($course_id);
         $user = User::findOrFail($user_id);
@@ -469,27 +465,23 @@ class CourseRepository
         $pdfPath = 'certificates/' . uniqid() . '.pdf';
         $pdf->save(storage_path('app/public/' . $pdfPath));
 
-        // Store the certificate record
         $course->certificates()->create([
             'user_id' => $user_id,
             'certificate_path' => $pdfPath
         ]);
-
         return $pdfPath;
     }
 
-    /**
+    /** get all certificates for a user
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|Collection
      */
-    public final function indexCourseCertificates(QueryConfig $queryConfig): LengthAwarePaginator|Collection
+    public static function indexCourseCertificates(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
         $authUserId = Auth::id();
 
         $certificateQuery = CourseCertificate::with(['course'])
             ->where('user_id', $authUserId);
-
-        // Apply any filters and ordering
         CourseCertificate::applyFilters($queryConfig->getFilters(), $certificateQuery);
         $certificateQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
 
@@ -505,26 +497,25 @@ class CourseRepository
 
         return $certificates;
     }
-
     /**
      * @throws Exception
      */
-    public final function getCertificateFilePath($certificateId): string
+    public static function getCertificateFilePath($certificateId): string
     {
         $certificate = CourseCertificate::findOrFail($certificateId);
         $filePath = storage_path('app/public/' . $certificate->certificate_path);
-
-        // Check if the file exists
         if (!file_exists($filePath)) {
             throw new \Exception('File not found.');
         }
-
         return $filePath;
     }
 
-    // index completed courses for enrolled students
+    /**
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
 
-    public final function indexCompletedCourses(QueryConfig $queryConfig): LengthAwarePaginator|Collection
+    public static function indexCompletedCourses(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
         $authUserId = Auth::id();
 
@@ -560,9 +551,87 @@ class CourseRepository
         return $queryConfig->getPaginated()
             ? $completedCoursesQuery->paginate($queryConfig->getPerPage())
             : $completedCoursesQuery->get();
-
     }
 
+    /** get all courses in the cart
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
+    public static function indexCartCourses(QueryConfig $queryConfig): LengthAwarePaginator|Collection
+    {
+        $authUserId = Auth::id();
+        $cartCoursesQuery = Course::with([
+            'media',
+            'facilitator' => function ($query) {
+                $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+            },
+
+        ])
+            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price, cart.id as cart_id')
+            ->join('cart', 'courses.id', '=', 'cart.course_id')
+            ->where('cart.user_id', '=', $authUserId)
+            ->newQuery();
+
+        // Apply filters to the query
+        Course::applyFilters($queryConfig->getFilters(), $cartCoursesQuery);
+
+        // If authenticated, filter based on subscription status
+        if ($authUserId) {
+            // Get only completed courses from the course_subscription table
+            $cartCoursesQuery = $cartCoursesQuery->whereHas('usersInCart', function ($query) use ($authUserId) {
+                $query->where('users.id', $authUserId);
+            });
+        }
+
+        // Apply ordering
+        $cartCoursesQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+
+        // Decide whether to get a paginated result or a collection
+        $courses= $queryConfig->getPaginated()
+            ? $cartCoursesQuery->paginate($queryConfig->getPerPage())
+            : $cartCoursesQuery->get();
+        return $courses->map(function ($course) {
+            return [
+
+                    'course' => $course->toArray(),
+                    'cart_id' => $course->cart_id,  // Assuming 'cart_id' was correctly selected and available
+
+            ];
+        });
+
+    }
+    /** add course to cart
+     * @throws Exception
+     * @param $course_id
+     */
+    public static function addToCart($course_id): void
+    {
+        $authUserId = Auth::id();
+        $course = Course::findOrFail($course_id);
+        if (!$course) {
+            throw new Exception(__('course_not_found'));
+        }
+        if ($course->usersInCart()->where('users.id', $authUserId)->exists()) {
+            throw new Exception(__('course_already_in_cart'));
+        }
+        $course->usersInCart()->attach($authUserId);
+    }
+
+    /**
+     * Remove a course from the cart.
+     * @param $cart_id
+     * @throws Exception
+     */
+    public static function removeFromCart($cart_id): void
+    {
+        $authUserId = Auth::id();
+        $course = Course::whereHas('usersInCart', function ($query) use ($authUserId, $cart_id) {
+            $query->where('users.id', $authUserId)
+                ->where('cart.id', $cart_id);
+        })->first();
+        if (!$course) {
+            throw new Exception(__('course_not_found'));
+        }
+        $course->usersInCart()->detach($authUserId);
+    }
 }
-
-

@@ -1,35 +1,29 @@
 <?php
 
-namespace App\Http\Controllers\Api\Category;
+namespace App\Http\Controllers\Api\User;
 
 use App\Helpers\QueryConfig;
 use App\Http\Controllers\Controller;
-use App\Repositories\Category\CategoryRepository;
+use App\Repositories\Course\CourseRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+
 /**
  * @OA\Get(
- *     path="/api/categories",
- *     summary="List categories with their courses including optional filtering and pagination",
- *     tags={"Category"},
- *     @OA\Parameter(
- *         name="keyword",
- *         in="query",
- *         description="Keyword to filter categories",
- *         required=false,
- *         @OA\Schema(
- *             type="string"
- *         )
- *     ),
+ *     path="/api/cart",
+ *     summary="List courses in authenticated user's cart with optional pagination",
+ *     tags={"User Cart"},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="PER_PAGE",
  *         in="query",
- *         description="Number of categories per page",
+ *         description="Number of courses per page",
  *         required=false,
  *         @OA\Schema(
  *             type="integer",
@@ -39,11 +33,11 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     @OA\Parameter(
  *         name="ORDER_BY",
  *         in="query",
- *         description="Field to sort the categories",
+ *         description="Field to order the courses by",
  *         required=false,
  *         @OA\Schema(
  *             type="string",
- *             default="name"
+ *             default="created_at"
  *         )
  *     ),
  *     @OA\Parameter(
@@ -58,6 +52,15 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *         )
  *     ),
  *     @OA\Parameter(
+ *         name="PAGE",
+ *         in="query",
+ *         description="Current page number for pagination",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Parameter(
  *         name="PAGINATION",
  *         in="query",
  *         description="Enable or disable pagination",
@@ -69,13 +72,13 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Successful operation",
+ *         description="Courses successfully retrieved for the authenticated user",
  *         @OA\JsonContent(
  *             type="object",
  *             @OA\Property(
  *                 property="message",
  *                 type="string",
- *                 example="categories_found"
+ *                 example="Courses retrieved successfully"
  *             ),
  *             @OA\Property(
  *                 property="success",
@@ -103,39 +106,29 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  * )
  */
 
-class IndexCategoriesWithCoursesController extends Controller
+class IndexCartCoursesController extends Controller
 {
-    use SuccessResponse, ErrorResponse, PaginationParams;
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
+    use ErrorResponse, SuccessResponse, PaginationParams;
+
     public function __invoke(Request $request): JsonResponse
     {
-        $paginationParams = $this->getAttributes($request);
         try {
-            $categories = CategoryRepository::indexCategoriesWithCourses($paginationParams);
-            return $this->returnSuccessPaginationResponse(__('categories_found'),
-                $categories,
-                ResponseAlias::HTTP_OK, $paginationParams->isPaginated());
+            $paginationParams = $this->getAttributes($request);
+            $courses = CourseRepository::indexCartCourses($paginationParams);
+            return $this->returnSuccessResponse('Courses retrieved successfully', $courses, ResponseAlias::HTTP_OK);
         } catch (\Exception $e) {
             return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-    private function getAttributes(Request $request): QueryConfig
+    private function getAttributes(Request $request) : QueryConfig
     {
         $paginationParams = $this->getPaginationParams($request);
         $search = new QueryConfig();
-
-        $filters = [
-            'category ' => $request->input('keyword'),
-        ];
-        $search->setFilters($filters)
-            ->setPerPage($paginationParams['PER_PAGE'])
+        $search->setPerPage($paginationParams['PER_PAGE'])
             ->setOrderBy($paginationParams['ORDER_BY'])
             ->setDirection($paginationParams['DIRECTION'])
-            ->setPaginated($paginationParams['PAGINATION']);
+            ->setPaginated($paginationParams['PAGINATION'])
+            ->setPage($paginationParams['PAGE']);
         return $search;
-
     }
 }

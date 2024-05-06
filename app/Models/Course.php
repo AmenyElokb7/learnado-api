@@ -107,12 +107,18 @@ class Course extends Model
     {
         return $this->hasMany(CourseCertificate::class);
     }
-
+    public function usersInCart()
+    {
+        return $this->belongsToMany(User::class, 'cart');
+    }
 
     public function deleteWithRelations()
     {
         // Delete related media
         $this->media()->delete();
+
+        // delete the course from cart
+        $this->usersInCart()->detach();
 
         // Delete subscribed users associations
 
@@ -122,8 +128,6 @@ class Course extends Model
         foreach ($this->steps as $step) {
             $step->deleteWithRelations();
         }
-
-
         $this->delete();
     }
 

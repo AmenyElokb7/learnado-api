@@ -69,13 +69,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class CreateCourseController extends Controller
 {
-    protected $courseRepository;
     use SuccessResponse, ErrorResponse;
-
-    public function __construct(CourseRepository $courseRepository)
-    {
-        $this->courseRepository = $courseRepository;
-    }
 
     /**
      * @param CreateCourseRequest $request
@@ -87,17 +81,14 @@ class CreateCourseController extends Controller
     {
 
         $data = $this->getAttributes($request);
-
-
         try {
-            $course = $this->courseRepository->createCourse($data);
+            $course = CourseRepository::createCourse($data);
             return $this->returnSuccessResponse(__('course_created'), $course, ResponseAlias::HTTP_OK);
 
         } catch (Exception $e) {
             return $this->returnErrorResponse($e->getMessage() ?: __('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     private function getAttributes(CreateCourseRequest $request): array
     {
         return $request->validated();

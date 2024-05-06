@@ -36,7 +36,7 @@ class LanguageRepository
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|\Illuminate\Support\Collection
      */
-    public final function indexLanguages(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    public static function indexLanguages(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
     {
         $query = Language::query();
         Language::applyFilters($queryConfig->getFilters(), $query);

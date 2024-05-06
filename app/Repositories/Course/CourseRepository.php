@@ -572,21 +572,16 @@ class CourseRepository
             ->where('cart.user_id', '=', $authUserId)
             ->newQuery();
 
-        // Apply filters to the query
         Course::applyFilters($queryConfig->getFilters(), $cartCoursesQuery);
 
-        // If authenticated, filter based on subscription status
         if ($authUserId) {
-            // Get only completed courses from the course_subscription table
             $cartCoursesQuery = $cartCoursesQuery->whereHas('usersInCart', function ($query) use ($authUserId) {
                 $query->where('users.id', $authUserId);
             });
         }
 
-        // Apply ordering
         $cartCoursesQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
 
-        // Decide whether to get a paginated result or a collection
         $courses= $queryConfig->getPaginated()
             ? $cartCoursesQuery->paginate($queryConfig->getPerPage())
             : $cartCoursesQuery->get();
@@ -594,7 +589,7 @@ class CourseRepository
             return [
 
                     'course' => $course->toArray(),
-                    'cart_id' => $course->cart_id,  // Assuming 'cart_id' was correctly selected and available
+                    'cart_id' => $course->cart_id,
 
             ];
         });
@@ -634,4 +629,5 @@ class CourseRepository
         }
         $course->usersInCart()->detach($authUserId);
     }
+
 }

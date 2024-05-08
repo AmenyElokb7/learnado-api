@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCategoryRequest extends FormRequest
@@ -17,17 +18,17 @@ class UpdateCategoryRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
-            'category' => 'required|string|unique:categories,category',
-            'media' => 'required|file|image|max:' . config('constants.MAX_FILE_SIZE') . '|mimes: ' . config('constants.MIME_TYPES'),
+            'category' => 'string|unique:categories,category,except,id',
+            'media' => 'sometimes|file|image|max:' . config('constants.MAX_FILE_SIZE') . '|mimes:' . config('constants.MEDIA_MIMES'),
         ];
     }
 
-    public function messages(){
+    public function messages() {
         return [
             'category.required' => __('messages.category_required'),
             'category.string' => __('messages.category_string'),

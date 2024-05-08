@@ -89,8 +89,8 @@ class CourseRepository
     private static function generateIcsContent($course): string
     {
 
-        $startDateTime = date('Ymd\THis\Z', strtotime($course->start_time));
-        $endDateTime = date('Ymd\THis\Z', strtotime($course->end_time));
+        $startDateTime = date('Ymd\THis\Z', $course->start_time);
+        $endDateTime = date('Ymd\THis\Z', $course->end_time);
         $courseCreator = $course->facilitator;
         $organizerEmail = $courseCreator->email;
         $organizerName = "{$courseCreator->first_name} {$courseCreator->last_name}";
@@ -292,7 +292,6 @@ class CourseRepository
     public static function getCourseById(int $courseId, ?QueryConfig $queryConfig = null): Model
     {
         $user = auth()->user();
-
         $query = Course::with([
             'media',
             'steps' => function ($query) use ($user) {

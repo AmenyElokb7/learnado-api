@@ -7,6 +7,7 @@ use App\Helpers\QueryConfig;
 use App\Models\Category;
 use App\Repositories\Media\MediaRepository;
 use App\Traits\PaginationParams;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Collection\Collection;
@@ -27,7 +28,6 @@ class CategoryRepository
         unset($data['media']);
         $category = Category::create($data);
         if ($mediaFile instanceof UploadedFile) {
-
             $media = MediaRepository::attachOrUpdateMediaForModel($category, $mediaFile);
             $category->media()->save($media);
         }
@@ -93,18 +93,25 @@ class CategoryRepository
     }
 
     /** update a category
-     * @param $categoryId
      * @param $data
+     * @param $id
      * @return Category
+     * @throws Exception
      */
-    public final function updateCategory($categoryId, $data): Category
+    public final function updateCategory($data, $id): Category
     {
-        $category = Category::find($categoryId);
+        $category = Category::findOrfail($id);
+        if(!$category){
+           throw new Exception('Category not found');
+        }
         $mediaFile = $data['media'] ?? null;
-        unset($data['media']);
+
         $category->update($data);
+
+        // update the media with its id
+        $currentMedia = $category->media->first();
         if ($mediaFile instanceof UploadedFile) {
-            $media = MediaRepository::attachOrUpdateMediaForModel($category, $mediaFile);
+            $media =MediaRepository::attachOrUpdateMediaForModel($category, $mediaFile, $currentMedia->id);
             $category->media()->save($media);
         }
         return $category;

@@ -73,7 +73,7 @@ use App\Http\Controllers\Api\User\UpdateProfileController;
 use App\Http\Controllers\Api\User\UserAnswersController;
 use App\Http\Controllers\Api\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
-
+use \App\Http\Controllers\Api\Stripe\IndexInvoicesController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -105,6 +105,7 @@ Route::middleware('auth:user')->group(function () {
         Route::delete('/remove-from-cart/{course_id}', RemoveFromCartController::class);
         Route::post('/checkout', PaymentController::class)->name('stripe.checkout');
         Route::delete('/clear-cart', ClearCartController::class);
+        Route::get('/invoices', IndexInvoicesController::class);
 
 
     });

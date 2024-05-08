@@ -68,8 +68,8 @@ class AdminRepository
         PasswordResetToken::create([
             'email' => $email,
             'token' => hash('sha256', Str::random(60)),
-            'created_at' => now(),
-            'expires_at' => now()->addDays(15),
+            'created_at' => now()->timestamp,
+            'expires_at' => now()->addDays(15)->timestamp,
         ]);
     }
 

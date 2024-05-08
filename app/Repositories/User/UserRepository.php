@@ -86,7 +86,7 @@ class UserRepository
 
             throw new Exception(__('token_invalid'), ResponseAlias::HTTP_BAD_REQUEST);
         }
-        if ($tokenData->expires_at < now()) {
+        if ($tokenData->expires_at < now()->timestamp){
             PasswordResetToken::where('token', $tokenData->token)->delete();
             throw new Exception(__('token_expired'), ResponseAlias::HTTP_BAD_REQUEST);
         }
@@ -163,8 +163,8 @@ class UserRepository
         PasswordResetToken::create([
             'email' => $email,
             'token' => hash('sha256', Str::random(60)),
-            'created_at' => now(),
-            'expires_at' => now()->addMinutes(15),
+            'created_at' => now()->timestamp,
+            'expires_at' => now()->addMinutes(15)->timestamp,
         ]);
     }
 }

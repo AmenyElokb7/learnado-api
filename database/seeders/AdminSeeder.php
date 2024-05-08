@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enum\UserRoleEnum;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -14,7 +15,7 @@ class AdminSeeder extends Seeder
             'last_name' => 'Admin',
             'email' => 'testadmin@example.com',
             'password' => bcrypt('123456aA'),
-            'role' => 1,
+            'role' => UserRoleEnum::ADMIN->value,
             'is_valid' => true,
         ]);
     }

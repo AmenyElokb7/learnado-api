@@ -25,6 +25,7 @@ class UpdateLearningPathQuizController extends Controller
 
     /**
      * @param UpdateQuizRequest $request
+     * @param $learningPathId
      * @return JsonResponse
      */
     public function __invoke(UpdateQuizRequest $request, $learningPathId): JsonResponse

@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class UserQuestionAnswer extends Model
 {
     use HasFactory, SoftDeletes;
+    protected $dateFormat = 'U';
 
     protected $fillable = [
-        'user_id', 'quiz_id', 'question_id', 'answers', 'binary_answer', 'open_answer'];
+        'user_id', 'quiz_id', 'question_id', 'answers', 'binary_answer', 'open_answer', "created_at", "updated_at"];
 
     protected $casts = [
         'answers' => 'array'

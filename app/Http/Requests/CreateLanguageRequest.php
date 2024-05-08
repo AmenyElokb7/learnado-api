@@ -30,9 +30,9 @@ class CreateLanguageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'language.required' => __('language_required'),
-            'language.unique' => __('language_already_exists'),
-            'language.max' => __('language_max_length'),
+            'language.required' => __('messages.language_required'),
+            'language.unique' => __('messages.language_already_exists'),
+            'language.max' => __('messages.language_max_length'),
         ];
     }
 

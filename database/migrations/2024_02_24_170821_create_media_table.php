@@ -18,9 +18,10 @@ return new class extends Migration {
             $table->string('mime_type')->nullable();
             $table->string('external_url')->nullable();
             $table->string('title')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
             $table->index(['model_type', 'model_id']);
+            $table->softDeletesBigInteger();
         });
     }
 

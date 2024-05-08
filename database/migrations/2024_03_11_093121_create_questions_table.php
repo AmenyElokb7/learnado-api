@@ -16,8 +16,9 @@ return new class extends Migration {
             $table->text('question');
             $table->enum('type', ['BINARY', 'QCM', 'OPEN']);
             $table->boolean('is_valid')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
+            $table->softDeletesBigInteger();
         });
     }
 

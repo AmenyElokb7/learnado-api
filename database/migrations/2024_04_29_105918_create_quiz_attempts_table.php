@@ -19,8 +19,9 @@ return new class extends Migration
             $table->integer('total_score_possible')->nullable();
             $table->boolean('needs_review')->default(false);
             $table->boolean('passed')->default(false);
-            $table->softDeletes();
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
+            $table->softDeletesBigInteger();
         });
     }
 

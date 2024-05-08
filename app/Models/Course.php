@@ -35,6 +35,7 @@ use Illuminate\Notifications\Notifiable;
 class Course extends Model
 {
     use SoftDeletes, ApplyQueryScopes, HasFactory, Notifiable;
+    protected $dateFormat = 'U';
 
     protected $fillable = [
         'title',
@@ -47,14 +48,16 @@ class Course extends Model
         'discount',
         'facilitator_id',
         'is_public',
-        'sequential',
         'is_active',
         'teaching_type',
+        'has_forum',
         'link',
         'latitude',
         'longitude',
         'start_time',
         'end_time',
+        'created_at',
+        'updated_at',
     ];
 
     public function media()

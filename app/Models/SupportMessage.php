@@ -10,11 +10,15 @@ use Illuminate\Database\Query\Builder;
 class SupportMessage extends Model
 {
     use HasFactory, ApplyQueryScopes;
+    protected $dateFormat = "U";
 
     protected $fillable = [
         'user_id',
         'message',
-        'subject'
+        'subject',
+        "created_at",
+            "updated_at",
+
     ];
     public function user()
     {

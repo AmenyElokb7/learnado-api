@@ -16,8 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Media extends Model
 {
     use HasFactory, SoftDeletes;
+    protected $dateFormat = 'U';
 
-    protected $fillable = ['model_type', 'model_id', 'file_name', 'mime_type', 'external_url', 'title'];
+    protected $fillable = ['model_type', 'model_id', 'file_name', 'mime_type', 'external_url', 'title', 'created_at', 'updated_at'];
 
     public function model()
     {

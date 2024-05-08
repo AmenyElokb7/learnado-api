@@ -18,12 +18,12 @@ return new class extends Migration {
             $table->json('answers')->nullable();
             $table->boolean('binary_answer')->nullable();
             $table->text('open_answer')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('quiz_id')->references('id')->on('quizzes')->onDelete('cascade');
             $table->foreign('question_id')->references('id')->on('questions')->onDelete('cascade');
+            $table->softDeletesBigInteger();
         });
     }
 

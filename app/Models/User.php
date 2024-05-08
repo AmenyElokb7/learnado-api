@@ -27,6 +27,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable, SoftDeletes, ApplyQueryScopes;
+    protected $dateFormat= "U";
 
 
     /**
@@ -34,7 +35,7 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
-    protected $fillable = ['first_name', 'last_name', 'email', 'role', 'password', 'is_valid'];
+    protected $fillable = ['first_name', 'last_name', 'email', 'role', 'password', 'is_valid', "created_at", "updated_at"];
 
     /**
      * The attributes that should be hidden for serialization.

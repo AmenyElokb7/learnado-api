@@ -15,8 +15,9 @@ return new class extends Migration {
             $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
             $table->text('answer');
             $table->boolean('is_valid')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
+            $table->softDeletesBigInteger();
         });
     }
 

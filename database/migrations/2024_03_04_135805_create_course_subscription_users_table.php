@@ -16,10 +16,10 @@ return new class extends Migration {
             $table->unsignedBigInteger('course_id');
             $table->unsignedBigInteger('user_id');
             $table->boolean('is_completed')->default(false);
-            $table->timestamps();
-
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
         });
     }
 

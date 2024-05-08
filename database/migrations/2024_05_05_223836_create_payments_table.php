@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('stripe_payment_id');
             $table->decimal('amount', 8, 2);
-            $table->string('status');
-            $table->timestamps();
+            $table->tinyInteger('status');
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
         });
     }
-
     /**
      * Reverse the migrations.
      */

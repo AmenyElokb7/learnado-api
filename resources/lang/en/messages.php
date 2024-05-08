@@ -137,6 +137,8 @@ return [
     'category_unique' => 'Category already exists',
     'category_retrieved' => 'Category retrieved successfully',
     'course_already_in_cart' => 'Course already in cart',
+    'language_already_exists' => 'Language already exists',
+
 
 
 ];

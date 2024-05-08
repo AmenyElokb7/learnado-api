@@ -13,7 +13,8 @@ return new class extends Migration {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('category');
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
         });
     }
 

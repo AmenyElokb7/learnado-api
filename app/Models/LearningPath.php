@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class LearningPath extends Model
 {
     use HasFactory, SoftDeletes, ApplyQueryScopes;
+    protected $dateFormat = 'U';
 
-    protected $fillable = ['title', 'description', 'language_id', 'category_id', 'added_by', 'is_public'];
+    protected $fillable = ['title', 'description', 'language_id', 'category_id', 'added_by', 'is_public', 'is_active', 'offline', 'created_at', 'updated_at'];
 
     public function language()
     {

@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
     use HasFactory;
+    protected $dateFormat = 'U';
+
+    const COMPLETED = 1;
+    const PENDING = 0;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +24,8 @@ class Payment extends Model
         'stripe_payment_id',
         'amount',
         'status',
+        'created_at',
+        'updated_at',
     ];
 
     /**

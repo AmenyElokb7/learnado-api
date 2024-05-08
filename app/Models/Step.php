@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Step extends Model
 {
     use HasFactory, SoftDeletes;
+    protected $dateFormat= "U";
 
-    protected $fillable = ['title', 'description', 'duration', 'course_id', 'has_quiz'];
+    protected $fillable = ['title', 'description', 'duration', 'course_id', 'has_quiz', 'created_at', 'updated_at'];
 
     public function media()
     {

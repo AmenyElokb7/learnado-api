@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 class CourseCertificate extends Model
 {
     use HasFactory, ApplyQueryScopes;
-    protected $fillable = ['user_id', 'course_id', 'certificate_path'];
+
+    protected $dateFormat = 'U';
+
+    protected $fillable = ['user_id', 'course_id', 'certificate_path', 'created_at', 'updated_at'];
 
     public function course()
     {

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('course_id');
             $table->string('certificate_path');  // Path to the stored PDF file
-            $table->timestamps();
-
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('course_id')->references('id')->on('courses');
         });

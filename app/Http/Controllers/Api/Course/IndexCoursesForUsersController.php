@@ -39,6 +39,7 @@ class IndexCoursesForUsersController extends Controller
         $filters = [
             'is_public' => true,
             'is_active' => true,
+            'is_offline' => false,
             'keyword' => $paginationParams['KEYWORD'] ?? '',
             'category' => $request->input('category', null),
             'is_paid' => $request->input('price', null),
@@ -48,7 +49,6 @@ class IndexCoursesForUsersController extends Controller
             'created_at',
             'title',
             'final_price',
-
         ];
         $orderByField = in_array($paginationParams['ORDER_BY'], $order_by) ? $paginationParams['ORDER_BY'] : 'created_at';
 

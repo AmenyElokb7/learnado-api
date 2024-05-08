@@ -265,7 +265,6 @@ class CourseRepository
             // select the courses that the user not enrolled in
             $courses->whereNotIn('id', $subscribedUserCourse->pluck('id'));
         }
-        $courses = $courses->get();
         $courses->each(function ($course) {
             $course->lessons_count = $course->steps->count();
 
@@ -275,10 +274,9 @@ class CourseRepository
             $course->subscribed_users_count = $course->subscribers->count();
 
         });
-        if ($queryConfig->getPaginated()) {
-            return self::applyPagination($courses, $queryConfig);
-        }
-        return $courses;
+        return $queryConfig->getPaginated()
+            ? $courses->paginate($queryConfig->getPerPage())
+            : $courses->get();
     }
 
     /**
@@ -639,4 +637,51 @@ class CourseRepository
         $user = User::find($authUserId);
         $user->cart()->detach();
     }
+
+    /**
+     * @param $course_id
+     * @return void
+     * @throws Exception
+     */
+
+    public static function setCourseActive($course_id): void
+    {
+        $course = Course::find($course_id);
+        if (!$course) {
+            throw new Exception(__('course_not_found'));
+        }
+        $course->is_active = true;
+        $course->save();
+    }
+
+    /**
+     * @param $course_id
+     * @return void
+     * @throws Exception
+     */
+    public static function setCourseOffline($course_id): void
+    {
+        $course = Course::find($course_id);
+        if (!$course) {
+            throw new Exception(__('course_not_found'));
+        }
+        $course->is_offline = true;
+        $course->save();
+    }
+
+    /**
+     * @throws Exception
+     * @param $course_id
+     * @return void
+     */
+    public static function setCourseOnline($course_id): void
+    {
+        $course = Course::find($course_id);
+        if (!$course) {
+            throw new Exception(__('course_not_found'));
+        }
+        $course->is_offline = false;
+        $course->save();
+    }
+
 }

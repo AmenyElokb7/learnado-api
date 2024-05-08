@@ -27,6 +27,7 @@ use Illuminate\Notifications\Notifiable;
  * @property double longitude
  * @property string start_time
  * @property string end_time
+ * @property boolean is_offline
  * @property User admin
  * @property User facilitator
  * @property Media media
@@ -49,6 +50,7 @@ class Course extends Model
         'facilitator_id',
         'is_public',
         'is_active',
+        'is_offline',
         'teaching_type',
         'has_forum',
         'link',
@@ -143,7 +145,6 @@ class Course extends Model
         return $query;
     }
 
-
     public function scopeByAddedBy($query, $DesignerId)
     {
         if (!$DesignerId) {
@@ -152,18 +153,25 @@ class Course extends Model
         return $query;
     }
 
-    public function scopeByIsPublic($query, $isPublic)
+    public function scopeByIsPublic($query, $isPublic = null)
     {
-        if ($isPublic) {
+        if (!is_null($isPublic)) {
             return $query->where('is_public', $isPublic);
         }
         return $query;
     }
 
-    public function scopeByIsActive($query, $isActive)
+    public function scopeByIsActive($query, $isActive = null)
     {
-        if ($isActive) {
+        if (!is_null($isActive)) {
             return $query->where('is_active', $isActive);
+        }
+        return $query;
+    }
+    public function scopeByIsOffline($query, $isOffline = null)
+    {
+        if (!is_null($isOffline)) {
+            return $query->where('is_offline', $isOffline);
         }
         return $query;
     }

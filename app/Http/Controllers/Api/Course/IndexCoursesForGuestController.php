@@ -39,6 +39,7 @@ class IndexCoursesForGuestController extends Controller
         $filters = [
             'is_public' => true,
             'is_active' => true,
+            'is_offline' => false,
             'keyword' => $paginationParams['KEYWORD'] ?? '',
             'category' => $request->input('category', null),
             'is_paid' => $request->input('price', null),

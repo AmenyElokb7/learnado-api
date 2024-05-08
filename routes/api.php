@@ -75,6 +75,7 @@ use App\Http\Controllers\Api\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Api\Stripe\IndexInvoicesController;
 use \App\Http\Controllers\Api\Stripe\DownloadInvoiceController;
+use \App\Http\Controllers\Api\Course\SetCourseActiveController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -154,6 +155,9 @@ Route::middleware('auth:user')->group(function () {
         Route::delete('/delete-question/{question_id}', DeleteQuestionController::class);
         Route::delete('/delete-answer/{answer_id}', DeleteAnswerController::class);
         Route::post('/support-message', SupportMessageController::class);
+        Route::post('/active-course/{course_id}', SetCourseActiveController::class);
+        Route::post('/offline/{course_id}', \App\Http\Controllers\Api\Course\SetCourseOfflineController::class);
+        Route::post('online/{course_id}', \App\Http\Controllers\Api\Course\SetCourseOnlineController::class);
     });
     Route::middleware('facilitator')->prefix(
         'facilitator'

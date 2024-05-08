@@ -74,6 +74,7 @@ use App\Http\Controllers\Api\User\UserAnswersController;
 use App\Http\Controllers\Api\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Api\Stripe\IndexInvoicesController;
+use \App\Http\Controllers\Api\Stripe\DownloadInvoiceController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -82,6 +83,7 @@ Route::post('/send-password-reset-mail', SendPasswordResetMailController::class)
 Route::post('/refresh-token', TokenController::class)->middleware('refreshToken');
 Route::get('/certificates/download/{certificateId}', DownloadCertificateController::class)->name('certificates.download');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+Route::post('/invoices/{invoice_id}', DownloadInvoiceController::class);
 
 Route::middleware('auth:user')->group(function () {
     Route::post('/logout', LogoutController::class);

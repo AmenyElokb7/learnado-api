@@ -4,18 +4,22 @@ namespace App\Repositories\Payment;
 
 use App\Helpers\QueryConfig;
 use App\Mail\InvoiceMail;
+use App\Mail\sendSubscriptionMail;
 use App\Models\Course;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 
 class PaymentRepository
@@ -96,7 +100,7 @@ class PaymentRepository
         ]);
 
 
-        $this->sendInvoicePDF($invoice->id);
+        $this->generateInvoicePDF($invoice->id);
 
         $user = $payment->user;
         $courses = $user->cart;
@@ -104,7 +108,10 @@ class PaymentRepository
 
         // the user is subscribed to the courses
         $user->subscribedCourses()->syncWithoutDetaching($uniqueCourseIds);
-
+        // send subscription email
+        foreach ($courses as $course) {
+            Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
+        }
         // Clear the user's cart
         $user->cart()->detach();
     }
@@ -116,7 +123,7 @@ class PaymentRepository
         $paymentIntentId = $event->data->object->id;
         $this->handleCompletedSession($paymentIntentId);
     }
-    public function sendInvoicePDF($invoiceId)
+    public function generateInvoicePDF($invoiceId)
     {
         $invoice = Invoice::findOrFail($invoiceId);
         $pdf = PDF::loadView('invoices.invoice', compact('invoice'));
@@ -127,13 +134,34 @@ class PaymentRepository
         return response()->json(['message' => 'Invoice sent successfully.']);
     }
 
+    /**
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
     public static function indexUserInvoices(QueryConfig $queryConfig) : LengthAwarePaginator|Collection
     {
         $user= Auth::user();
         $invoiceQuery = Invoice::where('email', $user->email)->newQuery();
         $invoiceQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+        $invoiceQuery->select('id', 'created_at', 'total');
         return $queryConfig->getPaginated()
             ? $invoiceQuery->paginate($queryConfig->getPerPage())
             : $invoiceQuery->get();
     }
+
+    /**
+     * @param $invoiceId
+     * @return Response
+     */
+
+    public function downloadInvoicePDF($invoiceId)
+    {
+        $invoice = Invoice::findOrFail($invoiceId);
+        $pdf = PDF::loadView('invoices.invoice', compact('invoice'));
+        return response($pdf->output(), ResponseAlias::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="invoice-' . $invoiceId . '.pdf"'
+        ]);
+    }
+
 }

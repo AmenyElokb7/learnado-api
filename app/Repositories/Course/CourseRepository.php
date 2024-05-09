@@ -86,21 +86,26 @@ class CourseRepository
      * @param $course
      * @return string
      */
+
+
     private static function generateIcsContent($course): string
     {
+        // Convert Unix timestamp to UTC DateTime strings
+        $startDateTime = gmdate('Ymd\THis\Z', $course->start_time);
+        $endDateTime = gmdate('Ymd\THis\Z', $course->end_time);
 
-        $startDateTime = date('Ymd\THis\Z', $course->start_time);
-        $endDateTime = date('Ymd\THis\Z', $course->end_time);
+        // Extracting course creator details
         $courseCreator = $course->facilitator;
         $organizerEmail = $courseCreator->email;
         $organizerName = "{$courseCreator->first_name} {$courseCreator->last_name}";
 
+        // Initializing ICS content with header
         $icsContent = "BEGIN:VCALENDAR\r\n";
         $icsContent .= "VERSION:2.0\r\n";
         $icsContent .= "PRODID:-//Learnado//EN\r\n";
         $icsContent .= "BEGIN:VEVENT\r\n";
         $icsContent .= "UID:" . uniqid() . "\r\n";
-        $icsContent .= "DTSTAMP:" . now()->format('Ymd\THis\Z') . "\r\n";
+        $icsContent .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
         $icsContent .= "DTSTART:{$startDateTime}\r\n";
         $icsContent .= "DTEND:{$endDateTime}\r\n";
         $icsContent .= "SUMMARY:{$course->title}\r\n";
@@ -111,6 +116,7 @@ class CourseRepository
 
         return $icsContent;
     }
+
 
     /** Assign course to facilitator and send email notification
      * @param $course_id
@@ -265,18 +271,17 @@ class CourseRepository
             // select the courses that the user not enrolled in
             $courses->whereNotIn('id', $subscribedUserCourse->pluck('id'));
         }
+        $courses = $courses->get();
         $courses->each(function ($course) {
-            $course->lessons_count = $course->steps->count();
-
-            $course->duration = $course->steps->sum('duration');
+            $course->lessons_count = $course->steps->count() ?:0;
+            $course->duration = $course->steps->sum('duration') ?:0;
+            $course->subscribed_users_count = $course->subscribers->count() ?:0;
         });
-        $courses->each(function ($course) {
-            $course->subscribed_users_count = $course->subscribers->count();
 
-        });
-        return $queryConfig->getPaginated()
-            ? $courses->paginate($queryConfig->getPerPage())
-            : $courses->get();
+        if ($queryConfig->getPaginated()) {
+            return self::applyPagination($courses, $queryConfig);
+        }
+        return $courses;
     }
 
     /**
@@ -682,6 +687,20 @@ class CourseRepository
         }
         $course->is_offline = false;
         $course->save();
+    }
+    public static function getUserStatistics() {
+        $user = Auth::user();
+        $enrolledCourses = $user->subscribedCourses()->count();
+        $completedCourses = $user->subscribedCourses()->wherePivot('is_completed', 1)->count();
+        // the price with discount
+        $moneySpent = $user->subscribedCourses()->sum(DB::raw('price - (price * discount / 100)'));
+        $certificates = $user->certificates()->count();
+        return [
+            'enrolled_courses' => $enrolledCourses,
+            'completed_courses' => $completedCourses,
+            'money_spent' => $moneySpent,
+            'certificates' => $certificates
+        ];
     }
 
 }

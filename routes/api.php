@@ -109,6 +109,7 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/checkout', PaymentController::class)->name('stripe.checkout');
         Route::delete('/clear-cart', ClearCartController::class);
         Route::get('/invoices', IndexInvoicesController::class);
+        Route::get('/statistics-per_month', \App\Http\Controllers\Api\User\GetUserStatisticsController::class);
 
 
     });

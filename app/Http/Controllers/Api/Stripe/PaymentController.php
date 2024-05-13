@@ -28,13 +28,14 @@ class PaymentController extends Controller
         $data = $request->all();
         try {
             $user = Auth::user();
-            $course_ids = $data['course_ids'];
+            $item_ids = $data['course_ids'];
 
-            $course_ids_array = array_map(function($item) {
+            $item_ids_array = array_map(function($item) {
                 return $item['id'];
-            }, $course_ids);
-            $course_ids_array = array_map('intval', $course_ids_array);
-            $session = $this->payments->createCheckoutSession($user, $course_ids_array);
+            }, $item_ids);
+
+            $item_ids_array = array_map('intval', $item_ids_array);
+            $session = $this->payments->createCheckoutSession($user, $item_ids_array);
             return response()->json(['id' => $session->id]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);

@@ -23,7 +23,6 @@ class IndexCoursesForGuestController extends Controller
         $paginationParams = $this->getAttributes($request);
         try {
             $courses = CourseRepository::index($paginationParams);
-
             return $this->returnSuccessPaginationResponse(__('course_found'), $courses, ResponseAlias::HTTP_OK, $paginationParams->isPaginated()
             );
         } catch (\Exception $exception) {

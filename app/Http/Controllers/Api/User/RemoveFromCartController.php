@@ -18,7 +18,7 @@ class RemoveFromCartController extends Controller
     {
         try{
             CourseRepository::removeFromCart($course_id);
-            return $this->returnSuccessResponse('Course removed from cart successfully', null, ResponseAlias::HTTP_OK);
+            return $this->returnSuccessResponse('Item removed from cart successfully', null, ResponseAlias::HTTP_OK);
         }catch(\Exception $e){
             Log::error($e->getMessage());
             return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);

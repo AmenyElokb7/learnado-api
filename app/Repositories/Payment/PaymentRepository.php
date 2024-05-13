@@ -7,6 +7,7 @@ use App\Mail\InvoiceMail;
 use App\Mail\sendSubscriptionMail;
 use App\Models\Course;
 use App\Models\Invoice;
+use App\Models\LearningPath;
 use App\Models\Payment;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -16,7 +17,9 @@ use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -33,43 +36,78 @@ class PaymentRepository
 
     /**
      * @param User $user
-     * @param array $courseIds
+     * @param array $itemIds
      * @return object
      * @throws ApiErrorException
      */
 
-    public final function createCheckoutSession(User $user, array $courseIds) : object
+    public final function createCheckoutSession(User $user, array $itemIds) : object
     {
-        $courses = Course::findMany($courseIds);
-        $lineItems = $courses->map(function ($course) {
+
+        $items = DB::table('cart')->whereIn('id', $itemIds)->get();
+
+        $courseLineItems = [];
+        $learningPathLineItems = [];
+        $courses = $user->cart()->whereIn('course_id', $items->pluck('course_id'))->get();
+        $learningPaths = $user->learningPathInCart()->whereIn('learning_path_id', $items->pluck('learning_path_id'))->get();
+
+
+        // Create line items for courses
+        $courseLineItems = $courses->map(function ($course) {
             return [
                 'price_data' => [
                     'currency' => 'usd',
-                    'product_data' => ['name' => $course->title],
+                    'product_data' => [
+                        'name' => $course->title,
+                    ],
                     'unit_amount' => $course->price * 100,
                 ],
                 'quantity' => 1,
             ];
         });
 
+        // Create line items for learning paths
+        $learningPathLineItems = $learningPaths->map(function ($learningPath) {
+            return [
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => [
+                        'name' => $learningPath->title,
+                    ],
+                    'unit_amount' => $learningPath->price * 100,
+                ],
+                'quantity' => 1,
+            ];
+        });
+
+        // Combine all line items into a single array and if the courseLineItems is empty, then only return the learningPathLineItems and vice versa
+        $allLineItems = array_merge($courseLineItems->toArray(), $learningPathLineItems->toArray());
+
+
+
+        // Create the Stripe checkout session
         $session = $this->stripe->checkout->sessions->create([
             'payment_method_types' => ['card'],
-            'line_items' => $lineItems->toArray(),
+            'line_items' => $allLineItems,
             'mode' => 'payment',
             'success_url' => config('app.frontend_url'),
             'cancel_url' => config('app.frontend_url'),
         ]);
 
+        $totalAmount = $courses->sum('price') + $learningPaths->sum('price');
+
+        // Record the payment in the database
         $payment = new Payment([
             'user_id' => $user->id,
             'stripe_payment_id' => $session->id,
-            'amount' => $courses->sum('price'),
+            'amount' => $totalAmount,
             'status' => Payment::PENDING,
         ]);
         $payment->save();
 
         return $session;
     }
+
 
     /**
      * @throws Exception
@@ -108,9 +146,15 @@ class PaymentRepository
 
         // the user is subscribed to the courses
         $user->subscribedCourses()->syncWithoutDetaching($uniqueCourseIds);
+        // the user is subscribed to the learning paths
+        $user->subscribedLearningPaths()->syncWithoutDetaching($user->learningPathInCart->pluck('id')->unique());
         // send subscription email
         foreach ($courses as $course) {
             Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
+        }
+        // send subscription email of the learning paths
+        foreach ($user->learningPathInCart as $learningPath) {
+            Mail::to($user->email)->send(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
         }
         // Clear the user's cart
         $user->cart()->detach();
@@ -163,5 +207,6 @@ class PaymentRepository
             'Content-Disposition' => 'attachment; filename="invoice-' . $invoiceId . '.pdf"'
         ]);
     }
+
 
 }

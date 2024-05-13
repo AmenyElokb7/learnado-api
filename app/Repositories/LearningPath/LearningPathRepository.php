@@ -12,8 +12,11 @@ use App\Repositories\Media\MediaRepository;
 use App\Repositories\Quiz\QuizRepository;
 use App\Traits\PaginationParams;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -23,47 +26,77 @@ class LearningPathRepository
 
     use PaginationParams;
 
+    /**
+     * @throws Exception
+     */
     public final function createLearningPath($data): LearningPath
     {
-        $mediaFiles = $data['media_files'] ?? [];
+        $mediaFile = $data['media_file'] ?? null;
+        unset($data['media_file']);
 
-        unset($data['media_files']);
         $user = auth()->user();
-        $data['added_by'] = $user->id;
-
+        $data['added_by'] = $user->id;  // Set who added the learning path
 
         $learningPath = LearningPath::create($data);
-        $courses = Course::where('language', $data['language_id'])
-            ->where('category', $data['category_id'])
-            ->where('added_by', $user->id)
-            ->where('is_public', $data['is_public'])
-            ->get();
-        $learningPath->courses()->attach($courses);
-        if (isset($data['quiz'])) {
-            QuizRepository::createQuiz($learningPath, $data['quiz']);
-        }
-        if (isset($mediaFiles)) {
+        $courses = self::filterCourses($data);
 
-            self::addMediaToLearningPath($learningPath->id, $mediaFiles);
+        $totalPrice = 0;
+        $allSubscribers = collect();
+        foreach ($courses as $course) {
+            $learningPath->courses()->attach($course);
+            $totalPrice += $course->price - ($course->discount ?? 0);
+            $allSubscribers = $allSubscribers->merge($course->subscribers);
+        }
+        $learningPath->price = $totalPrice;
+        $learningPath->save();
+
+        if (isset($data['quiz'])) {
+            QuizRepository::createQuiz($learningPath, $data['quiz'], true);
+        }
+
+        if ($mediaFile) {
+            self::addMediaToLearningPath($learningPath->id, $mediaFile);
+        }
+
+
+        if (!$data['is_public']){
+            $additionalUserIds = $data['additional_user_ids'] ?? [];
+
+            $allSubscribers = $allSubscribers->merge(User::whereIn('id', $additionalUserIds)->get())->unique('id');
+
+            $subscriberIds = $allSubscribers->pluck('id')->toArray();
+            self::subscribeUsersToLearningPath($learningPath->id, $subscriberIds, true);
         }
         return $learningPath;
     }
 
     /**
+     * function to get the courses for each learning path
+     */
+    public final function filterCourses($data) : Collection {
+        $user= Auth::user();
+        return Course::query()->where('language_id', $data['language_id'])
+            ->where('category_id', $data['category_id'])
+            ->where('added_by', $user->id)
+            ->where('is_public', $data['is_public'])
+            ->where('is_active', true)
+            ->where('is_offline', false)
+            ->get();
+    }
+
+
+    /**
      * @param $learning_path_id
-     * @param $files
+     * @param $file
      * @return void
      */
-    private static function addMediaToLearningPath($learning_path_id, $files): void
+    private static function addMediaToLearningPath($learning_path_id, $file): void
     {
         $learning_path = LearningPath::find($learning_path_id);
-
         if (!$learning_path) {
             return;
         }
-        foreach ($files as $file) {
-            MediaRepository::attachOrUpdateMediaForModel($learning_path, $file);
-        }
+        MediaRepository::attachOrUpdateMediaForModel($learning_path, $file);
     }
 
     /**
@@ -134,64 +167,207 @@ class LearningPathRepository
     {
         $learningPath = LearningPath::find($learningPathId);
         if ($learningPath) {
-            $learningPath->delete();
+            $learningPath->delteWithRelations();
         }
     }
 
     /**
      * @param $learningPathId
-     * @return LearningPath|Collection
+     * @param array $userIds
+     * @param bool $byAdmin
+     * @return Builder|\Illuminate\Database\Eloquent\Collection|Model|Builder[]
+     * @throws Exception
      */
 
-    public static function subscribeUsersToLearningPath($learningPathId): LearningPath|Collection
+    public static function subscribeUsersToLearningPath($learningPathId, array $userIds, bool $byAdmin = false): Builder|array|\Illuminate\Database\Eloquent\Collection|Model
     {
-        $userId = auth()->user()->id;
-        $learningPath = LearningPath::with(['courses' => function ($query) {
-            $query->where('is_public', true);
-        }])->findOrFail($learningPathId);
+        $learningPath = LearningPath::with(['courses'])->findOrFail($learningPathId);
 
-        $learningPathSubscriptions = [];
+        if (!$byAdmin && !$learningPath->is_public) {
+            throw new Exception(__('user_not_authorized'));
+        }
+
+        $validUserIds = User::whereIn('id', $userIds)
+            ->where('is_valid', true)
+            ->whereDoesntHave('subscribedLearningPaths', function ($query) use ($learningPathId) {
+                $query->where('learning_path_id', $learningPathId);
+            })
+            ->whereDoesntHave('subscribedCourses', function ($query) use ($learningPath) {
+                $query->whereIn('course_id', $learningPath->courses->pluck('id')->toArray());
+            })
+            ->pluck('id')
+            ->toArray();
+
+        $learningPathSubscriptions = collect(
+            array_map(
+                function ($userId) use ($learningPathId) {
+                    return [
+                        'learning_path_id' => $learningPathId,
+                        'user_id' => $userId,
+                        'created_at' => now()->timestamp,
+                        'updated_at' => now()->timestamp,
+                    ];
+                },
+                $validUserIds
+            )
+        );
         $courseSubscriptions = [];
-
-
-        $learningPathSubscriptions[] = [
-            'learning_path_id' => $learningPathId,
-            'user_id' => $userId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
-
         foreach ($learningPath->courses as $course) {
-            $courseSubscriptions[] = [
-                'course_id' => $course->id,
-                'user_id' => $userId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            foreach ($validUserIds as $userId) {
+                $courseSubscriptions[] = [
+                    'course_id' => $course->id,
+                    'user_id' => $userId,
+                    'created_at' => now()->timestamp,
+                    'updated_at' => now()->timestamp(),
+                ];
+            }
         }
 
-        $user = User::find($userId);
-        if ($user) {
-            Mail::to($user->email)->queue(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
+        DB::beginTransaction();
+        try {
+            DB::table('learning_path_subscriptions')->insert($learningPathSubscriptions->toArray());
+            DB::table('course_subscription_users')->insert($courseSubscriptions);
+            foreach ($validUserIds as $userId) {
+                $user = User::find($userId);
+                if ($user) {
+                    Mail::to($user->email)->queue(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
+                }
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
 
-        // Insert learning path subscriptions
-        DB::table('learning_path_subscriptions')->insert($learningPathSubscriptions);
-
-        // Insert course subscriptions
-        DB::table('course_subscription_users')->insert($courseSubscriptions);
         return $learningPath;
     }
-
+    /**
+     * index learning paths
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
-        $CourseQuery = Course::with('media')->with('courses')->with('quiz')->newQuery();
-        LearningPath::applyFilters($queryConfig->getFilters(), $CourseQuery);
-        $courses = $CourseQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
-        if ($queryConfig->getPaginated()) {
-            return self::applyPagination($courses, $queryConfig);
+        $authUserId = Auth::id();
+        $subscribedUserLearningPath= LearningPath::whereHas('subscribedUsersLearningPath', function ($query) use ($authUserId) {
+            $query->where('users.id', $authUserId);
+        })->get();
+
+
+        $LearningPathQuery = LearningPath::with([
+            'media',
+            'courses',
+            'quiz',
+            'category',
+            'language',
+            'subscribedUsersLearningPath'
+        ])->withCount(['courses', 'subscribedUsersLearningPath as subscriber_count'])
+            ->newQuery();
+
+        LearningPath::applyFilters($queryConfig->getFilters(), $LearningPathQuery);
+
+        $learningPaths = $LearningPathQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+
+        if($authUserId){
+            $learningPaths->whereNotIn('id', $subscribedUserLearningPath->pluck('id'));
         }
-        return $courses;
+        $learningPaths->addSelect([
+            DB::raw("CASE WHEN EXISTS (SELECT * FROM learning_path_subscriptions WHERE learning_path_subscriptions.learning_path_id = learning_paths.id AND learning_path_subscriptions.user_id = $authUserId) THEN 1 ELSE 0 END as is_subscribed")
+        ]);
+        $learningPaths=$learningPaths->get();
+
+        if ($queryConfig->getPaginated()) {
+            return self::applyPagination($learningPaths, $queryConfig);
+        }
+        return $learningPaths;
     }
+
+    public static function setLearningPathActive($learningPathId): void
+    {
+        $learningPath = LearningPath::find($learningPathId);
+        if ($learningPath) {
+            $learningPath->is_active = true;
+            $learningPath->save();
+        }
+    }
+    public static function setLearningPathOffline($learningPathId): void
+    {
+        $learningPath = LearningPath::find($learningPathId);
+        if ($learningPath) {
+            $learningPath->is_offline = true;
+            $learningPath->save();
+        }
+    }
+    public static function setLearningPathOnline($learningPathId): void
+    {
+        $learningPath = LearningPath::find($learningPathId);
+        if ($learningPath) {
+            $learningPath->is_offline = false;
+            $learningPath->save();
+        }
+    }
+    public static function completeLearningPath($learningPathId): void
+    {
+        $learningPath = LearningPath::find($learningPathId);
+        if (!$learningPath) {
+            throw new Exception(__('learning_path_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+        }
+        $learningPath->subscribedUsersLearningPath()->updateExistingPivot(auth()->user()->id, ['is_completed' => true]);
+    }
+
+    public static function indexEnrolledLearningPaths(QueryConfig $queryConfig): LengthAwarePaginator|Collection
+    {
+        $authUserId = Auth::id();
+        $LearningPathQuery = LearningPath::with([
+            'media',
+            'courses',
+            'quiz',
+            'category',
+            'language',
+            'subscribedUsersLearningPath'
+        ])->withCount(['courses', 'subscribedUsersLearningPath as subscriber_count'])
+            ->newQuery();
+
+        LearningPath::applyFilters($queryConfig->getFilters(), $LearningPathQuery);
+        $LearningPathQuery->addSelect([
+            DB::raw("CASE WHEN EXISTS (SELECT * FROM learning_path_subscriptions WHERE learning_path_subscriptions.learning_path_id = learning_paths.id AND learning_path_subscriptions.user_id = $authUserId) THEN 1 ELSE 0 END as is_subscribed")
+        ]);
+        $learningPaths = $LearningPathQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())
+            ->whereHas('subscribedUsersLearningPath', function ($query) use ($authUserId) {
+                $query->where('users.id', $authUserId);
+            })->get();
+
+
+
+        if ($queryConfig->getPaginated()) {
+            return self::applyPagination($learningPaths, $queryConfig);
+        }
+        return $learningPaths;
+    }
+
+    /**
+     * @throws Exception
+     * @param $learningPathId
+     * @return void
+     */
+    public static function addToCart($learningPathId): void
+    {
+        $learningPath = LearningPath::find($learningPathId);
+        if (!$learningPath) {
+            throw new Exception(__('learning_path_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+        }
+        if($learningPath->usersInCart->contains(auth()->id())){
+            throw new Exception(__('learning_path_already_in_cart'), ResponseAlias::HTTP_BAD_REQUEST);
+        }
+        $learningPath->usersInCart()->attach(auth()->id());
+    }
+    public static function removeFromCart($learningPathId): void
+    {
+        $learningPath = LearningPath::find($learningPathId);
+        if ($learningPath) {
+            $learningPath->usersInCart()->detach(auth()->id());
+        }
+    }
+    // index without pagination
 
 }

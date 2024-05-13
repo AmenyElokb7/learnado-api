@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Api\Course;
+namespace App\Http\Controllers\Api\LearningPath;
 
 use App\Helpers\QueryConfig;
 use App\Http\Controllers\Controller;
 use App\Repositories\Course\CourseRepository;
+use App\Repositories\LearningPath\LearningPathRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-class IndexCoursesForUsersController extends Controller
+class IndexLearningPathForUsersController extends Controller
 {
     use SuccessResponse, ErrorResponse, PaginationParams;
 
@@ -22,11 +22,11 @@ class IndexCoursesForUsersController extends Controller
     {
         $paginationParams = $this->getAttributes($request);
         try {
-            $courses = CourseRepository::index($paginationParams);
+            $courses = LearningPathRepository::index($paginationParams);
 
-            return $this->returnSuccessPaginationResponse(__('course_found'), $courses, ResponseAlias::HTTP_OK, $paginationParams->isPaginated()
+            return $this->returnSuccessPaginationResponse(__('learning_path_found'), $courses, ResponseAlias::HTTP_OK, $paginationParams->isPaginated()
             );
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             Log::error($exception->getMessage());
             return $this->returnErrorResponse($exception->getMessage() ?: __('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -37,18 +37,17 @@ class IndexCoursesForUsersController extends Controller
         $paginationParams = $this->getPaginationParams($request);
 
         $filters = [
-            'is_public' => true,
-            'is_active' => true,
-            'is_offline' => false,
+            'public' => true,
+            'active' => true,
+            'offline' => false,
             'keyword' => $paginationParams['KEYWORD'] ?? '',
             'category' => $request->input('category', null),
-            'is_paid' => $request->input('price', null),
-            'teaching_type' => $request->input('teaching_type', null),
+            'price' => $request->input('price', null),
         ];
         $order_by = [
             'created_at',
             'title',
-            'final_price',
+            'filter_price',
         ];
         $orderByField = in_array($paginationParams['ORDER_BY'], $order_by) ? $paginationParams['ORDER_BY'] : 'created_at';
 
@@ -63,3 +62,4 @@ class IndexCoursesForUsersController extends Controller
         return $search;
     }
 }
+

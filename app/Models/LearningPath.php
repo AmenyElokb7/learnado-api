@@ -12,7 +12,7 @@ class LearningPath extends Model
     use HasFactory, SoftDeletes, ApplyQueryScopes;
     protected $dateFormat = 'U';
 
-    protected $fillable = ['title', 'description', 'language_id', 'category_id', 'added_by', 'is_public', 'is_active', 'offline', 'created_at', 'updated_at'];
+    protected $fillable = ['title', 'description', 'language_id', 'category_id', 'added_by', 'is_public', 'is_active', 'price', 'is_offline', 'created_at', 'updated_at'];
 
     public function language()
     {
@@ -43,6 +43,10 @@ class LearningPath extends Model
     {
         return $this->morphMany(Media::class, 'model');
     }
+    public function discussion()
+    {
+        return $this->morphMany(Discussion::class, 'discussable');
+    }
 
     public function subscribedUsersLearningPath()
     {
@@ -55,6 +59,61 @@ class LearningPath extends Model
             return $query->where('added_by', $DesignerId);
         }
         return $query;
+    }
+    public function scopeByCategory($query, $category)
+    {
+        if ($category) {
+            return $query->where('category_id', $category);
+        }
+        return $query;
+    }
+    public function scopeByKeyWord($query, $keyword)
+    {
+        if ($keyword) {
+            return $query->where('title', 'like', '%' . $keyword . '%');
+        }
+        return $query;
+    }
+    public function scopeByPrice($query, $price)
+    {
+        if ($price) {
+            return $query->where('price', $price);
+        }
+        return $query;
+    }
+    public function scopeByOffline($query, $offline)
+    {
+        if ($offline) {
+            return $query->where('is_offline', 1);
+        }
+        return $query;
+    }
+    public function scopeByPublic($query, $public)
+    {
+        if ($public) {
+            return $query->where('is_public', 1);
+        }
+        return $query;
+    }
+    public function scopeByActive($query, $active)
+    {
+        if ($active) {
+            return $query->where('is_active', 1);
+        }
+        return $query;
+    }
+    public function usersInCart()
+    {
+        return $this->belongsToMany(User::class, 'cart');
+    }
+
+    public function delteWithRelations(){
+        // detach courses from learning path , subscribed users, quiz with its questions and answers and media
+        $this->courses()->detach();
+        $this->subscribedUsersLearningPath()->detach();
+        $this->quiz()->delete();
+        $this->media()->delete();
+        $this->delete();
     }
 
 }

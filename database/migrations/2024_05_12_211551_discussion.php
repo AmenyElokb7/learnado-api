@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cart', function (Blueprint $table) {
+        Schema::create('discussions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('discussable_id');
+            $table->string('discussable_type');
+            $table->unsignedBigInteger('user_id');
+            $table->text('message');
             $table->unsignedBigInteger('created_at')->default(now()->timestamp);
             $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
+            $table->index(['discussable_id', 'discussable_type']);
             $table->softDeletesBigInteger();
         });
     }
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cart');
+        Schema::dropIfExists('discussions');
     }
 };

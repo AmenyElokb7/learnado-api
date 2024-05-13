@@ -66,6 +66,10 @@ class Course extends Model
     {
         return $this->morphMany(Media::class, 'model');
     }
+    public function discussion()
+    {
+        return $this->morphMany(Discussion::class, 'discussable');
+    }
 
     public function admin()
     {

@@ -11,6 +11,7 @@ use App\Mail\SendCertificateMail;
 use App\Mail\sendSubscriptionMail;
 use App\Models\Course;
 use App\Models\CourseCertificate;
+use App\Models\LearningPath;
 use App\Models\Media;
 use App\Models\QuizAttempt;
 use App\Models\User;
@@ -327,7 +328,6 @@ class CourseRepository
         if (!$course) {
             throw new Exception(__('course_not_found'));
         }
-        // if course has steps else lessons_count = 0
         $course->lessons_count = $course->steps->count() ?:0;
         $course->duration = $course->steps->sum('duration') ?:0;
         $course->subscribed_users_count = $course->subscribers->count() ?:0;
@@ -555,48 +555,67 @@ class CourseRepository
             : $completedCoursesQuery->get();
     }
 
-    /** get all courses in the cart
-     * @param QueryConfig $queryConfig
-     * @return LengthAwarePaginator|Collection
+    /**
+     * get all items in the cart
+     * @return array
+     * @throws Exception
      */
-    public static function indexCartCourses(QueryConfig $queryConfig): LengthAwarePaginator|Collection
+    public static function indexCartItems(): array
     {
         $authUserId = Auth::id();
-        $cartCoursesQuery = Course::with([
+
+        // Fetch courses and learning paths that the user has in their cart
+        $courses = Course::with([
             'media',
             'facilitator' => function ($query) {
                 $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
             },
-
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price, cart.id as cart_id')
             ->join('cart', 'courses.id', '=', 'cart.course_id')
             ->where('cart.user_id', '=', $authUserId)
-            ->newQuery();
+            ->get();
 
-        Course::applyFilters($queryConfig->getFilters(), $cartCoursesQuery);
+        $learning_paths = LearningPath::with('media')
+            ->selectRaw('learning_paths.*, cart.id as cart_id')
+            ->join('cart', 'learning_paths.id', '=', 'cart.learning_path_id')
+            ->where('cart.user_id', '=', $authUserId)
+            ->get();
 
-        if ($authUserId) {
-            $cartCoursesQuery = $cartCoursesQuery->whereHas('usersInCart', function ($query) use ($authUserId) {
-                $query->where('users.id', $authUserId);
-            });
+        // Check if both are empty
+        if ($courses->isEmpty() && $learning_paths->isEmpty()) {
+            return [];
         }
 
-        $cartCoursesQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
-
-        $courses= $queryConfig->getPaginated()
-            ? $cartCoursesQuery->paginate($queryConfig->getPerPage())
-            : $cartCoursesQuery->get();
-        return $courses->map(function ($course) {
-            return [
-
-                    'course' => $course->toArray(),
-                    'cart_id' => $course->cart_id,
-
-            ];
+        // Calculate the total price
+        $total_price_courses = $courses->sum(function ($course) {
+            return $course->price - ($course->price * ($course->discount / 100));
         });
 
+        $total_price_learning_paths = $learning_paths->sum('price');
+        $total_price = $total_price_courses + $total_price_learning_paths;
+
+        $mapped_courses = $courses->map(function ($course) {
+            return [
+                'course' => $course->toArray(),
+                'cart_id' => $course->cart_id ?? null,
+            ];
+        })->toArray();
+
+        $mapped_learning_paths = $learning_paths->map(function ($path) {
+            return [
+                'learning_path' => $path->toArray(),
+                'cart_id' => $path->cart_id ?? null,
+            ];
+        })->toArray();
+
+        return [
+            ['total_price' => $total_price,
+            'courses' => $mapped_courses,
+            'learning_paths' => $mapped_learning_paths,]
+        ];
     }
+
     /** add course to cart
      * @throws Exception
      * @param $course_id
@@ -626,10 +645,20 @@ class CourseRepository
             $query->where('users.id', $authUserId)
                 ->where('cart.id', $cart_id);
         })->first();
-        if (!$course) {
-            throw new Exception(__('course_not_found'));
+        $learningPath = LearningPath::whereHas('usersInCart', function ($query) use ($authUserId, $cart_id) {
+            $query->where('users.id', $authUserId)
+                ->where('cart.id', $cart_id);
+        })->first();
+        if ($course) {
+            $course->usersInCart()->detach($authUserId);
+        } elseif ($learningPath) {
+            $learningPath->usersInCart()->detach($authUserId);
+        } else {
+            throw new Exception(__('course_not_in_cart'));
         }
-        $course->usersInCart()->detach($authUserId);
+
+
+
     }
 
     /**

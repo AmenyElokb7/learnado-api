@@ -81,6 +81,17 @@ use \App\Http\Controllers\Api\User\GetUserStatisticsController;
 use \App\Http\Controllers\Api\LearningPath\IndexLearningPathForUsersController;
 use \App\Http\Controllers\Api\LearningPath\IndexLearningPathsForDesignerController;
 use App\Http\Controllers\Api\Course\IndexCoursesForUsersController;
+use App\Http\Controllers\Api\LearningPath\GetLearningPathByIdController;
+use \App\Http\Controllers\Api\LearningPath\GetLearningPathForGuestByIdController;
+use \App\Http\Controllers\Api\LearningPath\IndexLearningPathForGuestController;
+use \App\Http\Controllers\Api\Message\IndexForumMessagesController;
+use \App\Http\Controllers\Api\Message\ForumMessageSendController;
+use \App\Http\Controllers\Api\Course\SetCourseOfflineController;
+use \App\Http\Controllers\Api\Course\SetCourseOnlineController;
+use \App\Http\Controllers\Api\LearningPath\FilterCoursesController;
+use \App\Http\Controllers\Api\LearningPath\SetLearningPathActiveController;
+use \App\Http\Controllers\Api\LearningPath\SetLearningPathOfflineController;
+use \App\Http\Controllers\Api\LearningPath\SetLearningPathOnlineController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -97,8 +108,8 @@ Route::middleware('auth:user')->group(function () {
     Route::get('/profile', UserProfileController::class);
     Route::get('/courses', IndexCoursesForUsersController::class);
     Route::get('/courses/{id}', GetCourseByIdForUserController::class);
-    Route::post('/send-message', \App\Http\Controllers\Api\Message\ForumMessageSendController::class);
-    Route::get('/forum-messages/{courseId?}/{learningPathId?}', \App\Http\Controllers\Api\Message\IndexForumMessagesController::class);
+    Route::post('/send-message', ForumMessageSendController::class);
+    Route::get('/forum-messages/{courseId?}/{learningPathId?}', IndexForumMessagesController::class);
 
     Route::middleware('user')->group(function () {
         Route::post('/enroll-learning-path/{id}', SubscribeToLearningPathController::class);
@@ -121,10 +132,10 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/statistics', GetUserStatisticsController::class);
         Route::get('/learning-paths', IndexLearningPathForUsersController::class);
         Route::get('/enrolled-learning-paths', IndexEnrolledLearningPathForUsersController::class);
-        Route::post('/add-learning-path-to-cart/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\AddToCartController::class);
-
-
+        Route::post('/add-learning-path-to-cart/{learning_path_id}', AddToCartController::class);
+        Route::get('/learning-path/{id}', GetLearningPathByIdController::class);
     });
+
     Route::middleware('admin')->prefix(
         'admin'
     )->group(function () {
@@ -146,6 +157,7 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/notifications', AdminNotificationController::class);
         Route::post('/mark-as-read/{messageId}', MarkAsReadNotificationController::class);
     });
+
     Route::middleware('designer')->prefix(
         'designer'
     )->group(function () {
@@ -170,12 +182,12 @@ Route::middleware('auth:user')->group(function () {
         Route::delete('/delete-answer/{answer_id}', DeleteAnswerController::class);
         Route::post('/support-message', SupportMessageController::class);
         Route::post('/active-course/{course_id}', SetCourseActiveController::class);
-        Route::post('/offline/{course_id}', \App\Http\Controllers\Api\Course\SetCourseOfflineController::class);
-        Route::post('online/{course_id}', \App\Http\Controllers\Api\Course\SetCourseOnlineController::class);
-        Route::get('/filter-courses', \App\Http\Controllers\Api\LearningPath\FilterCoursesController::class);
-        Route::post('/set-active-learning-path/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\SetLearningPathActiveController::class);
-        Route::post('/set-online-learning-path/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\SetLearningPathOnlineController::class);
-        Route::post('/set-offline-learning-path/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\SetLearningPathOfflineController::class);
+        Route::post('/offline/{course_id}', SetCourseOfflineController::class);
+        Route::post('online/{course_id}', SetCourseOnlineController::class);
+        Route::get('/filter-courses', FilterCoursesController::class);
+        Route::post('/set-active-learning-path/{learning_path_id}', SetLearningPathActiveController::class);
+        Route::post('/set-online-learning-path/{learning_path_id}', SetLearningPathOnlineController::class);
+        Route::post('/set-offline-learning-path/{learning_path_id}', SetLearningPathOfflineController::class);
 
     });
     Route::middleware('facilitator')->prefix(
@@ -185,6 +197,7 @@ Route::middleware('auth:user')->group(function () {
         Route::get('courses/{id}', GetCourseByIdForFacilitatorController::class);
     });
 });
+
 // Public routes for guests
 Route::get('/guest-courses', IndexCoursesForGuestController::class);
 Route::get('/guest-courses/{id}', GetCourseByIdForGuestController::class);
@@ -194,4 +207,6 @@ Route::get('/categories-filter', IndexCategoriesWithCoursesController::class);
 Route::get('/categories/{id}', GetCategoryByIdController::class);
 Route::get('/languages', IndexLanguagesController::class);
 Route::get('/facilitators', IndexFacilitatorsController::class);
-Route::get('/guest-learning-paths', \App\Http\Controllers\Api\LearningPath\IndexLearningPathForGuestController::class);
+Route::get('/guest-learning-paths', IndexLearningPathForGuestController::class);
+Route::get('/guest-learning-paths/{id}', GetLearningPathForGuestByIdController::class);
+

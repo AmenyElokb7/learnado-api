@@ -9,41 +9,36 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class Forum implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $user, $picture ,$message, $time;
-    private $id;
+    public $learningPathId, $courseId ,$message;
     /**
      * Create a new event instance.
      */
-    public function __construct($message, $user, $picture, $time,$id)
+    public function __construct($message, $learningPathId, $courseId)
     {
+        Log::info("Dispatching Forum event", [
+            'message' => $message,
+            'learningPathId' => $learningPathId,
+            'courseId' => $courseId
+        ]);
         $this->message = $message;
-        $this->user = $user;
-        $this->picture = $picture;
-        $this->time = $time;
-        $this->id = $id;
+        $this->learningPathId = $learningPathId;
+        $this->courseId = $courseId;
     }
 
-
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, Channel>
-     */
-    public function broadcastOn(): array
+    public function broadcastOn()
     {
-        return [
-            new PrivateChannel('forum.'. $this->id),
-        ];
+        if ($this->courseId) {
+            return new PresenceChannel('forum.' . $this->courseId);
+        }
+        return new PresenceChannel('forum.' . $this->learningPathId);
     }
 
-    public function broadcastAs(): string
-    {
-        return 'forum';
-    }
+
+
 }

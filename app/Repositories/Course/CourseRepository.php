@@ -309,7 +309,6 @@ class CourseRepository
                     }
                 }]);
             },
-            'subscribers',
             'facilitator' => function ($query) {
                 $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
             },
@@ -317,11 +316,6 @@ class CourseRepository
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
             ->newQuery();
-
-        $user = auth()->user();
-        if ($user && $user->role == UserRoleEnum::USER->value) {
-            $query->with("subscribers")->newQuery();
-        }
 
         $course = $query->find($courseId);
 
@@ -351,7 +345,7 @@ class CourseRepository
 
                     if ($lastAttempt) {
 
-                        $cooldownPeriod = 120; // 2 hours
+                        $cooldownPeriod = QuizAttempt::QUIZ_COOLDOWN_TIME; // 2 hours
                         $created_at= $lastAttempt->created_at;
                         $nextAttemptTime = $lastAttempt->created_at->addMinutes($cooldownPeriod);
 

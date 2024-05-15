@@ -97,7 +97,6 @@ class GetCourseByIdForUserController extends Controller
     {
         $filters = [
             'is_active' => true,
-            'is_public' => true,
         ];
         $search = new QueryConfig();
         $search->setFilters($filters);

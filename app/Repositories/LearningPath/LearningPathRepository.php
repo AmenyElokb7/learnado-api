@@ -270,10 +270,11 @@ class LearningPathRepository
 
         if($authUserId){
             $learningPaths->whereNotIn('id', $subscribedUserLearningPath->pluck('id'));
+            $learningPaths->addSelect([
+                DB::raw("CASE WHEN EXISTS (SELECT * FROM learning_path_subscriptions WHERE learning_path_subscriptions.learning_path_id = learning_paths.id AND learning_path_subscriptions.user_id = $authUserId) THEN 1 ELSE 0 END as is_subscribed")
+            ]);
         }
-        $learningPaths->addSelect([
-            DB::raw("CASE WHEN EXISTS (SELECT * FROM learning_path_subscriptions WHERE learning_path_subscriptions.learning_path_id = learning_paths.id AND learning_path_subscriptions.user_id = $authUserId) THEN 1 ELSE 0 END as is_subscribed")
-        ]);
+
         $learningPaths=$learningPaths->get();
 
         if ($queryConfig->getPaginated()) {
@@ -361,13 +362,43 @@ class LearningPathRepository
         }
         $learningPath->usersInCart()->attach(auth()->id());
     }
-    public static function removeFromCart($learningPathId): void
+
+    // get learning path by id
+
+    /**
+     * @throws Exception
+     */
+    public static function getLearningPathById($learningPathId, ?QueryConfig $queryConfig = null) : Model
     {
-        $learningPath = LearningPath::find($learningPathId);
-        if ($learningPath) {
-            $learningPath->usersInCart()->detach(auth()->id());
+        $user = auth()->user();
+        $query = LearningPath::with([
+            'media',
+            'courses',
+            'quiz',
+            'category',
+            'language',
+        ])->withCount(['courses', 'subscribedUsersLearningPath as subscriber_count'])
+            ->newQuery();
+        $learningPath = $query->find($learningPathId);
+        if (!$learningPath) {
+            throw new Exception(__('learning_path_not_found'), ResponseAlias::HTTP_NOT_FOUND);
         }
+        if(Auth::id()){
+            $learningPath->is_subscribed = $learningPath->subscribedUsersLearningPath->contains('id', $user->id);
+            $subscriber = $learningPath->subscribedUsersLearningPath->findOrFail($user->id);
+            if($subscriber){
+                $learningPath->is_completed = $subscriber->pivot->is_completed;
+            }else {
+                $learningPath->is_completed = false;
+            }
+            $quiz = $learningPath->quiz;
+            if($quiz){
+                $quizAttempt = $quiz->latestAttempt()->where('user_id', $user->id)->first();
+
+                $learningPath->quiz_status = $quizAttempt ?  $quizAttempt->status : null;
+            }
+        }
+        return $learningPath;
     }
-    // index without pagination
 
 }

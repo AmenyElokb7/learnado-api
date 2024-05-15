@@ -57,27 +57,31 @@ class MessageRepository
         $message->save();
     }
 
+    /**
+     * @throws Exception
+     */
     public static function forumMessageSend($data, $learningPathId = null, $courseId= null ) : array
     {
+
         $course = Course::find($courseId);
         $learningPath = LearningPath::find($learningPathId);
 
         if(!$course && !$learningPath) {
-            throw new LengthRequiredHttpException(__('course_or_learning_path_not_found'));
+           throw new Exception(__('course_or_learning_path_not_found'));
         }
 
-        $userName= Auth::user()->first_name . ' ' . Auth::user()->last_name;
-        $userId = Auth::id();
-        $userPicture = Auth::user()->media()->first()->file_name ?? null;
-         Discussion::create([
-            'discussable_id' => $courseId ?? $learningPathId,
+       $userId = Auth::id();
+        $discussion = Discussion::create([
+            'discussable_id' => $course->id ?? $learningPath->id,
             'discussable_type' => $course ? Course::class : LearningPath::class,
             'user_id' => $userId,
             'message' => $data
         ]);
 
-        event(new Forum($data, $userName,$userPicture, now()->timestamp ,$courseId ?? $learningPathId));
-        return ['message' => __('message_sent')];
+        event(new Forum($discussion->message, $learningPathId ?? null, $courseId ?? null));
+
+        return ['message' => $data, 'course' => $course, 'learningPath' => $learningPath];
+
     }
 
     /**
@@ -87,33 +91,34 @@ class MessageRepository
     {
         $authUser = Auth::user();
 
+        // Find the discussable entity, either Course or LearningPath
         $discussable = Course::find($courseId) ?? LearningPath::find($learningPathId);
         if (!$discussable) {
             throw new Exception(__('course_or_learning_path_not_found'));
         }
 
-        // Check if the user is subscribed or is the facilitator
-        if ($discussable instanceof Course) {
-            $enrolledCheck= $discussable->subscribers()->where('user_id', $authUser->id)->firstOrFail();
-            $facilitatorCheck = $discussable->facilitator_id === $authUser->id;
-        } else {
-            $enrolledCheck=$discussable->courses()->each(function ($course) use ($authUser) {
-                $course->subscribers()->where('user_id', $authUser->id)->firstOrFail();
-            });
-            $facilitatorCheck = $discussable->courses()->any(function ($course) use ($authUser) {
-                return $course->facilitator_id === $authUser->id;
-            });
-        }
+        // Check if the user is subscribed to or is the facilitator of the course/learning path
+        $isEnrolledOrFacilitator = false;
 
-        if (!$facilitatorCheck && !$enrolledCheck ) {
+        if ($discussable instanceof Course) {
+            $isEnrolled = $discussable->subscribers()->where('user_id', $authUser->id)->exists();
+            $isFacilitator = $discussable->facilitator_id == $authUser->id;
+        } else {
+            $isEnrolled = $discussable->courses()->whereHas('subscribers', function ($query) use ($authUser) {
+                $query->where('user_id', $authUser->id);
+            })->exists();
+            $isFacilitator = $discussable->courses()->where('facilitator_id', $authUser->id)->exists();
+        }
+        $isEnrolledOrFacilitator = $isEnrolled || $isFacilitator;
+
+        if (!$isEnrolledOrFacilitator) {
             throw new Exception(__('user_not_authorised'));
         }
 
-        // Fetch messages
+        // Fetch all messages associated with the discussable entity
         return $discussable->discussion()
             ->with('user.media')
-            ->where('user_id', $authUser->id)
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'ASC')
             ->get();
     }
 

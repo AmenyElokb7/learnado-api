@@ -81,6 +81,7 @@ class Course extends Model
         return $this->belongsTo(User::class);
     }
 
+
     public function learningPaths()
     {
         return $this->belongsToMany(LearningPath::class, 'learning_path_course');

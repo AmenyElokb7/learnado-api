@@ -52,29 +52,46 @@ class PaymentRepository
         $learningPaths = $user->learningPathInCart()->whereIn('learning_path_id', $items->pluck('learning_path_id'))->get();
 
 
+
         // Create line items for courses
         $courseLineItems = $courses->map(function ($course) {
+            $finalPrice = $course->price - ($course->price * ($course->discount / 100));
+
             return [
                 'price_data' => [
                     'currency' => 'usd',
                     'product_data' => [
                         'name' => $course->title,
                     ],
-                    'unit_amount' => $course->price * 100,
+                    // Stripe requires the price in cents and - discount
+                    'unit_amount' =>  (int)($finalPrice * 100),
                 ],
                 'quantity' => 1,
             ];
         });
-
+        $purchasedCoursesIds = $user->subscribedCourses->pluck('id');
+        $authUserId = $user->id;
         // Create line items for learning paths
-        $learningPathLineItems = $learningPaths->map(function ($learningPath) {
+        $learningPathLineItems =  $learningPaths->map(function ($learningPath) use ($authUserId, $purchasedCoursesIds) {
+            $coursesIds = $learningPath->courses->pluck('id');
+            $purchasedCourses = $coursesIds->intersect($purchasedCoursesIds);
+
+            // price - discount in percent of the course
+            $totalPrice = $purchasedCourses->sum(function ($courseId) {
+                $course = Course::find($courseId);
+                return $course->price - ($course->price * $course->discount / 100);
+            });
+            // final price of the learning path
+            $totalPrice = $learningPath->price - $totalPrice;
+
+
             return [
                 'price_data' => [
                     'currency' => 'usd',
                     'product_data' => [
                         'name' => $learningPath->title,
                     ],
-                    'unit_amount' => $learningPath->price * 100,
+                    'unit_amount' => $totalPrice * 100,
                 ],
                 'quantity' => 1,
             ];
@@ -82,7 +99,6 @@ class PaymentRepository
 
         // Combine all line items into a single array and if the courseLineItems is empty, then only return the learningPathLineItems and vice versa
         $allLineItems = array_merge($courseLineItems->toArray(), $learningPathLineItems->toArray());
-
 
 
         // Create the Stripe checkout session
@@ -124,23 +140,52 @@ class PaymentRepository
 
         $payment->status = Payment::COMPLETED;
         $payment->save();
-        // create invoice
+        $user = $payment->user;
+
+        // Fetch courses and learning paths based on ids in the cart
+        // get the courses in user's cart
+
+
+        $items = $user->cart->map(function ($course) {
+            $finalPrice = $course->price - ($course->price * ($course->discount / 100));
+            return [
+                'name' => $course->title,
+                'price' => $finalPrice,
+                'type' => 'Course'
+            ];
+        })->merge($user->learningPathInCart->map(function ($learningPath) use ($user) {
+            $purchasedCoursesIds = $user->subscribedCourses->pluck('id');
+            $coursesIds = $learningPath->courses->pluck('id');
+            $purchasedCourses = $coursesIds->intersect($purchasedCoursesIds);
+            $totalPrice = $purchasedCourses->sum(function ($courseId) {
+                $course = Course::find($courseId);
+                return $course->price - ($course->price * $course->discount / 100);
+            });
+            $finalPrice = $learningPath->price - $totalPrice;
+            return [
+                'name' => $learningPath->title,
+                'price' => $finalPrice,
+                'type' => 'Learning Path'
+            ];
+        }))->toArray();
+        // calculate the total amount of the invoice
+        $totalAmount = collect($items)->sum('price');
+
+        // Create invoice
         $invoice = Invoice::create([
             'username' => $payment->user->first_name . ' ' . $payment->user->last_name,
             'email' => $payment->user->email,
             'seller_name' => Invoice::SELLER_NAME,
             'seller_email' => Invoice::SELLER_EMAIL,
-            'items' => json_encode($payment->user->cart->map(function ($course) {
-                return ['name' => $course->title, 'price' => $course->price];
-            })->toArray()),
-            'total' => $payment->amount,
+            'items' => json_encode($items),
+            'total' => $totalAmount,
             'payment_id' => $payment->id,
         ]);
 
 
         $this->generateInvoicePDF($invoice->id);
 
-        $user = $payment->user;
+
         $courses = $user->cart;
         $uniqueCourseIds = $courses->pluck('id')->unique();
 

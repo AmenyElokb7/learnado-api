@@ -29,6 +29,10 @@ class LearningPath extends Model
         return $this->belongsToMany(Course::class, 'learning_path_course');
     }
 
+    public function checkFacilitator($user){
+        return in_array($user->id, $this->courses()->facilitator()->pluck('facilitator_id')->toArray());
+    }
+
     public function quiz()
     {
         return $this->hasOne(Quiz::class);
@@ -92,6 +96,14 @@ class LearningPath extends Model
     {
         if ($public) {
             return $query->where('is_public', 1);
+        }
+        return $query;
+    }
+    public function scopeByIsPaid($query, $isPaid)
+    {
+        if ($isPaid !== null) {
+            // return 1 or 0 if price > 0.00
+           return $query->where('price', $isPaid ? '>' : '=', 0.00);
         }
         return $query;
     }

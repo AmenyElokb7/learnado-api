@@ -20,9 +20,13 @@ class AddToCartController extends Controller
     use SuccessResponse, ErrorResponse;
     public function __invoke($learning_path_id): JsonResponse
     {
-
-            LearningPathRepository::addToCart($learning_path_id);
-            return $this->returnSuccessResponse(__('learning_path_added_to_cart'), [], ResponseAlias::HTTP_OK);
+            try{
+                LearningPathRepository::addToCart($learning_path_id);
+                return $this->returnSuccessResponse(__('learning_path_added_to_cart'), [], ResponseAlias::HTTP_OK);
+            }catch(\Exception $e){
+                Log::error($e->getMessage());
+                return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            }
 
     }
 }

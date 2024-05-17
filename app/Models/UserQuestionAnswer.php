@@ -3,17 +3,18 @@
 namespace App\Models;
 
 
+use App\Traits\ApplyQueryScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserQuestionAnswer extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, ApplyQueryScopes;
     protected $dateFormat = 'U';
 
     protected $fillable = [
-        'user_id', 'quiz_id', 'question_id', 'answers', 'binary_answer', 'open_answer', "created_at", "updated_at"];
+        'user_id', 'quiz_id', 'question_id', 'answers', 'binary_answer','open_answer',"is_validated","created_at", "updated_at"];
 
     protected $casts = [
         'answers' => 'array'

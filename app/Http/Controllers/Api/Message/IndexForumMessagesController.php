@@ -21,7 +21,7 @@ class IndexForumMessagesController extends Controller
     public function __invoke($courseId=null, $learningPathId=null): JsonResponse
     {
         try{
-            $messages =MessageRepository::indexForumMessages($courseId);
+            $messages =MessageRepository::indexForumMessages($courseId, $learningPathId);
             return $this->returnSuccessResponse('Messages fetched successfully',$messages, ResponseAlias::HTTP_OK);
         }
         catch (\Exception $e){

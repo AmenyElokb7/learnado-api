@@ -151,7 +151,6 @@ class QuizRepository
 
     /**
      * Deletes the quiz associated with the given entity (Step or Learning Path).
-     *
      * @param $quiz_id
      * @throws Exception If the quiz is not found.
      */
@@ -226,16 +225,19 @@ class QuizRepository
     {
         $user_id = auth()->id();
         $quizQuery = QuizAttempt::with(['quiz' => function($query) {
-            $query->select('id', 'step_id')
+            $query->select('id', 'step_id', 'learning_path_id')
             ->with(['step' => function($query) {
                 $query->select('id', 'course_id', 'title')
                 ->with(['course' => function($query) {
                     $query->select('id', 'title');
                 }]);
-            }]);
+            }])
+                ->with(['learningPath' => function($query) {
+                    $query->select('id', 'title');
+                }]);
         }])
             ->where('user_id', $user_id)
-            ->select('id', 'user_id', 'quiz_id', 'score','total_score_possible', 'passed');
+            ->select('id', 'user_id', 'quiz_id', 'score','total_score_possible', 'passed', 'needs_review');
 
         QuizAttempt::applyFilters($queryConfig->getFilters(), $quizQuery);
 

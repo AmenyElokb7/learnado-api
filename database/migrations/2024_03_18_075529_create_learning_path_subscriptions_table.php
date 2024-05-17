@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
             $table->foreign('learning_path_id')->references('id')->on('learning_paths')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->boolean('is_completed')->nullable();
         });
     }
 

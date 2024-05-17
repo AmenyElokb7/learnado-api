@@ -91,12 +91,11 @@ class MessageRepository
     {
         $authUser = Auth::user();
 
-        // Find the discussable entity, either Course or LearningPath
         $discussable = Course::find($courseId) ?? LearningPath::find($learningPathId);
+
         if (!$discussable) {
             throw new Exception(__('course_or_learning_path_not_found'));
         }
-
         // Check if the user is subscribed to or is the facilitator of the course/learning path
         $isEnrolledOrFacilitator = false;
 

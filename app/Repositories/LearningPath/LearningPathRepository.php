@@ -7,6 +7,7 @@ use App\Mail\sendSubscriptionMail;
 use App\Models\Course;
 use App\Models\LearningPath;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\User;
 use App\Repositories\Media\MediaRepository;
 use App\Repositories\Quiz\QuizRepository;
@@ -33,13 +34,10 @@ class LearningPathRepository
     {
         $mediaFile = $data['media_file'] ?? null;
         unset($data['media_file']);
-
         $user = auth()->user();
-        $data['added_by'] = $user->id;  // Set who added the learning path
-
+        $data['added_by'] = $user->id;
         $learningPath = LearningPath::create($data);
         $courses = self::filterCourses($data);
-
         $totalPrice = 0;
         $allSubscribers = collect();
         foreach ($courses as $course) {
@@ -49,21 +47,15 @@ class LearningPathRepository
         }
         $learningPath->price = $totalPrice;
         $learningPath->save();
-
         if (isset($data['quiz'])) {
             QuizRepository::createQuiz($learningPath, $data['quiz'], true);
         }
-
         if ($mediaFile) {
             self::addMediaToLearningPath($learningPath->id, $mediaFile);
         }
-
-
         if (!$data['is_public']){
             $additionalUserIds = $data['additional_user_ids'] ?? [];
-
             $allSubscribers = $allSubscribers->merge(User::whereIn('id', $additionalUserIds)->get())->unique('id');
-
             $subscriberIds = $allSubscribers->pluck('id')->toArray();
             self::subscribeUsersToLearningPath($learningPath->id, $subscriberIds, true);
         }
@@ -83,8 +75,6 @@ class LearningPathRepository
             ->where('is_offline', false)
             ->get();
     }
-
-
     /**
      * @param $learning_path_id
      * @param $file
@@ -186,7 +176,6 @@ class LearningPathRepository
         if (!$byAdmin && !$learningPath->is_public) {
             throw new Exception(__('user_not_authorized'));
         }
-
         $validUserIds = User::whereIn('id', $userIds)
             ->where('is_valid', true)
             ->whereDoesntHave('subscribedLearningPaths', function ($query) use ($learningPathId) {
@@ -197,7 +186,6 @@ class LearningPathRepository
             })
             ->pluck('id')
             ->toArray();
-
         $learningPathSubscriptions = collect(
             array_map(
                 function ($userId) use ($learningPathId) {
@@ -222,7 +210,6 @@ class LearningPathRepository
                 ];
             }
         }
-
         DB::beginTransaction();
         try {
             DB::table('learning_path_subscriptions')->insert($learningPathSubscriptions->toArray());
@@ -246,27 +233,44 @@ class LearningPathRepository
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|Collection
      */
+
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
         $authUserId = Auth::id();
-        $subscribedUserLearningPath= LearningPath::whereHas('subscribedUsersLearningPath', function ($query) use ($authUserId) {
+        $subscribedUserCourseIds = Course::whereHas('subscribers', function ($query) use ($authUserId) {
             $query->where('users.id', $authUserId);
-        })->get();
-
-
+        })->pluck('id');
         $LearningPathQuery = LearningPath::with([
             'media',
             'courses',
             'quiz',
+            'quiz.questions',
+            'quiz.questions.answers',
             'category',
             'language',
-            'subscribedUsersLearningPath'
-        ])->withCount(['courses', 'subscribedUsersLearningPath as subscriber_count'])
+            // courses with their extended relations
+            'courses' => function ($query) use ($subscribedUserCourseIds, $authUserId) {
+                $query->with([
+                    'media',
+                    'steps.media',
+                    'steps.quiz.questions.answers',
+                    'subscribers',
+                    'facilitator' => function ($query) {
+                        $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+                    },
+                    'language',
+                    'category'
+                ])->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+                    // Here specify the table name with the id to remove ambiguity
+                    ->whereNotIn('courses.id', $subscribedUserCourseIds);
+            }
+        ])->withCount(['courses', 'subscribedUsersLearningPath as subscribed_users_count'])
             ->newQuery();
-
         LearningPath::applyFilters($queryConfig->getFilters(), $LearningPathQuery);
-
         $learningPaths = $LearningPathQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+        $subscribedUserLearningPath= LearningPath::whereHas('subscribedUsersLearningPath', function ($query) use ($authUserId) {
+            $query->where('users.id', $authUserId);
+        })->get();
 
         if($authUserId){
             $learningPaths->whereNotIn('id', $subscribedUserLearningPath->pluck('id'));
@@ -274,15 +278,12 @@ class LearningPathRepository
                 DB::raw("CASE WHEN EXISTS (SELECT * FROM learning_path_subscriptions WHERE learning_path_subscriptions.learning_path_id = learning_paths.id AND learning_path_subscriptions.user_id = $authUserId) THEN 1 ELSE 0 END as is_subscribed")
             ]);
         }
-
         $learningPaths=$learningPaths->get();
-
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($learningPaths, $queryConfig);
         }
         return $learningPaths;
     }
-
     public static function setLearningPathActive($learningPathId): void
     {
         $learningPath = LearningPath::find($learningPathId);
@@ -307,6 +308,9 @@ class LearningPathRepository
             $learningPath->save();
         }
     }
+    /**
+     * @throws Exception
+     */
     public static function completeLearningPath($learningPathId): void
     {
         $learningPath = LearningPath::find($learningPathId);
@@ -315,30 +319,50 @@ class LearningPathRepository
         }
         $learningPath->subscribedUsersLearningPath()->updateExistingPivot(auth()->user()->id, ['is_completed' => true]);
     }
-
     public static function indexEnrolledLearningPaths(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
         $authUserId = Auth::id();
+        $subscribedUserCourseIds = Course::whereHas('subscribers', function ($query) use ($authUserId) {
+            $query->where('users.id', $authUserId);
+        })->pluck('id');
         $LearningPathQuery = LearningPath::with([
             'media',
             'courses',
             'quiz',
+            'quiz',
+            'quiz.questions',
+            'quiz.questions.answers',
             'category',
             'language',
-            'subscribedUsersLearningPath'
-        ])->withCount(['courses', 'subscribedUsersLearningPath as subscriber_count'])
+            // courses with their extended relations
+            'courses' => function ($query) use ($subscribedUserCourseIds, $authUserId) {
+                $query->with([
+                    'media',
+                    'steps.media',
+                    'steps.quiz.questions.answers',
+                    'subscribers',
+                    'facilitator' => function ($query) {
+                        $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+                    },
+                    'language',
+                    'category'
+                ])->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+                    // Here specify the table name with the id to remove ambiguity
+                    ->whereNotIn('courses.id', $subscribedUserCourseIds);
+            }
+        ])->withCount(['courses', 'subscribedUsersLearningPath as subscribed_users_count'])
             ->newQuery();
 
         LearningPath::applyFilters($queryConfig->getFilters(), $LearningPathQuery);
+
         $LearningPathQuery->addSelect([
             DB::raw("CASE WHEN EXISTS (SELECT * FROM learning_path_subscriptions WHERE learning_path_subscriptions.learning_path_id = learning_paths.id AND learning_path_subscriptions.user_id = $authUserId) THEN 1 ELSE 0 END as is_subscribed")
         ]);
+
         $learningPaths = $LearningPathQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())
             ->whereHas('subscribedUsersLearningPath', function ($query) use ($authUserId) {
                 $query->where('users.id', $authUserId);
             })->get();
-
-
 
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($learningPaths, $queryConfig);
@@ -363,42 +387,88 @@ class LearningPathRepository
         $learningPath->usersInCart()->attach(auth()->id());
     }
 
-    // get learning path by id
-
     /**
      * @throws Exception
      */
     public static function getLearningPathById($learningPathId, ?QueryConfig $queryConfig = null) : Model
     {
         $user = auth()->user();
+        $authUserId = $user->id ?? null;
+        $subscribedUserCourseIds = Course::whereHas('subscribers', function ($query) use ($authUserId) {
+            $query->where('users.id', $authUserId);
+        })->pluck('id');
         $query = LearningPath::with([
             'media',
-            'courses',
             'quiz',
+            'quiz',
+            'quiz.questions',
+            'quiz.questions.answers',
             'category',
             'language',
-        ])->withCount(['courses', 'subscribedUsersLearningPath as subscriber_count'])
-            ->newQuery();
+            // courses with their extended relations
+            'courses' => function ($query) use ($authUserId) {
+                $query->with([
+                    'media',
+                    'steps.media',
+                    'steps.quiz.questions.answers',
+                    'subscribers',
+                    'facilitator' => function ($query) {
+                        $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+                    },
+                    'language',
+                    'category'
+                ])->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price');
+            }
+        ])->withCount(['courses', 'subscribedUsersLearningPath as subscribed_users_count'])
+        ->newQuery();
+        $query->with(['quiz' => function ($query) use ($authUserId) {
+            $query->withCount(['latestAttempt as has_attempt' => function ($query) use ($authUserId) {
+                $query->where('user_id', $authUserId);
+            }])->with(['latestAttempt' => function ($query) use ($authUserId) {
+                $query->select('id', 'quiz_id', 'user_id', 'passed', 'needs_review', 'created_at')
+                    ->where('user_id', $authUserId)
+                    ->latest('created_at')
+                    ->first();
+            }])
+                ->addSelect([
+                    'status' => QuizAttempt::selectRaw("
+            CASE
+                WHEN passed = 1 THEN 'success'
+                WHEN passed = 0 AND needs_review = 0 THEN 'fail'
+                WHEN needs_review = 1 THEN 'pending'
+                ELSE 'no_attempt'
+            END")
+                        ->whereColumn('quiz_id', 'quizzes.id')
+                        ->where('user_id', $authUserId)
+                        ->latest('created_at')
+                        ->limit(1),
+                ]);
+        }]);
         $learningPath = $query->find($learningPathId);
+
+        if ($learningPath->courses) {
+            foreach ($learningPath->courses as $course) {
+                $course->lessons_count = $course->steps->count() ?: 0;
+                $course->duration = $course->steps->sum('duration') ?: 0;
+                $course->subscribed_users_count = $course->subscribers->count() ?: 0;
+                $course->is_subscribed = $course->subscribers->contains('id', $authUserId);
+                $course->is_completed = $course->subscribers->find($authUserId)->pivot->is_completed ?? false;
+            }
+        }
+        $learningPath->has_quiz = $learningPath->quiz ? 1 : 0;
         if (!$learningPath) {
             throw new Exception(__('learning_path_not_found'), ResponseAlias::HTTP_NOT_FOUND);
         }
         if(Auth::id()){
             $learningPath->is_subscribed = $learningPath->subscribedUsersLearningPath->contains('id', $user->id);
-            $subscriber = $learningPath->subscribedUsersLearningPath->findOrFail($user->id);
+            $subscriber = $learningPath->subscribedUsersLearningPath->find($user->id);
             if($subscriber){
                 $learningPath->is_completed = $subscriber->pivot->is_completed;
             }else {
                 $learningPath->is_completed = false;
             }
             $quiz = $learningPath->quiz;
-            if($quiz){
-                $quizAttempt = $quiz->latestAttempt()->where('user_id', $user->id)->first();
-
-                $learningPath->quiz_status = $quizAttempt ?  $quizAttempt->status : null;
-            }
         }
         return $learningPath;
     }
-
 }

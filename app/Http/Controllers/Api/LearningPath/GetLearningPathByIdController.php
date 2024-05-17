@@ -21,13 +21,9 @@ class GetLearningPathByIdController extends Controller
     use SuccessResponse,ErrorResponse;
     public function __invoke($learningPathId) : JsonResponse
     {
-        try
-        {
+
             $learningPath= LearningPathRepository::getLearningPathById($learningPathId);
             return $this->returnSuccessResponse('Learning Path fetched successfully',$learningPath, ResponseAlias::HTTP_OK);
-        }catch (\Exception $e){
-            Log::error($e->getMessage());
-            return $this->returnErrorResponse('Failed to fetch learning path', ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
-        }
+
     }
 }

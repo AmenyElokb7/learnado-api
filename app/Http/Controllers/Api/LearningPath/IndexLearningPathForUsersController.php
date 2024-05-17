@@ -42,12 +42,13 @@ class IndexLearningPathForUsersController extends Controller
             'offline' => false,
             'keyword' => $paginationParams['KEYWORD'] ?? '',
             'category' => $request->input('category', null),
-            'price' => $request->input('price', null),
+            // is_paid that takes a value 0 if the price is 0 and 1 if the price is greater than 0
+            'is_paid' => $request->input('price', null),
         ];
         $order_by = [
             'created_at',
             'title',
-            'filter_price',
+            'price',
         ];
         $orderByField = in_array($paginationParams['ORDER_BY'], $order_by) ? $paginationParams['ORDER_BY'] : 'created_at';
 

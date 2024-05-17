@@ -20,22 +20,28 @@ class SubscribedMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $quizId = $request->route('quiz_id');
-        $quiz = Quiz::with('step.course')->find($quizId);
+        // whether course or learning path
+        $quiz = Quiz::find($quizId);
 
         if (!$quiz) {
             return $this->returnErrorResponse(__('quiz_not_found'), Response::HTTP_NOT_FOUND);
         }
 
-        $course = $quiz->step->course;
-
-        if (!$course) {
-            return $this->returnErrorResponse(__('course_not_found'), Response::HTTP_NOT_FOUND);
+        $course = $quiz->step->course ?? null;
+        $learningPath = $quiz->learningPath ?? null;
+        if (!$course && !$learningPath) {
+            return $this->returnErrorResponse(__('quiz_not_found'), Response::HTTP_NOT_FOUND);
         }
 
-        if (!$request->user()->subscribedCourses()->where('course_id', $course->id)->exists()) {
+        $user = auth()->user();
+        if ($course) {
+            $isSubscribed = $user->subscribedCourses->contains($course->id);
+        } else {
+            $isSubscribed = $user->subscribedLearningPaths->contains($learningPath->id);
+        }
+        if (!$isSubscribed) {
             return $this->returnErrorResponse(__('not_subscribed'), Response::HTTP_FORBIDDEN);
         }
-
         return $next($request);
     }
 }

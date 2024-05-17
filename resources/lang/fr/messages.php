@@ -138,5 +138,6 @@ return [
     'category_unique' => 'La catégorie existe déjà',
     'course_already_in_cart' => 'Le cours est déjà dans le panier',
     'language_already_exists' => 'La langue existe déjà',
+    'learning_path_already_in_cart' => 'Le parcours d\'apprentissage est déjà dans le panier',
 
 ];

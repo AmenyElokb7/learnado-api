@@ -132,8 +132,9 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/statistics', GetUserStatisticsController::class);
         Route::get('/learning-paths', IndexLearningPathForUsersController::class);
         Route::get('/enrolled-learning-paths', IndexEnrolledLearningPathForUsersController::class);
-        Route::post('/add-learning-path-to-cart/{learning_path_id}', AddToCartController::class);
-        Route::get('/learning-path/{id}', GetLearningPathByIdController::class);
+        Route::post('/add-learning-path-to-cart/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\AddToCartController::class);
+        Route::get('/learning-paths/{id}', GetLearningPathByIdController::class);
+        Route::post('/download-attestation/{learning_path_id}', \App\Http\Controllers\Api\Quiz\DownloadAttestationController::class);
     });
 
     Route::middleware('admin')->prefix(
@@ -195,6 +196,9 @@ Route::middleware('auth:user')->group(function () {
     )->group(function () {
         Route::get('/courses', IndexCoursesForFacilitator::class);
         Route::get('courses/{id}', GetCourseByIdForFacilitatorController::class);
+        Route::post('/invalidate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\InvalidateOpenQuestionAnswerController::class);
+        Route::post('/validate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\ValidateOpenQuestionAnswerController::class);
+        Route::get('/open-questions', \App\Http\Controllers\Api\Quiz\IndexOpenAnswerController::class);
     });
 });
 

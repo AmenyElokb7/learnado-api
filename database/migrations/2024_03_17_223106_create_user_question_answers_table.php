@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->json('answers')->nullable();
             $table->boolean('binary_answer')->nullable();
             $table->text('open_answer')->nullable();
+            $table->tinyInteger('is_validated')->nullable();
             $table->unsignedBigInteger('created_at')->default(now()->timestamp);
             $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

@@ -565,28 +565,44 @@ class CourseRepository
                 $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
             },
         ])
-            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price, cart.id as cart_id')
+            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as price, cart.id as cart_id')
             ->join('cart', 'courses.id', '=', 'cart.course_id')
             ->where('cart.user_id', '=', $authUserId)
             ->get();
 
-        $learning_paths = LearningPath::with('media')
+        // Fetch learning paths in the user's cart, include purchased courses calculation
+        $learning_paths = LearningPath::with(['media', 'courses'])
             ->selectRaw('learning_paths.*, cart.id as cart_id')
             ->join('cart', 'learning_paths.id', '=', 'cart.learning_path_id')
             ->where('cart.user_id', '=', $authUserId)
             ->get();
 
+
+
         // Check if both are empty
         if ($courses->isEmpty() && $learning_paths->isEmpty()) {
             return [];
         }
-
         // Calculate the total price
-        $total_price_courses = $courses->sum(function ($course) {
-            return $course->price - ($course->price * ($course->discount / 100));
+        $total_price_courses = $courses->sum('price');
+        $authUserId = Auth::id();
+        // subscribers in each course
+        $purchasedCoursesIds = Course::whereHas('subscribers', function ($query) use ($authUserId) {
+            $query->where('users.id', $authUserId);
+        })->pluck('id');
+
+        // if teh learning path added to cart check if the user is subscribed in courses of that learning path if so
+        $total_price_learning_paths = $learning_paths->sum(
+            function ($path) use ($authUserId, $purchasedCoursesIds) {
+                $coursesIds = $path->courses->pluck('id');
+                $purchasedCourses = $coursesIds->intersect($purchasedCoursesIds);
+                $totalCoursePrice = $purchasedCourses->sum(function ($courseId) {
+                    $course = Course::find($courseId);
+                    return $course->price - ($course->price * $course->discount / 100);
+                });
+                return $path->price - $totalCoursePrice;
         });
 
-        $total_price_learning_paths = $learning_paths->sum('price');
         $total_price = $total_price_courses + $total_price_learning_paths;
 
         $mapped_courses = $courses->map(function ($course) {

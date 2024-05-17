@@ -138,6 +138,7 @@ return [
     'category_retrieved' => 'Category retrieved successfully',
     'course_already_in_cart' => 'Course already in cart',
     'language_already_exists' => 'Language already exists',
+    'learning_path_already_in_cart' => 'Learning path already in cart',
 
 
 

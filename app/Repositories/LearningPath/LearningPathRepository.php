@@ -4,6 +4,7 @@ namespace App\Repositories\LearningPath;
 
 use App\Helpers\QueryConfig;
 use App\Mail\sendSubscriptionMail;
+use App\Models\Attestation;
 use App\Models\Course;
 use App\Models\LearningPath;
 use App\Models\Quiz;
@@ -15,6 +16,7 @@ use App\Traits\PaginationParams;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -334,7 +336,6 @@ class LearningPathRepository
             'quiz.questions.answers',
             'category',
             'language',
-            // courses with their extended relations
             'courses' => function ($query) use ($subscribedUserCourseIds, $authUserId) {
                 $query->with([
                     'media',
@@ -347,7 +348,6 @@ class LearningPathRepository
                     'language',
                     'category'
                 ])->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
-                    // Here specify the table name with the id to remove ambiguity
                     ->whereNotIn('courses.id', $subscribedUserCourseIds);
             }
         ])->withCount(['courses', 'subscribedUsersLearningPath as subscribed_users_count'])
@@ -371,6 +371,63 @@ class LearningPathRepository
     }
 
     /**
+     * index the completed learning paths for user
+     * @param QueryConfig $queryConfig
+     * @return LengthAwarePaginator|Collection
+     */
+    public static function indexCompletedLearningsPathsForUser(QueryConfig $queryConfig) : LengthAwarePaginator | Collection
+    {
+        $authUserId = Auth::id();
+        $subscribedUserCourseIds = Course::whereHas('subscribers', function ($query) use ($authUserId) {
+            $query->where('users.id', $authUserId);
+        })->pluck('id');
+        $LearningPathQuery = LearningPath::with([
+            'media',
+            'courses',
+            'quiz',
+            'quiz',
+            'quiz.questions',
+            'quiz.questions.answers',
+            'category',
+            'language',
+            'courses' => function ($query) use ($subscribedUserCourseIds, $authUserId) {
+                $query->with([
+                    'media',
+                    'steps.media',
+                    'steps.quiz.questions.answers',
+                    'subscribers',
+                    'facilitator' => function ($query) {
+                        $query->with('media:model_id,file_name')->select('id', 'first_name', 'last_name', 'email');
+                    },
+                    'language',
+                    'category'
+                ])->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+                    ->whereNotIn('courses.id', $subscribedUserCourseIds);
+            }
+        ])->withCount(['courses', 'subscribedUsersLearningPath as subscribed_users_count'])
+            ->newQuery();
+
+        LearningPath::applyFilters($queryConfig->getFilters(), $LearningPathQuery);
+
+        $LearningPathQuery->addSelect([
+            DB::raw("CASE WHEN EXISTS (SELECT * FROM learning_path_subscriptions WHERE learning_path_subscriptions.learning_path_id = learning_paths.id AND learning_path_subscriptions.user_id = $authUserId) THEN 1 ELSE 0 END as is_subscribed")
+        ]);
+
+        $learningPaths = $LearningPathQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())
+            ->whereHas('subscribedUsersLearningPath', function ($query) use ($authUserId) {
+                $query->where('users.id', $authUserId)
+                    ->where('learning_path_subscriptions.is_completed', 1);
+            })->get();
+
+        if ($queryConfig->getPaginated()) {
+            return self::applyPagination($learningPaths, $queryConfig);
+        }
+        return $learningPaths;
+
+    }
+
+    /**
+     * add learning path to cart
      * @throws Exception
      * @param $learningPathId
      * @return void
@@ -388,6 +445,10 @@ class LearningPathRepository
     }
 
     /**
+     * get learning path by id
+     * @param $learningPathId
+     * @param QueryConfig|null $queryConfig
+     * @return Model
      * @throws Exception
      */
     public static function getLearningPathById($learningPathId, ?QueryConfig $queryConfig = null) : Model
@@ -470,5 +531,23 @@ class LearningPathRepository
             $quiz = $learningPath->quiz;
         }
         return $learningPath;
+    }
+
+    /**
+     * index learning path attestations for users
+     * @param QueryConfig $paginationParams
+     * @return LengthAwarePaginator|Collection
+     */
+    public static function indexLearningPathAttestationsForUsers(QueryConfig $paginationParams): LengthAwarePaginator|Collection
+    {
+        $user = Auth::user();
+        $attestationQuery = Attestation::where('user_id', $user->id)
+            ->with('learningPath')->newQuery();
+        $attestations = $attestationQuery->orderBy($paginationParams->getOrderBy(), $paginationParams->getDirection());
+        if ($paginationParams->getPaginated()) {
+            return $attestations->paginate($paginationParams->getPerPage());
+        } else {
+            return $attestations->get();
+        }
     }
 }

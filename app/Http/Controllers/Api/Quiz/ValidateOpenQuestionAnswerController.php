@@ -21,7 +21,6 @@ class ValidateOpenQuestionAnswerController extends Controller
     use SuccessResponse,ErrorResponse;
     public function __invoke($answer_id) : JsonResponse
     {
-        $this->checkAuthorization($answer_id);
         try{
             $answer = UserAnswersRepository::validateOpenQuestion($answer_id);
             return $this->returnSuccessResponse(__('answer_validated'), $answer, ResponseAlias::HTTP_OK);

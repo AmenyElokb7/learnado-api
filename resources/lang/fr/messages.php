@@ -139,5 +139,6 @@ return [
     'course_already_in_cart' => 'Le cours est déjà dans le panier',
     'language_already_exists' => 'La langue existe déjà',
     'learning_path_already_in_cart' => 'Le parcours d\'apprentissage est déjà dans le panier',
+    'quiz_wait' => 'Veuillez attendre 30 minutes avant de retenter le quiz',
 
 ];

@@ -17,12 +17,16 @@ class DownloadAttestationController extends Controller
     /**
      * Handle the incoming request.
      */
+    protected $userAnswersRepository;
+    public function __construct(UserAnswersRepository $userAnswersRepository)
+    {
+        $this->userAnswersRepository = $userAnswersRepository;
+    }
     use SuccessResponse,ErrorResponse;
-    public function __invoke($learning_path_id) : JsonResponse
+    public function __invoke($learning_path_id) : JsonResponse | Response
     {
         try {
-            $attestation = UserAnswersRepository::downloadAttestation($learning_path_id);
-            return $this->returnSuccessResponse(__('attestation_found'), $attestation, ResponseAlias::HTTP_OK);
+            return $this->userAnswersRepository->downloadAttestation($learning_path_id);
         }catch (\Exception $exception) {
             Log::error($exception->getMessage());
             return $this->returnErrorResponse($exception->getMessage() ?: __('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);

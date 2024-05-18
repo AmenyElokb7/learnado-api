@@ -12,9 +12,11 @@ use App\Models\User;
 use App\Models\UserQuestionAnswer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class UserAnswersRepository
 {
@@ -47,7 +49,7 @@ class UserAnswersRepository
             if ($lastAttempt && !$this->canAttemptQuiz($lastAttempt)) {
                 $nextAttemptTime = $lastAttempt->created_at->addMinutes(0);
                 $nextAttemptTime->diffInSeconds(now());
-                throw new Exception('Please wait 30 minutes before attempting this quiz again.', 0, null);
+                throw new Exception(__('quiz_wait'), ResponseAlias::HTTP_FORBIDDEN, null);
             }
         }
         $score = 0;
@@ -163,7 +165,11 @@ class UserAnswersRepository
     public static function validateOpenQuestion(int $userAnswerId) : UserQuestionAnswer
     {
         $authUserId = auth()->id();
-        $facilitatorIds = LearningPath::courses()->facilitator()->pluck('id')->toArray();
+        $learningPaths = LearningPath::with('courses.facilitator')->get();
+        $facilitatorIds = $learningPaths->flatMap(function($learningPath) {
+            return $learningPath->courses->pluck('facilitator.id');
+        })->toArray();
+
         if (!in_array($authUserId, $facilitatorIds)) {
             throw new Exception(__('unauthorized'));
         }
@@ -186,6 +192,9 @@ class UserAnswersRepository
             ->where('is_validated', 1)
             ->count();
 
+        // Add +1 to the score for the validated answer
+        $score += 1;
+
         $totalScorePossible = $quiz->questions()->count();
         $passingPercentage = 60;
         $userPercentage = ($score / $totalScorePossible) * 100;
@@ -204,15 +213,18 @@ class UserAnswersRepository
             $quizAttempt->needs_review = 0;
 
             // Update learning_path_subscription
-                $learningPathSubscription = DB::table('learning_path_subscriptions')->where('user_id', $userAnswer->user_id)
-                ->where('quiz_id', $quiz->id)
+            $learningPathSubscription = DB::table('learning_path_subscriptions')->where('user_id', $userAnswer->user_id)
+                ->where('learning_path_id', $quiz->learning_path_id)
                 ->first();
-            $learningPathSubscription->is_completed = 1;
-            $learningPathSubscription->save();
+            if ($learningPathSubscription) {
+                DB::table('learning_path_subscriptions')
+                    ->where('id', $learningPathSubscription->id)
+                    ->update(['is_completed' => 1]);
 
-            // Generate attestation if passed
-            if ($passed) {
-                self::generateAttestation($learningPathSubscription->learning_path_id, $userAnswer->user_id);
+                // Generate attestation if passed
+                if ($passed) {
+                    self::generateAttestation($learningPathSubscription->learning_path_id, $userAnswer->user_id);
+                }
             }
         }
 
@@ -223,15 +235,17 @@ class UserAnswersRepository
         return $userAnswer;
     }
 
-
-
     /**
      * @throws Exception
      */
     public static function invalidateOpenQuestion($userAnswerId) : UserQuestionAnswer
     {
         $authUserId = auth()->id();
-        $facilitatorIds = LearningPath::courses()->facilitator()->pluck('id')->toArray();
+        $learningPaths = LearningPath::with('courses.facilitator')->get();
+        $facilitatorIds = $learningPaths->flatMap(function($learningPath) {
+            return $learningPath->courses->pluck('facilitator.id');
+        })->toArray();
+
         if (!in_array($authUserId, $facilitatorIds)) {
             throw new Exception(__('unauthorized'));
         }
@@ -262,10 +276,12 @@ class UserAnswersRepository
             $quizAttempt->passed = $userPercentage >= $passingPercentage;
 
             $learningPathSubscription = DB::table('learning_path_subscriptions')->where('user_id', $userAnswer->user_id)
-                ->where('quiz_id', $quiz->id)
+                ->where('learning_path_id', $quiz->learning_path_id)
                 ->first();
             $learningPathSubscription->is_completed = 1;
-            $learningPathSubscription->save();
+            DB::table('learning_path_subscriptions')
+                ->where('id', $learningPathSubscription->id)
+                ->update(['is_completed' => 1]);
 
             if ($quizAttempt->passed) {
                 self::generateAttestation($learningPathSubscription->learning_path_id, $userAnswer->user_id);
@@ -277,6 +293,16 @@ class UserAnswersRepository
 
     private static function generateAttestation($learningPathId, $userId) : \Illuminate\Http\Response
     {
+
+        return Attestation::create([
+            'user_id' => $userId,
+            'learning_path_id' => $learningPathId,
+            'created_at' => now()->timestamp,
+        ]);
+    }
+    public final function downloadAttestation($learningPathId) : \Illuminate\Http\Response
+    {
+        $userId = auth()->id();
         $learningPath = LearningPath::findOrFail($learningPathId);
         $user = User::findOrFail($userId);
 
@@ -287,18 +313,7 @@ class UserAnswersRepository
         ];
 
         $pdf = Pdf::loadView('attestations.template', $data);
-
-        Attestation::create([
-            'user_id' => $userId,
-            'learning_path_id' => $learningPathId,
-            'created_at' => now(),
-        ]);
         return $pdf->download('attestation.pdf');
-    }
-    public static function downloadAttestation($learningPathId) : \Illuminate\Http\Response
-    {
-        $userId = auth()->id();
-        return self::generateAttestation($learningPathId, $userId);
     }
 
     public static function indexPendingOpenQuestionAnswers($queryConfig) : LengthAwarePaginator | Collection

@@ -139,6 +139,7 @@ return [
     'course_already_in_cart' => 'Course already in cart',
     'language_already_exists' => 'Language already exists',
     'learning_path_already_in_cart' => 'Learning path already in cart',
+    'quiz_wait' => 'Please wait 30 minutes before attempting this quiz again.'
 
 
 

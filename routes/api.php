@@ -92,6 +92,9 @@ use \App\Http\Controllers\Api\LearningPath\FilterCoursesController;
 use \App\Http\Controllers\Api\LearningPath\SetLearningPathActiveController;
 use \App\Http\Controllers\Api\LearningPath\SetLearningPathOfflineController;
 use \App\Http\Controllers\Api\LearningPath\SetLearningPathOnlineController;
+use \App\Http\Controllers\Api\LearningPath\IndexAttestationsController;
+use \App\Http\Controllers\Api\Quiz\DownloadAttestationController;
+use \App\Http\Controllers\Api\LearningPath\IndexCompletedLearningPathForUsersController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -134,7 +137,9 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/enrolled-learning-paths', IndexEnrolledLearningPathForUsersController::class);
         Route::post('/add-learning-path-to-cart/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\AddToCartController::class);
         Route::get('/learning-paths/{id}', GetLearningPathByIdController::class);
-        Route::post('/download-attestation/{learning_path_id}', \App\Http\Controllers\Api\Quiz\DownloadAttestationController::class);
+        Route::get('/attestations', IndexAttestationsController::class);
+        Route::post('/download-attestation/{learning_path_id}', DownloadAttestationController::class);
+        Route::get('/completed-learning-paths', IndexCompletedLearningPathForUsersController::class);
     });
 
     Route::middleware('admin')->prefix(

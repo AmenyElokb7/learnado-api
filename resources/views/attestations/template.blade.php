@@ -16,7 +16,7 @@
             align-items: center;
         }
         .attestation {
-            border: 5px solid #E9C874;
+            border: 5px solid #C71585;
             padding: 20px;
             width: 600px;
             height: 450px;
@@ -47,7 +47,7 @@
         }
         .participant-name {
             font-family: cursive;
-            color: #A34343;
+            color: #DB7093;
             font-size: 32px;
             margin: 10px 0;
         }
@@ -55,7 +55,7 @@
             color: #000;
             margin: 5px 0;
         }
-        p{
+        p {
             font-size: 18px;
         }
     </style>
@@ -63,11 +63,11 @@
 <body>
 <center>
     <div class="attestation">
-        <img src="{{ asset('storage/images/lernado.png') }}" alt="Learnado Logo" class="logo" >
+        <img src="{{ asset('storage/images/lernado.png') }}" alt="Learnado Logo" class="logo">
         <br><br><br>
         <div class="header">
             <h1>Attestation of Completion</h1>
-            <img src="https://www.iconpacks.net/icons/1/free-certificate-icon-1356-thumb.png" alt="attestation" width="70px" height="70px" />
+            <img src="https://cdn-icons-png.flaticon.com/512/3965/3965050.png" alt="attestation" width="70px" height="70px">
         </div>
         <div class="content">
             <p>This is awarded to</p>

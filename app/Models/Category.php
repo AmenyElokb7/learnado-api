@@ -19,6 +19,11 @@ class Category extends Model
         return $this->hasMany(Course::class);
     }
 
+    public function learningPaths()
+    {
+        return $this->hasMany(LearningPath::class);
+    }
+
     public function media()
     {
         return $this->morphMany(Media::class, 'model');

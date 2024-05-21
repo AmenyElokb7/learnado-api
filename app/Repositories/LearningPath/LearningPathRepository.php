@@ -40,14 +40,11 @@ class LearningPathRepository
         $data['added_by'] = $user->id;
         $learningPath = LearningPath::create($data);
         $courses = self::filterCourses($data);
-        $totalPrice = 0;
         $allSubscribers = collect();
         foreach ($courses as $course) {
             $learningPath->courses()->attach($course);
-            $totalPrice += $course->price - ($course->discount ?? 0);
             $allSubscribers = $allSubscribers->merge($course->subscribers);
         }
-        $learningPath->price = $totalPrice;
         $learningPath->save();
         if (isset($data['quiz'])) {
             QuizRepository::createQuiz($learningPath, $data['quiz'], true);

@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\Admin\DeleteAccountController;
 use App\Http\Controllers\Api\Admin\IndexAcceptedUsersController;
 use App\Http\Controllers\Api\Admin\IndexPendingUsersController;
 use App\Http\Controllers\Api\Admin\IndexUsersController;
-use App\Http\Controllers\Api\Admin\MarkAsReadNotificationController;
 use App\Http\Controllers\Api\Admin\RejectUserAccountController;
 use App\Http\Controllers\Api\Admin\SuspendUserAccountController;
 use App\Http\Controllers\Api\Admin\UpdateAccountController;
@@ -95,6 +94,7 @@ use \App\Http\Controllers\Api\LearningPath\SetLearningPathOnlineController;
 use \App\Http\Controllers\Api\LearningPath\IndexAttestationsController;
 use \App\Http\Controllers\Api\Quiz\DownloadAttestationController;
 use \App\Http\Controllers\Api\LearningPath\IndexCompletedLearningPathForUsersController;
+use \App\Http\Controllers\Api\Category\IndexCategoriesWithLearningPathsController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -112,7 +112,11 @@ Route::middleware('auth:user')->group(function () {
     Route::get('/courses', IndexCoursesForUsersController::class);
     Route::get('/courses/{id}', GetCourseByIdForUserController::class);
     Route::post('/send-message', ForumMessageSendController::class);
-    Route::get('/forum-messages/{courseId?}/{learningPathId?}', IndexForumMessagesController::class);
+    Route::get('/forum-messages/{courseId}/{learningPathId}', IndexForumMessagesController::class);
+    Route::post('/send-private-message', \App\Http\Controllers\Api\Message\SendPrivateMessageController::class);
+    Route::get('/private-messages', \App\Http\Controllers\Api\Message\IndexPrivateMessageController::class);
+    Route::get('/learning-paths', IndexLearningPathForUsersController::class);
+    Route::get('/learning-paths/{id}', GetLearningPathByIdController::class);
 
     Route::middleware('user')->group(function () {
         Route::post('/enroll-learning-path/{id}', SubscribeToLearningPathController::class);
@@ -133,13 +137,13 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/invoices', IndexInvoicesController::class);
         Route::post('/complete-learning-path/{learning_path_id}', CompleteLearningPathController::class);
         Route::get('/statistics', GetUserStatisticsController::class);
-        Route::get('/learning-paths', IndexLearningPathForUsersController::class);
         Route::get('/enrolled-learning-paths', IndexEnrolledLearningPathForUsersController::class);
         Route::post('/add-learning-path-to-cart/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\AddToCartController::class);
-        Route::get('/learning-paths/{id}', GetLearningPathByIdController::class);
         Route::get('/attestations', IndexAttestationsController::class);
         Route::post('/download-attestation/{learning_path_id}', DownloadAttestationController::class);
         Route::get('/completed-learning-paths', IndexCompletedLearningPathForUsersController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\UserStatsticsController::class);
+        Route::get('/facilitators-chat', \App\Http\Controllers\Api\Message\IndexFacilitatorsChatForUserController::class);
     });
 
     Route::middleware('admin')->prefix(
@@ -161,7 +165,7 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/update-category/{id}', UpdateCategoryController::class);
         Route::delete('/delete-category/{id}', DeleteCategoryController::class);
         Route::get('/notifications', AdminNotificationController::class);
-        Route::post('/mark-as-read/{messageId}', MarkAsReadNotificationController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\AdminStatsticsController::class);
     });
 
     Route::middleware('designer')->prefix(
@@ -194,6 +198,7 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/set-active-learning-path/{learning_path_id}', SetLearningPathActiveController::class);
         Route::post('/set-online-learning-path/{learning_path_id}', SetLearningPathOnlineController::class);
         Route::post('/set-offline-learning-path/{learning_path_id}', SetLearningPathOfflineController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\DesignerStatsticsController::class);
 
     });
     Route::middleware('facilitator')->prefix(
@@ -204,15 +209,17 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/invalidate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\InvalidateOpenQuestionAnswerController::class);
         Route::post('/validate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\ValidateOpenQuestionAnswerController::class);
         Route::get('/open-questions', \App\Http\Controllers\Api\Quiz\IndexOpenAnswerController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\FacilitatorStatsticsController::class);
+        Route::get('/users', \App\Http\Controllers\Api\Message\IndexUsersForFacilitatorsController::class);
     });
 });
-
 // Public routes for guests
 Route::get('/guest-courses', IndexCoursesForGuestController::class);
 Route::get('/guest-courses/{id}', GetCourseByIdForGuestController::class);
 Route::get('/steps/{id}', GetStepMediaByIdController::class);
 Route::get('/categories', IndexCategoriesController::class);
 Route::get('/categories-filter', IndexCategoriesWithCoursesController::class);
+Route::get('/categories-learning-paths', IndexCategoriesWithLearningPathsController::class);
 Route::get('/categories/{id}', GetCategoryByIdController::class);
 Route::get('/languages', IndexLanguagesController::class);
 Route::get('/facilitators', IndexFacilitatorsController::class);

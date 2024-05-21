@@ -33,12 +33,9 @@ class Forum implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        if ($this->courseId) {
-            return new PresenceChannel('forum.' . $this->courseId);
-        }
-        return new PresenceChannel('forum.' . $this->learningPathId);
+     return [
+         new PresenceChannel('forum.' . $this->courseId),
+         new PresenceChannel('forum.' . $this->learningPathId),
+     ];
     }
-
-
-
 }

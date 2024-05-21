@@ -137,18 +137,13 @@ class PaymentRepository
         if ($payment->status === Payment::COMPLETED) {
             throw new \Exception('payment_already_completed');
         }
-
         $payment->status = Payment::COMPLETED;
         $payment->save();
         $user = $payment->user;
-
-        // Fetch courses and learning paths based on ids in the cart
-        // get the courses in user's cart
-
-
         $items = $user->cart->map(function ($course) {
             $finalPrice = $course->price - ($course->price * ($course->discount / 100));
             return [
+                'id' => $course->id,
                 'name' => $course->title,
                 'price' => $finalPrice,
                 'type' => 'Course'
@@ -163,15 +158,13 @@ class PaymentRepository
             });
             $finalPrice = $learningPath->price - $totalPrice;
             return [
+                'id' => $learningPath->id,
                 'name' => $learningPath->title,
                 'price' => $finalPrice,
                 'type' => 'Learning Path'
             ];
         }))->toArray();
-        // calculate the total amount of the invoice
         $totalAmount = collect($items)->sum('price');
-
-        // Create invoice
         $invoice = Invoice::create([
             'username' => $payment->user->first_name . ' ' . $payment->user->last_name,
             'email' => $payment->user->email,
@@ -181,23 +174,16 @@ class PaymentRepository
             'total' => $totalAmount,
             'payment_id' => $payment->id,
         ]);
-
-
         $this->generateInvoicePDF($invoice->id);
-
-
         $courses = $user->cart;
         $uniqueCourseIds = $courses->pluck('id')->unique();
 
-        // the user is subscribed to the courses
         $user->subscribedCourses()->syncWithoutDetaching($uniqueCourseIds);
         // the user is subscribed to the learning paths
         $user->subscribedLearningPaths()->syncWithoutDetaching($user->learningPathInCart->pluck('id')->unique());
-        // send subscription email
         foreach ($courses as $course) {
             Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
         }
-        // send subscription email of the learning paths
         foreach ($user->learningPathInCart as $learningPath) {
             Mail::to($user->email)->send(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
         }
@@ -207,12 +193,12 @@ class PaymentRepository
     /**
      * @throws Exception
      */
-    public final function handleWebhook($event)
+    public final function handleWebhook($event) : void
     {
         $paymentIntentId = $event->data->object->id;
         $this->handleCompletedSession($paymentIntentId);
     }
-    public function generateInvoicePDF($invoiceId)
+    public final function generateInvoicePDF($invoiceId)
     {
         $invoice = Invoice::findOrFail($invoiceId);
         $pdf = PDF::loadView('invoices.invoice', compact('invoice'));

@@ -61,7 +61,7 @@ class Course extends Model
         'created_at',
         'updated_at',
     ];
-
+    // Relationships
     public function media()
     {
         return $this->morphMany(Media::class, 'model');
@@ -70,45 +70,36 @@ class Course extends Model
     {
         return $this->morphMany(Discussion::class, 'discussable');
     }
-
     public function admin()
     {
         return $this->belongsTo(User::class);
     }
-
     public function facilitator()
     {
         return $this->belongsTo(User::class);
     }
 
-
     public function learningPaths()
     {
         return $this->belongsToMany(LearningPath::class, 'learning_path_course');
     }
-
     public function steps()
     {
         return $this->hasMany(Step::class);
     }
 
-    // App\Models\Course.php
-
     public function subscribers()
     {
         return $this->belongsToMany(User::class, 'course_subscription_users', 'course_id', 'user_id');
     }
-
     public function added_by()
     {
         return $this->belongsTo(User::class, 'id');
     }
-
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
-
     public function language()
     {
         return $this->belongsTo(Language::class);
@@ -121,26 +112,18 @@ class Course extends Model
     {
         return $this->belongsToMany(User::class, 'cart');
     }
-
+    // Methods
     public function deleteWithRelations()
     {
-        // Delete related media
         $this->media()->delete();
-
-        // delete the course from cart
         $this->usersInCart()->detach();
-
-        // Delete subscribed users associations
-
         $this->subscribers()->detach();
-
-        // Delete related steps and their quizzes, questions, and answers
         foreach ($this->steps as $step) {
             $step->deleteWithRelations();
         }
         $this->delete();
     }
-
+    // Scopes
     public function scopeByFacilitator($query, $facilitatorId)
     {
 
@@ -149,7 +132,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByAddedBy($query, $DesignerId)
     {
         if (!$DesignerId) {
@@ -157,7 +139,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByIsPublic($query, $isPublic = null)
     {
         if (!is_null($isPublic)) {
@@ -165,7 +146,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByIsActive($query, $isActive = null)
     {
         if (!is_null($isActive)) {
@@ -180,7 +160,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByStartTime($query, $startTime)
     {
         if ($startTime) {
@@ -188,7 +167,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeBySubscribedUser($query, $userId)
     {
         if ($userId) {
@@ -198,7 +176,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByKeyWord($query, $keyword)
     {
         if ($keyword) {
@@ -209,7 +186,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByIsPaid($query, $isPaid)
     {
         if ($isPaid !== null) {
@@ -218,7 +194,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByTeachingType($query, $teachingType)
     {
         if ($teachingType !== null) {
@@ -226,7 +201,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByCategory($query, $categorieId)
     {
         if ($categorieId !== null) {
@@ -234,6 +208,4 @@ class Course extends Model
         }
         return $query;
     }
-
-
 }

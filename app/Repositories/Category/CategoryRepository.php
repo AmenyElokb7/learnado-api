@@ -81,6 +81,20 @@ class CategoryRepository
         return $categories;
     }
 
+    public static function indexCategoriesWithLearningPaths(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    {
+
+        $query = Category::with('media')->whereHas('learningPaths', function ($query) {
+            $query->where('is_active', true);
+        })->newQuery();
+        Category::applyFilters($queryConfig->getFilters(), $query);
+        $categories = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
+        if ($queryConfig->getPaginated()) {
+            return self::applyPagination($categories, $queryConfig);
+        }
+        return $categories;
+    }
+
     /**
      * get a category by id
      * @param $categoryId

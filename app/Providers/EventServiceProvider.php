@@ -24,6 +24,7 @@ class EventServiceProvider extends ServiceProvider
         Forum::class => [
             ForumMessageListener::class,
         ],
+
     ];
 
     /**

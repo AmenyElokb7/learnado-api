@@ -14,35 +14,30 @@ class LearningPath extends Model
 
     protected $fillable = ['title', 'description', 'language_id', 'category_id', 'added_by', 'is_public', 'is_active', 'price', 'is_offline', 'created_at', 'updated_at'];
 
+    // Relations
     public function language()
     {
         return $this->belongsTo(Language::class);
     }
-
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
-
     public function courses()
     {
         return $this->belongsToMany(Course::class, 'learning_path_course');
     }
-
     public function checkFacilitator($user){
         return in_array($user->id, $this->courses()->facilitator()->pluck('facilitator_id')->toArray());
     }
-
     public function quiz()
     {
         return $this->hasOne(Quiz::class);
     }
-
     public function added_by()
     {
         return $this->belongsTo(User::class, 'id');
     }
-
     public function media()
     {
         return $this->morphMany(Media::class, 'model');
@@ -51,12 +46,11 @@ class LearningPath extends Model
     {
         return $this->morphMany(Discussion::class, 'discussable');
     }
-
     public function subscribedUsersLearningPath()
     {
         return $this->belongsToMany(User::class, 'learning_path_subscriptions', 'learning_path_id', 'user_id');
     }
-
+    // Scopes
     public function scopeByAddedBy($query, $DesignerId)
     {
         if (!$DesignerId) {
@@ -118,6 +112,7 @@ class LearningPath extends Model
     {
         return $this->belongsToMany(User::class, 'cart');
     }
+    // Methods
 
     public function delteWithRelations(){
         // detach courses from learning path , subscribed users, quiz with its questions and answers and media
@@ -127,5 +122,4 @@ class LearningPath extends Model
         $this->media()->delete();
         $this->delete();
     }
-
 }

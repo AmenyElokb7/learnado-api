@@ -21,6 +21,7 @@ class IndexForumMessagesController extends Controller
     public function __invoke($courseId=null, $learningPathId=null): JsonResponse
     {
         try{
+
             $messages =MessageRepository::indexForumMessages($courseId, $learningPathId);
             return $this->returnSuccessResponse('Messages fetched successfully',$messages, ResponseAlias::HTTP_OK);
         }
@@ -28,6 +29,5 @@ class IndexForumMessagesController extends Controller
             Log::error($e->getMessage());
             return $this->returnErrorResponse($e->getMessage() ?: __('general_error') , ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
-
     }
 }

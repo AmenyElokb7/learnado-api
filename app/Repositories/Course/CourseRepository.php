@@ -727,19 +727,4 @@ class CourseRepository
         $course->is_offline = false;
         $course->save();
     }
-    public static function getUserStatistics() {
-        $user = Auth::user();
-        $enrolledCourses = $user->subscribedCourses()->count();
-        $completedCourses = $user->subscribedCourses()->wherePivot('is_completed', 1)->count();
-        // the price with discount
-        $moneySpent = $user->subscribedCourses()->sum(DB::raw('price - (price * discount / 100)'));
-        $certificates = $user->certificates()->count();
-        return [
-            'enrolled_courses' => $enrolledCourses,
-            'completed_courses' => $completedCourses,
-            'money_spent' => $moneySpent,
-            'certificates' => $certificates
-        ];
-    }
-
 }

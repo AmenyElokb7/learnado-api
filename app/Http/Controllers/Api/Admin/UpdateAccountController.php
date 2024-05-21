@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-
 /**
  * @OA\Patch(
  *     path="/api/admin/update-user-account/{id}",

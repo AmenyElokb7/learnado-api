@@ -19,6 +19,9 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     path="/api/admin/create-user",
  *     summary="Create a new user account",
  *     tags={"Admin"},
+ *     security={
+ *         {"bearerAuth": {}}
+ *     },
  *     @OA\RequestBody(
  *         required=true,
  *         content={
@@ -57,6 +60,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  *     )
  * )
  */
+
 
 class CreateAccountController extends Controller
 {

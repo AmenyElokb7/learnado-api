@@ -74,6 +74,11 @@ class StatsticsRepository
             'total_price_per_month' => $totalPricePerMonth
         ];
     }
+
+    /**
+     * Get statistics for facilitator
+     * @return array
+     */
     public static function getFacilitatorStatistics() : array
     {
         $user = Auth::user();
@@ -84,10 +89,69 @@ class StatsticsRepository
         foreach ($facilitatorCourses as $course) {
             $enrolledStudents += $course->subscribers()->count();
         }
+        $userId = $user->id;
+        $invoices = Invoice::all();
+        $filteredInvoices = $invoices->map(function ($invoice) {
+            $items = collect(json_decode($invoice->items, true)); // Decode as array
+            $courseItems = $items->filter(function ($item) {
+                return isset($item['type']) && $item['type'] === "Course" && isset($item['id']);
+            });
+            $learningPathItems = $items->filter(function ($item) {
+                return isset($item['type']) && $item['type'] === "Learning Path" && isset($item['id']);
+            });
+            $invoice->course_items = $courseItems->values();
+            $invoice->learning_path_items = $learningPathItems->values();
+            return $invoice;
+        });
+        $filteredInvoices = $filteredInvoices->filter(function ($invoice) {
+            return count($invoice->course_items) > 0 || count($invoice->learning_path_items) > 0;
+        });
+        $courseIds = $filteredInvoices->flatMap(function ($invoice) {
+            return $invoice->course_items;
+        })->pluck('id')->filter();
+
+        $learningPathIds = $filteredInvoices->flatMap(function ($invoice) {
+            return $invoice->learning_path_items;
+        })->pluck('id')->filter();
+
+        $courses = Course::whereIn('id', $courseIds)->where('facilitator_id', $userId)->get()->keyBy('id');
+
+        $learningPaths = LearningPath::whereIn('id', $learningPathIds)->get()->keyBy('id');
+
+        $totalCourseFee = $filteredInvoices->flatMap(function ($invoice) use ($courses) {
+            return $invoice->course_items->filter(function ($item) use ($courses) {
+                return $courses->has($item['id']);
+            });
+        })->sum(function ($item) {
+            $price = $item['price'];
+            if (isset($item['discount'])) {
+                $price -= ($price * $item['discount'] / 100);
+            }
+            return $price * 0.3;
+        });
+
+        $totalLearningPathFee = $filteredInvoices->flatMap(function ($invoice) use ($learningPaths, $userId) {
+            return $invoice->learning_path_items->flatMap(function ($item) use ($learningPaths, $userId) {
+                if ($learningPaths->has($item['id'])) {
+                    $learningPath = $learningPaths->get($item['id']);
+                    $coursesInLearningPath = $learningPath->courses()->where('facilitator_id', $userId)->get();
+                    return $coursesInLearningPath->map(function ($course) {
+                        $price = $course->price;
+                        if (isset($course->discount)) {
+                            $price -= ($price * $course->discount / 100);
+                        }
+                        return $price * 0.3;
+                    });
+                }
+                return collect();
+            });
+        })->sum();
+        $totalFee = $totalCourseFee + $totalLearningPathFee;
         return [
             'private_courses' => $privateCourses,
             'public_courses' => $publicCourses,
-            'enrolled_students' => $enrolledStudents
+            'enrolled_students' => $enrolledStudents,
+            'total_fee' => $totalFee,
         ];
     }
     public static function getAdminStatistics() : array

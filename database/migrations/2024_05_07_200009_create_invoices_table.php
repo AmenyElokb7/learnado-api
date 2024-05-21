@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('seller_name');
             $table->string('seller_email');
             $table->json('items');
-            $table->unsignedBigInteger('total');
+            // total price
+            $table->decimal('total', 10, 2);
             $table->unsignedBigInteger('payment_id');
             $table->unsignedBigInteger('created_at');
             $table->unsignedBigInteger('updated_at');

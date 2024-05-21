@@ -45,25 +45,18 @@ class PaymentRepository
     {
 
         $items = DB::table('cart')->whereIn('id', $itemIds)->get();
-
         $courseLineItems = [];
         $learningPathLineItems = [];
         $courses = $user->cart()->whereIn('course_id', $items->pluck('course_id'))->get();
         $learningPaths = $user->learningPathInCart()->whereIn('learning_path_id', $items->pluck('learning_path_id'))->get();
-
-
-
-        // Create line items for courses
         $courseLineItems = $courses->map(function ($course) {
             $finalPrice = $course->price - ($course->price * ($course->discount / 100));
-
             return [
                 'price_data' => [
                     'currency' => 'usd',
                     'product_data' => [
                         'name' => $course->title,
                     ],
-                    // Stripe requires the price in cents and - discount
                     'unit_amount' =>  (int)($finalPrice * 100),
                 ],
                 'quantity' => 1,
@@ -71,7 +64,6 @@ class PaymentRepository
         });
         $purchasedCoursesIds = $user->subscribedCourses->pluck('id');
         $authUserId = $user->id;
-        // Create line items for learning paths
         $learningPathLineItems =  $learningPaths->map(function ($learningPath) use ($authUserId, $purchasedCoursesIds) {
             $coursesIds = $learningPath->courses->pluck('id');
             $purchasedCourses = $coursesIds->intersect($purchasedCoursesIds);
@@ -81,10 +73,7 @@ class PaymentRepository
                 $course = Course::find($courseId);
                 return $course->price - ($course->price * $course->discount / 100);
             });
-            // final price of the learning path
             $totalPrice = $learningPath->price - $totalPrice;
-
-
             return [
                 'price_data' => [
                     'currency' => 'usd',
@@ -96,12 +85,7 @@ class PaymentRepository
                 'quantity' => 1,
             ];
         });
-
-        // Combine all line items into a single array and if the courseLineItems is empty, then only return the learningPathLineItems and vice versa
         $allLineItems = array_merge($courseLineItems->toArray(), $learningPathLineItems->toArray());
-
-
-        // Create the Stripe checkout session
         $session = $this->stripe->checkout->sessions->create([
             'payment_method_types' => ['card'],
             'line_items' => $allLineItems,
@@ -109,10 +93,7 @@ class PaymentRepository
             'success_url' => config('app.frontend_url'),
             'cancel_url' => config('app.frontend_url'),
         ]);
-
         $totalAmount = $courses->sum('price') + $learningPaths->sum('price');
-
-        // Record the payment in the database
         $payment = new Payment([
             'user_id' => $user->id,
             'stripe_payment_id' => $session->id,
@@ -124,8 +105,9 @@ class PaymentRepository
         return $session;
     }
 
-
     /**
+     * complete the payment
+     * @param string $paymentIntentId
      * @throws Exception
      */
     public final function handleCompletedSession(string $paymentIntentId) : void
@@ -140,7 +122,9 @@ class PaymentRepository
         $payment->status = Payment::COMPLETED;
         $payment->save();
         $user = $payment->user;
-        $items = $user->cart->map(function ($course) {
+        $cartCourses = $user->cart;
+        $cartLearningPaths = $user->learningPathInCart;
+        $courseItems = $cartCourses->map(function ($course) {
             $finalPrice = $course->price - ($course->price * ($course->discount / 100));
             return [
                 'id' => $course->id,
@@ -148,7 +132,8 @@ class PaymentRepository
                 'price' => $finalPrice,
                 'type' => 'Course'
             ];
-        })->merge($user->learningPathInCart->map(function ($learningPath) use ($user) {
+        });
+        $learningPathItems = $cartLearningPaths->map(function ($learningPath) use ($user) {
             $purchasedCoursesIds = $user->subscribedCourses->pluck('id');
             $coursesIds = $learningPath->courses->pluck('id');
             $purchasedCourses = $coursesIds->intersect($purchasedCoursesIds);
@@ -163,7 +148,16 @@ class PaymentRepository
                 'price' => $finalPrice,
                 'type' => 'Learning Path'
             ];
-        }))->toArray();
+        });
+        if ($courseItems->isEmpty() && $learningPathItems->isEmpty()) {
+            throw new \Exception('No items in cart');
+        } elseif ($courseItems->isEmpty()) {
+            $items = $learningPathItems->toArray();
+        } elseif ($learningPathItems->isEmpty()) {
+            $items = $courseItems->toArray();
+        } else {
+            $items = $courseItems->merge($learningPathItems)->toArray();
+        }
         $totalAmount = collect($items)->sum('price');
         $invoice = Invoice::create([
             'username' => $payment->user->first_name . ' ' . $payment->user->last_name,
@@ -177,9 +171,7 @@ class PaymentRepository
         $this->generateInvoicePDF($invoice->id);
         $courses = $user->cart;
         $uniqueCourseIds = $courses->pluck('id')->unique();
-
         $user->subscribedCourses()->syncWithoutDetaching($uniqueCourseIds);
-        // the user is subscribed to the learning paths
         $user->subscribedLearningPaths()->syncWithoutDetaching($user->learningPathInCart->pluck('id')->unique());
         foreach ($courses as $course) {
             Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
@@ -187,10 +179,11 @@ class PaymentRepository
         foreach ($user->learningPathInCart as $learningPath) {
             Mail::to($user->email)->send(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
         }
-        // Clear the user's cart
         $user->cart()->detach();
     }
+
     /**
+     * @param $event
      * @throws Exception
      */
     public final function handleWebhook($event) : void
@@ -198,7 +191,12 @@ class PaymentRepository
         $paymentIntentId = $event->data->object->id;
         $this->handleCompletedSession($paymentIntentId);
     }
-    public final function generateInvoicePDF($invoiceId)
+
+    /**
+     * @param $invoiceId
+     * @return JsonResponse
+     */
+    public final function generateInvoicePDF($invoiceId): JsonResponse
     {
         $invoice = Invoice::findOrFail($invoiceId);
         $pdf = PDF::loadView('invoices.invoice', compact('invoice'));
@@ -210,6 +208,7 @@ class PaymentRepository
     }
 
     /**
+     * index user invoices
      * @param QueryConfig $queryConfig
      * @return LengthAwarePaginator|Collection
      */
@@ -229,7 +228,7 @@ class PaymentRepository
      * @return Response
      */
 
-    public function downloadInvoicePDF($invoiceId)
+    public final function downloadInvoicePDF($invoiceId) : Response
     {
         $invoice = Invoice::findOrFail($invoiceId);
         $pdf = PDF::loadView('invoices.invoice', compact('invoice'));

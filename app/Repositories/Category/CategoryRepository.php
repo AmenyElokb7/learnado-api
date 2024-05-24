@@ -122,7 +122,6 @@ class CategoryRepository
 
         $category->update($data);
 
-        // update the media with its id
         $currentMedia = $category->media->first();
         if ($mediaFile instanceof UploadedFile) {
             $media =MediaRepository::attachOrUpdateMediaForModel($category, $mediaFile, $currentMedia->id);

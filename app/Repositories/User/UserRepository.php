@@ -42,15 +42,12 @@ class UserRepository
 
     public static function index(QueryConfig $queryConfig): LengthAwarePaginator|Collection
     {
-
         $UserQuery = User::with('media')->withCount('courses')->newQuery();
-
         User::applyFilters($queryConfig->getFilters(), $UserQuery);
         $users = $UserQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($users, $queryConfig);
         }
-
         return $users;
     }
 
@@ -61,7 +58,6 @@ class UserRepository
      */
     public final function findById(int $UserId): User|Builder|Model
     {
-
         $user = User::with('media')->where('id', $UserId)->first();
         if(!$user){
             throw new Exception(__('user_not_found'), ResponseAlias::HTTP_NOT_FOUND);
@@ -107,33 +103,27 @@ class UserRepository
      * @throws Exception
      */
 
-    public final function updateProfile(array $data): Authenticatable
+    public final function updateProfile(array $data) : User
     {
         $user = Auth::user();
-
         if (!$user) {
             throw new Exception(__('user_authenticated_failed'), ResponseAlias::HTTP_NOT_FOUND);
         }
-
         $password = $data['password'] ?? null;
         if(isset($password)){
             $data['password'] = bcrypt($password);
         }
-
         $currentMedia = $user->media->first();
         $profilePicture = $data['profile_picture'] ?? null;
-
-        if (array_key_exists('profile_picture', $data) && $profilePicture === null) {
-            if ($currentMedia) {
-                MediaRepository::detachMediaFromModel($user, $currentMedia->id);
-            }
-        } elseif ($profilePicture !== null) {
-            MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture, $currentMedia->id ?? null);
-        }
+        $deletedMedia = $data['deleted_files_id'] ?? null;
+        if ($deletedMedia)
+            MediaRepository::detachMediaFromModel($user, $currentMedia->id);
+         else if ($profilePicture)
+             MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture, $currentMedia->id ?? null);
 
         $user->fill($data);
         $user->save();
-        return $user;
+        return User::with('media')->where('id', $user->id)->first();
     }
 
     /**

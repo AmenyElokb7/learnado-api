@@ -69,8 +69,7 @@ class sendSubscriptionMail extends Mailable
      */
     public function build()
     {
-        $url = $this->isCourse ? url("/api/get-course/{$this->entityId}") : url("/api/get-learning-path/{$this->entityId}");
-
+        $url = $this->isCourse ? config('app.frontend_url') . '/Courses/' . $this->entityId : config('app.frontend_url') . '/learning-path/' . $this->entityId;
         return $this->subject('Subscription Confirmation')
             ->view('emails.users.subscription')
             ->with([

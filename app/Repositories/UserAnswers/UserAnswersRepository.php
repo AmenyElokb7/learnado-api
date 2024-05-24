@@ -105,18 +105,21 @@ class UserAnswersRepository
 
         if ($quiz->is_exam && !$needsReview) {
             $learningPathSubscription = DB::table('learning_path_subscriptions')->where('user_id', $userId)
-                ->where('quiz_id', $quiz->id)
+                ->where('learning_path_id', $quiz->learning_path_id)
                 ->first();
-            $learningPathSubscription->is_completed = 1;
-            $learningPathSubscription->save();
+            $learningPathSubscription->is_completed = true;
+
 
             if ($passed) {
                 $this->generateAttestation($userId, $quizId);
             } else {
-                // Handle the case where the user fails
                 $learningPathSubscription->is_completed = 1;
-                $learningPathSubscription->save();
             }
+
+            DB::table('learning_path_subscriptions')
+                ->where('id', $learningPathSubscription->id)
+                ->update(['is_completed' => 1]);
+
         }
 
         return [
@@ -173,34 +176,24 @@ class UserAnswersRepository
         if (!in_array($authUserId, $facilitatorIds)) {
             throw new Exception(__('unauthorized'));
         }
-
-        // Retrieve the user answer and validate it
         $userAnswer = UserQuestionAnswer::findOrFail($userAnswerId);
         $userAnswer->is_validated = 1;
         $userAnswer->save();
-
-        // Find the latest quiz attempt for this user and quiz
         $quizAttempt = QuizAttempt::where('user_id', $userAnswer->user_id)
             ->where('quiz_id', $userAnswer->quiz_id)
             ->latest('created_at')
             ->first();
-
-        // Recalculate score and passing status
         $quiz = Quiz::find($userAnswer->quiz_id);
         $score = UserQuestionAnswer::where('quiz_id', $quiz->id)
             ->where('user_id', $userAnswer->user_id)
             ->where('is_validated', 1)
             ->count();
-
-        // Add +1 to the score for the validated answer
         $score += 1;
 
         $totalScorePossible = $quiz->questions()->count();
         $passingPercentage = 60;
         $userPercentage = ($score / $totalScorePossible) * 100;
         $passed = $userPercentage >= $passingPercentage;
-
-        // Update needs_review and passed status
         $openQuestions = $quiz->questions()->where('type', 'OPEN')->count();
         $validatedOpenQuestions = UserQuestionAnswer::where('quiz_id', $quiz->id)
             ->where('user_id', $userAnswer->user_id)
@@ -212,7 +205,6 @@ class UserAnswersRepository
         } else {
             $quizAttempt->needs_review = 0;
 
-            // Update learning_path_subscription
             $learningPathSubscription = DB::table('learning_path_subscriptions')->where('user_id', $userAnswer->user_id)
                 ->where('learning_path_id', $quiz->learning_path_id)
                 ->first();
@@ -220,8 +212,6 @@ class UserAnswersRepository
                 DB::table('learning_path_subscriptions')
                     ->where('id', $learningPathSubscription->id)
                     ->update(['is_completed' => 1]);
-
-                // Generate attestation if passed
                 if ($passed) {
                     self::generateAttestation($learningPathSubscription->learning_path_id, $userAnswer->user_id);
                 }
@@ -291,7 +281,7 @@ class UserAnswersRepository
         return $userAnswer;
     }
 
-    private static function generateAttestation($learningPathId, $userId) : \Illuminate\Http\Response
+    private static function generateAttestation($learningPathId, $userId) : Attestation
     {
 
         return Attestation::create([
@@ -315,7 +305,6 @@ class UserAnswersRepository
         $pdf = Pdf::loadView('attestations.template', $data);
         return $pdf->download('attestation.pdf');
     }
-
     public static function indexPendingOpenQuestionAnswers($queryConfig) : LengthAwarePaginator | Collection
     {
         $authUserId = auth()->id();
@@ -329,15 +318,12 @@ class UserAnswersRepository
                     }]);
                 }]);
             }])->get()->pluck('learningPaths')->flatten()->unique('id');
-
         $questions = $learningPaths->pluck('quiz.questions')->flatten()->unique('id');
-
         $answersQuery = UserQuestionAnswer::whereIn('question_id', $questions->pluck('id'))
             ->whereNull('is_validated')
             ->join('questions', 'user_question_answers.question_id', '=', 'questions.id')
             ->select('user_question_answers.*', 'questions.question')
             ->get();
-
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($answersQuery, $queryConfig);
         }

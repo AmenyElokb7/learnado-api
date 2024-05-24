@@ -75,8 +75,6 @@ class QuizRepository
                 throw new Exception(__('quiz_not_found'), ResponseAlias::HTTP_NOT_FOUND);
             }
             $quizData = $quizData['quiz'];
-
-            // Process each question provided in the request
             if (isset($quizData['questions']) && is_array($quizData['questions'])) {
 
                 foreach ($quizData['questions'] as $questionData) {
@@ -116,8 +114,6 @@ class QuizRepository
             }  else if ($question->type === 'BINARY' && $questionData['type'] === 'QCM') {
                     $question->update(['is_valid' => null]);
                 }
-
-            // Update the question itself.
             $question->update($questionData);
         } else {
             $question = $quiz->questions()->create($questionData);

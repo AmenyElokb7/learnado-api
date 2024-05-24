@@ -44,12 +44,10 @@ class AdminRepository
             throw new Exception(__('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        // token for setting password
         self::createPasswordResetToken($user->email);
         $token = PasswordResetToken::where('email', $user->email)->first()->token;
         Mail::to($user->email)->send(new SetPasswordMail($token, $user->email));
 
-        // profile picture
         $profilePicture = $data['profile_picture'] ?? null;
         if ($profilePicture instanceof UploadedFile) {
             MediaRepository::attachOrUpdateMediaForModel($user, $profilePicture);

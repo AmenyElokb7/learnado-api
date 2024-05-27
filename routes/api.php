@@ -114,6 +114,8 @@ Route::middleware('auth:user')->group(function () {
     Route::get('/private-messages', \App\Http\Controllers\Api\Message\IndexPrivateMessageController::class);
     Route::get('/learning-paths', IndexLearningPathForUsersController::class);
     Route::get('/learning-paths/{id}', GetLearningPathByIdController::class);
+    Route::get('/messages/unread-count', \App\Http\Controllers\Api\Message\GetUnreadCountController::class);
+    Route::post('/messages/mark-as-read/{id}', \App\Http\Controllers\Api\Message\MarkAsReadController::class);
 
     Route::middleware('user')->group(function () {
         Route::post('/enroll-learning-path/{id}', SubscribeToLearningPathController::class);

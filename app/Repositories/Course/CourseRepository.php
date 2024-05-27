@@ -685,4 +685,5 @@ class CourseRepository
         $course->is_offline = false;
         $course->save();
     }
+
 }

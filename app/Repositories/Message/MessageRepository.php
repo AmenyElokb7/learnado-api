@@ -193,4 +193,27 @@ class MessageRepository
         $subscribed_users = Course::whereIn('id', $facilitated_courses)->with('subscribers')->get()->pluck('subscribers')->flatten()->pluck('id');
         return User::whereIn('id', $subscribed_users)->with('media')->get();
     }
+
+    /**
+     * get unread messages count
+     * @return int
+     */
+    public static function getUnreadMessagesCount() : int
+    {
+        $authUser = Auth::user();
+        return DB::table('messages')
+            ->join('user_messages as um', 'messages.id', '=', 'um.message_id')
+            ->where('um.receiver_id', $authUser->id)
+            ->where('um.is_read', false)
+            ->count();
+    }
+
+    public static function markAsRead($messageId): void
+    {
+        $authUser = Auth::user();
+        DB::table('user_messages')
+            ->where('message_id', $messageId)
+            ->where('receiver_id', $authUser->id)
+            ->update(['is_read' => true]);
+    }
 }

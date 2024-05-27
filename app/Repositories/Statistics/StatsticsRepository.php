@@ -92,7 +92,7 @@ class StatsticsRepository
         $userId = $user->id;
         $invoices = Invoice::all();
         $filteredInvoices = $invoices->map(function ($invoice) {
-            $items = collect(json_decode($invoice->items, true)); // Decode as array
+            $items = collect(json_decode($invoice->items, true));
             $courseItems = $items->filter(function ($item) {
                 return isset($item['type']) && $item['type'] === "Course" && isset($item['id']);
             });
@@ -147,6 +147,7 @@ class StatsticsRepository
             });
         })->sum();
         $totalFee = $totalCourseFee + $totalLearningPathFee;
+        $totalFee = round($totalFee, 2);
         return [
             'private_courses' => $privateCourses,
             'public_courses' => $publicCourses,

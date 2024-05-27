@@ -255,7 +255,8 @@ class CourseRepository
             'facilitator' => function ($query) {
                 $query->with('media:model_id,file_name,id')->select('id', 'first_name', 'last_name', 'email');
             },
-            'language'
+            'language',
+            'category'
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
             ->newQuery();
@@ -304,7 +305,8 @@ class CourseRepository
             'facilitator' => function ($query) {
                 $query->with('media:model_id,file_name,id')->select('id', 'first_name', 'last_name', 'email');
             },
-            'language'
+            'language',
+            'category'
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
             ->newQuery();
@@ -373,7 +375,8 @@ class CourseRepository
             'facilitator' => function ($query) {
                 $query->with('media:model_id,file_name,id')->select('id', 'first_name', 'last_name', 'email');
             },
-            'language'
+            'language',
+            'category'
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price');
 
@@ -507,7 +510,8 @@ class CourseRepository
             'facilitator' => function ($query) {
                 $query->with('media:model_id,file_name,id')->select('id', 'first_name', 'last_name', 'email');
             },
-            'language'
+            'language',
+            'category'
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price');
         Course::applyFilters($queryConfig->getFilters(), $completedCoursesQuery);
@@ -686,4 +690,32 @@ class CourseRepository
         $course->save();
     }
 
+    /**
+     * get the courses ordered by closest start time
+     * @param QueryConfig $queryConfig
+     * @return Collection|LengthAwarePaginator
+     */
+    public static function getUpcomingCourses(QueryConfig $queryConfig): Collection|LengthAwarePaginator
+    {
+        $upcomingCoursesQuery = Course::with([
+            'media',
+            'steps.media',
+            'steps.quiz.questions.answers',
+            'subscribers',
+            'facilitator' => function ($query) {
+                $query->with('media:model_id,file_name,id')->select('id', 'first_name', 'last_name', 'email');
+            },
+            'language',
+            'category'
+        ])
+            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+            ->where('start_time', '>', now())
+            ->orderBy('start_time', 'asc')
+            ->newQuery();
+        Course::applyFilters($queryConfig->getFilters(), $upcomingCoursesQuery);
+        $upcomingCoursesQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
+        return $queryConfig->getPaginated()
+            ? $upcomingCoursesQuery->paginate($queryConfig->getPerPage())
+            : $upcomingCoursesQuery->get();
+    }
 }

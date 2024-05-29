@@ -9,6 +9,7 @@ use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -34,6 +35,12 @@ class IndexCoursesForGuestController extends Controller
     private function getAttributes(Request $request): QueryConfig
     {
         $paginationParams = $this->getPaginationParams($request);
+        $startTimeMin = $request->input('start_time_min', null);
+        $startTimeMax = $request->input('start_time_max', null);
+
+        // Convert ISO 8601 dates to Unix timestamps
+        $startTimeMinUnix = $startTimeMin ? strtotime($startTimeMin) : null;
+        $startTimeMaxUnix = $startTimeMax ? strtotime($startTimeMax) : null;
 
         $filters = [
             'is_public' => true,
@@ -43,7 +50,11 @@ class IndexCoursesForGuestController extends Controller
             'category' => $request->input('category', null),
             'is_paid' => $request->input('price', null),
             'teaching_type' => $request->input('teaching_type', null),
-        ];
+            'price_max' => $request->input('price_max', null),
+            'price_min' => $request->input('price_min', null),
+            'start_time_min' => $startTimeMinUnix,
+            'start_time_max' => $startTimeMaxUnix,
+            ];
         $order_by = [
             'created_at',
             'title',

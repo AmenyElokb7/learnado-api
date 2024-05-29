@@ -78,7 +78,6 @@ class Course extends Model
     {
         return $this->belongsTo(User::class);
     }
-
     public function learningPaths()
     {
         return $this->belongsToMany(LearningPath::class, 'learning_path_course');
@@ -205,6 +204,38 @@ class Course extends Model
     {
         if ($categorieId !== null) {
             return $query->where('category_id', $categorieId);
+        }
+        return $query;
+    }
+    public function scopeByPriceMin($query, $priceMin)
+    {
+        if ($priceMin !== null && $priceMin > 0) {
+            $query->where(function ($query) use ($priceMin) {
+                $query->whereRaw('COALESCE(price, 0) - (COALESCE(price, 0) * COALESCE(discount, 0) / 100) >= ?', [$priceMin]);
+            });
+        }
+        return $query;
+    }
+    public function scopeByPriceMax($query, $priceMax)
+    {
+        if ($priceMax !== null) {
+            $query->where(function ($query) use ($priceMax) {
+                $query->whereRaw('COALESCE(price, 0) - (COALESCE(price, 0) * COALESCE(discount, 0) / 100) <= ?', [$priceMax]);
+            });
+        }
+        return $query;
+    }
+    public function scopeByStartTimeMin($query, $startTimeMin)
+    {
+        if ($startTimeMin) {
+            return $query->where('start_time', '>=', $startTimeMin);
+        }
+        return $query;
+    }
+    public function scopeByStartTimeMax($query, $startTimeMax)
+    {
+        if ($startTimeMax) {
+            return $query->where('start_time', '<=', $startTimeMax);
         }
         return $query;
     }

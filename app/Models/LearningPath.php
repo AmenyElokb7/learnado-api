@@ -113,7 +113,6 @@ class LearningPath extends Model
         return $this->belongsToMany(User::class, 'cart');
     }
     // Methods
-
     public function delteWithRelations(){
         // detach courses from learning path , subscribed users, quiz with its questions and answers and media
         $this->courses()->detach();

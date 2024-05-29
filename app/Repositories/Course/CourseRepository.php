@@ -260,18 +260,19 @@ class CourseRepository
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
             ->newQuery();
-        Course::applyFilters($queryConfig->getFilters(), $CourseQuery);
 
         $courses = $CourseQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
         if($authUserId){
             $courses->whereNotIn('id', $subscribedUserCourse->pluck('id'));
         }
+        Course::applyFilters($queryConfig->getFilters(), $CourseQuery);
         $courses = $courses->get();
         $courses->each(function ($course) {
             $course->lessons_count = $course->steps->count() ?:0;
             $course->duration = $course->steps->sum('duration') ?:0;
             $course->subscribed_users_count = $course->subscribers->count() ?:0;
         });
+
 
         if ($queryConfig->getPaginated()) {
             return self::applyPagination($courses, $queryConfig);
@@ -717,5 +718,23 @@ class CourseRepository
         return $queryConfig->getPaginated()
             ? $upcomingCoursesQuery->paginate($queryConfig->getPerPage())
             : $upcomingCoursesQuery->get();
+    }
+
+    /**
+     * Filter by range of price, start time and end time
+     * @param $query
+     * @param $filters
+     */
+    public static function applyFilters($filters, $query): void
+    {
+        if (isset($filters['price_min']) && isset($filters['price_max'])) {
+            $query->whereBetween('price', [$filters['price_min'], $filters['price_max']]);
+        }
+        if (isset($filters['start_time_min']) && isset($filters['start_time_max'])) {
+            $query->whereBetween('start_time', [$filters['start_time_min'], $filters['start_time_max']]);
+        }
+        if (isset($filters['end_time_min']) && isset($filters['end_time_max'])) {
+            $query->whereBetween('end_time', [$filters['end_time_min'], $filters['end_time_max']]);
+        }
     }
 }

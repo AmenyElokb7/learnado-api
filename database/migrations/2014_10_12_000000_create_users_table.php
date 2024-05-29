@@ -15,13 +15,11 @@ return new class extends Migration {
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             /** ENUM */
             $table->unsignedBigInteger('role')->default(UserRoleEnum::USER->value);
             /** end ENUM */
             $table->string('password')->nullable();
             $table->boolean('is_valid')->default(false);
-            $table->rememberToken();
             $table->unsignedBigInteger('created_at');
             $table->unsignedBigInteger('updated_at');
             $table->softDeletesBigInteger();

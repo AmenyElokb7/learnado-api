@@ -26,7 +26,8 @@ class UpdateStepRequest extends FormRequest
             'title' => 'sometimes|string|max:' . config('constants.MAX_STRING_LENGTH'),
             'description' => 'sometimes|string',
             'duration' => 'sometimes|integer',
-
+            'deleted_media' => 'sometimes|array',
+            'media_files' => 'sometimes|array',
         ];
     }
 
@@ -39,7 +40,6 @@ class UpdateStepRequest extends FormRequest
             'title.sometimes' => __('messages.step_title_required'),
             'description.sometimes' => __('messages.step_description_required'),
             'duration.sometimes' => __('messages.step_duration_required'),
-
         ];
     }
 }

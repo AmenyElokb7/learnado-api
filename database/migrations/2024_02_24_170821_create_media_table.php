@@ -16,7 +16,6 @@ return new class extends Migration {
             $table->unsignedBigInteger('model_id');
             $table->string('file_name')->nullable();
             $table->string('mime_type')->nullable();
-            $table->string('external_url')->nullable();
             $table->string('title')->nullable();
             $table->unsignedBigInteger('created_at')->default(now()->timestamp);
             $table->unsignedBigInteger('updated_at')->default(now()->timestamp);

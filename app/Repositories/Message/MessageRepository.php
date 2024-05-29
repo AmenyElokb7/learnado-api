@@ -208,12 +208,22 @@ class MessageRepository
             ->count();
     }
 
-    public static function markAsRead($messageId): void
+    public static function markAsRead($senderId): void
     {
         $authUser = Auth::user();
-        DB::table('user_messages')
-            ->where('message_id', $messageId)
+        $unreadMessages = DB::table('user_messages')
+            ->where('sender_id', $senderId)
             ->where('receiver_id', $authUser->id)
+            ->where('is_read', false)
+            ->exists();
+        if (!$unreadMessages) {
+            return;
+        }
+        DB::table('user_messages')
+            ->where('sender_id', $senderId)
+            ->where('receiver_id', $authUser->id)
+            ->where('is_read', false)
             ->update(['is_read' => true]);
     }
+
 }

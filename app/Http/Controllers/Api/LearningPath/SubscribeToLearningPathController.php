@@ -28,7 +28,5 @@ class SubscribeToLearningPathController extends Controller
             Log::error($e->getMessage());
             return $this->returnErrorResponse($e->getMessage() ?: __('general_error'),  ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-
     }
 }

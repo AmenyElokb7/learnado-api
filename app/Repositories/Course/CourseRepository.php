@@ -169,6 +169,14 @@ class CourseRepository
             if ($user) {
                 Mail::to($user->email)->queue(new sendSubscriptionMail(true, $course->title, $courseId));
             }
+            if ($course->teaching_type == TeachingTypeEnum::ONLINE->value) {
+                $icsContent = self::generateIcsContent($course);
+                $filename = "course-{$course->id}.ics";
+                Storage::disk('local')->put($filename, $icsContent);
+                $pathToFile = storage_path('app/' . $filename);
+                Mail::to($user->email)->queue(new GoogleMeetConfirmation($course, $course->link, $pathToFile));
+                Storage::disk('local')->delete($filename);
+            }
         }
         $course->subscribers()->sync($validUserIds);
         return $course;
@@ -543,7 +551,7 @@ class CourseRepository
                 $query->with('media:model_id,file_name,id')->select('id', 'first_name', 'last_name', 'email');
             },
         ])
-            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as price, cart.id as cart_id')
+            ->selectRaw('courses.*, (courses.price - (courses.price * COALESCE(courses.discount, 0) / 100)) as price, cart.id as cart_id')
             ->join('cart', 'courses.id', '=', 'cart.course_id')
             ->where('cart.user_id', '=', $authUserId)
             ->get();

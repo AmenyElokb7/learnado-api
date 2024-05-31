@@ -2,7 +2,9 @@
 
 namespace App\Repositories\LearningPath;
 
+use App\Enum\TeachingTypeEnum;
 use App\Helpers\QueryConfig;
+use App\Mail\GoogleMeetConfirmation;
 use App\Mail\sendSubscriptionMail;
 use App\Models\Attestation;
 use App\Models\Course;
@@ -22,7 +24,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class LearningPathRepository
@@ -123,16 +127,19 @@ class LearningPathRepository
         if (!$byAdmin && !$learningPath->is_public) {
             throw new Exception(__('user_not_authorized'));
         }
+
         $validUserIds = User::whereIn('id', $userIds)
             ->where('is_valid', true)
             ->whereDoesntHave('subscribedLearningPaths', function ($query) use ($learningPathId) {
                 $query->where('learning_path_id', $learningPathId);
             })
-            ->whereDoesntHave('subscribedCourses', function ($query) use ($learningPath) {
-                $query->whereIn('course_id', $learningPath->courses->pluck('id')->toArray());
-            })
             ->pluck('id')
             ->toArray();
+
+        if (empty($validUserIds)) {
+            throw new Exception(__('No valid users found to subscribe.'));
+        }
+
         $learningPathSubscriptions = collect(
             array_map(
                 function ($userId) use ($learningPathId) {
@@ -146,34 +153,62 @@ class LearningPathRepository
                 $validUserIds
             )
         );
+
         $courseSubscriptions = [];
         foreach ($learningPath->courses as $course) {
             foreach ($validUserIds as $userId) {
-                $courseSubscriptions[] = [
-                    'course_id' => $course->id,
-                    'user_id' => $userId,
-                    'created_at' => now()->timestamp,
-                    'updated_at' => now()->timestamp(),
-                ];
+                if (!DB::table('course_subscription_users')->where('course_id', $course->id)->where('user_id', $userId)->exists()) {
+                    $courseSubscriptions[] = [
+                        'course_id' => $course->id,
+                        'user_id' => $userId,
+                        'created_at' => now()->timestamp,
+                        'updated_at' => now()->timestamp,
+                    ];
+                }
             }
         }
+
         DB::beginTransaction();
         try {
             DB::table('learning_path_subscriptions')->insert($learningPathSubscriptions->toArray());
-            DB::table('course_subscription_users')->insert($courseSubscriptions);
+
+            if (!empty($courseSubscriptions)) {
+                DB::table('course_subscription_users')->insert($courseSubscriptions);
+            }
+
+            $courseIds = $learningPath->courses->pluck('id')->toArray();
+            $courses = Course::whereIn('id', $courseIds)->get();
+
             foreach ($validUserIds as $userId) {
                 $user = User::find($userId);
                 if ($user) {
                     Mail::to($user->email)->queue(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
+                    foreach ($courses as $course) {
+                        if (!$course->subscribers->contains('id', $userId)) {
+                            Mail::to($user->email)->queue(new sendSubscriptionMail(true, $course->title, $course->id));
+                            if ($course->teaching_type == TeachingTypeEnum::ONLINE->value) {
+                                $icsContent = self::generateIcsContent($course);
+                                $filename = "course-{$course->id}.ics";
+                                Storage::disk('local')->put($filename, $icsContent);
+                                $pathToFile = storage_path('app/' . $filename);
+                                Mail::to($user->email)->queue(new GoogleMeetConfirmation($course, $course->link, $pathToFile));
+                                Storage::disk('local')->delete($filename);
+                            }
+                        }
+                    }
                 }
             }
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Error subscribing users to learning path: ' . $e->getMessage());
             throw $e;
         }
+
         return $learningPath;
     }
+
 
     /**
      * index learning paths
@@ -519,5 +554,31 @@ class LearningPathRepository
         } else {
             return $attestations->get();
         }
+    }
+
+    private static function generateIcsContent($course): string
+    {
+        $startDateTime = gmdate('Ymd\THis\Z', $course->start_time);
+        $endDateTime = gmdate('Ymd\THis\Z', $course->end_time);
+
+        $courseCreator = $course->facilitator;
+        $organizerEmail = $courseCreator->email;
+        $organizerName = "{$courseCreator->first_name} {$courseCreator->last_name}";
+
+        $icsContent = "BEGIN:VCALENDAR\r\n";
+        $icsContent .= "VERSION:2.0\r\n";
+        $icsContent .= "PRODID:-//Learnado//EN\r\n";
+        $icsContent .= "BEGIN:VEVENT\r\n";
+        $icsContent .= "UID:" . uniqid() . "\r\n";
+        $icsContent .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
+        $icsContent .= "DTSTART:{$startDateTime}\r\n";
+        $icsContent .= "DTEND:{$endDateTime}\r\n";
+        $icsContent .= "SUMMARY:{$course->title}\r\n";
+        $icsContent .= "DESCRIPTION:{$course->description}\r\n";
+        $icsContent .= "ORGANIZER;CN=\"{$organizerName}\":mailto:{$organizerEmail}\r\n";
+        $icsContent .= "END:VEVENT\r\n";
+        $icsContent .= "END:VCALENDAR\r\n";
+
+        return $icsContent;
     }
 }

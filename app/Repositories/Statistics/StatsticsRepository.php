@@ -165,6 +165,7 @@ class StatsticsRepository
         $categories= Category::count();
         $languages = Language::count();
         $income = Invoice::sum('total');
+        $income = round($income, 2);
 
         return [
             'users' => $users,
@@ -250,6 +251,7 @@ class StatsticsRepository
         $totalPrice = $totalCoursePrice + $totalLearningPathPrice;
         $privateLearningPaths = LearningPath::where('added_by', $user->id)->where('is_public', 0)->count();
         $publicLearningPaths = LearningPath::where('added_by', $user->id)->where('is_public', 1)->count();
+        $totalPrice = round($totalPrice, 2);
         return [
             'private_courses' => $privateCourses,
             'public_courses' => $publicCourses,

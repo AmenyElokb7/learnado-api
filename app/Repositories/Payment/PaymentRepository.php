@@ -2,7 +2,9 @@
 
 namespace App\Repositories\Payment;
 
+use App\Enum\TeachingTypeEnum;
 use App\Helpers\QueryConfig;
+use App\Mail\GoogleMeetConfirmation;
 use App\Mail\InvoiceMail;
 use App\Mail\sendSubscriptionMail;
 use App\Models\Course;
@@ -50,14 +52,14 @@ class PaymentRepository
         $courses = $user->cart()->whereIn('course_id', $items->pluck('course_id'))->get();
         $learningPaths = $user->learningPathInCart()->whereIn('learning_path_id', $items->pluck('learning_path_id'))->get();
         $courseLineItems = $courses->map(function ($course) {
-            $finalPrice = $course->price - ($course->price * ($course->discount / 100));
+            $finalPrice = $course->price - ($course->price * ($course->discount ?? 0 / 100));
             return [
                 'price_data' => [
                     'currency' => 'usd',
                     'product_data' => [
                         'name' => $course->title,
                     ],
-                    'unit_amount' =>  (int)($finalPrice * 100),
+                    'unit_amount' =>  (int)$finalPrice * 100,
                 ],
                 'quantity' => 1,
             ];
@@ -68,19 +70,25 @@ class PaymentRepository
             $coursesIds = $learningPath->courses->pluck('id');
             $purchasedCourses = $coursesIds->intersect($purchasedCoursesIds);
 
-            // price - discount in percent of the course
+
             $totalPrice = $purchasedCourses->sum(function ($courseId) {
                 $course = Course::find($courseId);
-                return $course->price - ($course->price * $course->discount / 100);
+                // foreach course
+                if ($course->discount) {
+                    return $course->price - ($course->price * $course->discount / 100);
+                }
+                return $course->price;
             });
             $totalPrice = $learningPath->price - $totalPrice;
+
+
             return [
                 'price_data' => [
                     'currency' => 'usd',
                     'product_data' => [
                         'name' => $learningPath->title,
                     ],
-                    'unit_amount' => $totalPrice * 100,
+                    'unit_amount' => (int)$totalPrice * 100,
                 ],
                 'quantity' => 1,
             ];
@@ -125,7 +133,7 @@ class PaymentRepository
         $cartCourses = $user->cart;
         $cartLearningPaths = $user->learningPathInCart;
         $courseItems = $cartCourses->map(function ($course) {
-            $finalPrice = $course->price - ($course->price * ($course->discount / 100));
+            $finalPrice = $course->price ?? 0 - ($course->price * ($course->discount ?? 0 / 100));
             return [
                 'id' => $course->id,
                 'name' => $course->title,
@@ -149,6 +157,7 @@ class PaymentRepository
                 'type' => 'Learning Path'
             ];
         });
+
         if ($courseItems->isEmpty() && $learningPathItems->isEmpty()) {
             throw new \Exception('No items in cart');
         } elseif ($courseItems->isEmpty()) {
@@ -158,6 +167,7 @@ class PaymentRepository
         } else {
             $items = $courseItems->merge($learningPathItems)->toArray();
         }
+
         $totalAmount = collect($items)->sum('price');
         $invoice = Invoice::create([
             'username' => $payment->user->first_name . ' ' . $payment->user->last_name,
@@ -169,17 +179,42 @@ class PaymentRepository
             'payment_id' => $payment->id,
         ]);
         $this->generateInvoicePDF($invoice->id);
-        $courses = $user->cart;
-        $uniqueCourseIds = $courses->pluck('id')->unique();
-        $user->subscribedCourses()->syncWithoutDetaching($uniqueCourseIds);
-        $user->subscribedLearningPaths()->syncWithoutDetaching($user->learningPathInCart->pluck('id')->unique());
-        foreach ($courses as $course) {
-            Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
-        }
-        foreach ($user->learningPathInCart as $learningPath) {
-            Mail::to($user->email)->send(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
-        }
+        $this->subscribeUserToItems($user, $cartCourses, $cartLearningPaths);
         $user->cart()->detach();
+    }
+
+    private function subscribeUserToItems(User $user, $cartCourses, $cartLearningPaths) : void
+    {
+        $currentSubscribedCourseIds = $user->subscribedCourses->pluck('id')->toArray();
+        $currentSubscribedLearningPathIds = $user->subscribedLearningPaths->pluck('id')->toArray();
+        $newCourseIds = $cartCourses->pluck('id')->diff($currentSubscribedCourseIds)->toArray();
+        if (!empty($newCourseIds)) {
+            $user->subscribedCourses()->attach($newCourseIds);
+            foreach ($cartCourses->whereIn('id', $newCourseIds) as $course) {
+                Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
+            }
+        }
+        $newLearningPathIds = $cartLearningPaths->pluck('id')->diff($currentSubscribedLearningPathIds)->toArray();
+        if (!empty($newLearningPathIds)) {
+            $user->subscribedLearningPaths()->attach($newLearningPathIds);
+            foreach ($cartLearningPaths->whereIn('id', $newLearningPathIds) as $learningPath) {
+                Mail::to($user->email)->send(new sendSubscriptionMail(false, $learningPath->title, $learningPath->id));
+                foreach ($learningPath->courses as $course) {
+                    if (!in_array($course->id, $currentSubscribedCourseIds)) {
+                        $user->subscribedCourses()->attach($course->id);
+                        Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
+                        if ($course->teaching_type == TeachingTypeEnum::ONLINE->value) {
+                            $icsContent = self::generateIcsContent($course);
+                            $filename = "course-{$course->id}.ics";
+                            Storage::disk('local')->put($filename, $icsContent);
+                            $pathToFile = storage_path('app/' . $filename);
+                            Mail::to($user->email)->send(new GoogleMeetConfirmation($course, $course->link, $pathToFile));
+                            Storage::disk('local')->delete($filename);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -200,9 +235,7 @@ class PaymentRepository
     {
         $invoice = Invoice::findOrFail($invoiceId);
         $pdf = PDF::loadView('invoices.invoice', compact('invoice'));
-        // Generate PDF content
         $pdfContent = $pdf->output();
-        // Send the PDF via email
         Mail::to($invoice->email)->send(new InvoiceMail($invoice, $pdfContent));
         return response()->json(['message' => 'Invoice sent successfully.']);
     }
@@ -238,5 +271,30 @@ class PaymentRepository
         ]);
     }
 
+    private static function generateIcsContent($course): string
+    {
+        $startDateTime = gmdate('Ymd\THis\Z', $course->start_time);
+        $endDateTime = gmdate('Ymd\THis\Z', $course->end_time);
+
+        $courseCreator = $course->facilitator;
+        $organizerEmail = $courseCreator->email;
+        $organizerName = "{$courseCreator->first_name} {$courseCreator->last_name}";
+
+        $icsContent = "BEGIN:VCALENDAR\r\n";
+        $icsContent .= "VERSION:2.0\r\n";
+        $icsContent .= "PRODID:-//Learnado//EN\r\n";
+        $icsContent .= "BEGIN:VEVENT\r\n";
+        $icsContent .= "UID:" . uniqid() . "\r\n";
+        $icsContent .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
+        $icsContent .= "DTSTART:{$startDateTime}\r\n";
+        $icsContent .= "DTEND:{$endDateTime}\r\n";
+        $icsContent .= "SUMMARY:{$course->title}\r\n";
+        $icsContent .= "DESCRIPTION:{$course->description}\r\n";
+        $icsContent .= "ORGANIZER;CN=\"{$organizerName}\":mailto:{$organizerEmail}\r\n";
+        $icsContent .= "END:VEVENT\r\n";
+        $icsContent .= "END:VCALENDAR\r\n";
+
+        return $icsContent;
+    }
 
 }

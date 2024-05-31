@@ -222,3 +222,4 @@ Route::get('/facilitators', IndexFacilitatorsController::class);
 Route::get('/guest-learning-paths', IndexLearningPathForGuestController::class);
 Route::get('/guest-learning-paths/{id}', GetLearningPathForGuestByIdController::class);
 Route::get('/upcoming-courses', \App\Http\Controllers\Api\Course\GetUpcomingCoursesController::class);
+Route::get('/stats', \App\Http\Controllers\Api\Statstics\GuestStatisticsController::class);

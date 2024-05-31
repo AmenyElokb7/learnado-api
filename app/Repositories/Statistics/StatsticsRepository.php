@@ -264,4 +264,24 @@ class StatsticsRepository
             'total_price' => $totalPrice,
         ];
     }
+
+    public static function getGuestStatistics() : array
+    {
+        $courses = Course::where('is_public', 1)->where('is_active', 1)->where('is_offline',0)->count();
+        $instructors = User::where('role', UserRoleEnum::FACILITATOR->value)->count();
+        $onlineCourses = Course::where('is_public', 1)->where('is_active', 1)->where('is_offline',0)->where('teaching_type', TeachingTypeEnum::ONLINE->value)->count();
+        $enrolledStudentsCourses = Course::where('is_public', 1)->where('is_active', 1)->where('is_offline',0)->get()->sum(function ($course) {
+            return $course->subscribers()->count();
+        });
+        $enrolledStudentsLearningPaths = LearningPath::where('is_public', 1)->where('is_active', 1)->get()->sum(function ($learningPath) {
+            return $learningPath->subscribedUsersLearningPath()->count();
+        });
+        $totalEnrolledStudents = $enrolledStudentsCourses + $enrolledStudentsLearningPaths;
+        return [
+            'courses' => $courses,
+            'instructors' => $instructors,
+            'online_courses' => $onlineCourses,
+            'students' => $totalEnrolledStudents
+        ];
+    }
 }

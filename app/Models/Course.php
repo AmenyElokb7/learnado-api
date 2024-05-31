@@ -207,6 +207,14 @@ class Course extends Model
         }
         return $query;
     }
+    public function scopeByLanguage($query, $languageId)
+    {
+        if ($languageId !== null) {
+            return $query->where('language_id', $languageId);
+        }
+        return $query;
+    }
+
     public function scopeByPriceMin($query, $priceMin)
     {
         if ($priceMin !== null && $priceMin > 0) {

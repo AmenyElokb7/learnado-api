@@ -50,7 +50,11 @@ class PaymentRepository
         $courses = $user->cart()->whereIn('course_id', $items->pluck('course_id'))->get();
         $learningPaths = $user->learningPathInCart()->whereIn('learning_path_id', $items->pluck('learning_path_id'))->get();
         $courseLineItems = $courses->map(function ($course) {
-            $finalPrice = $course->price - ($course->price * ($course->discount ?? 0 / 100));
+            if( $course->discount != 0 || $course->discount != null){
+                $finalPrice = $course->price - ($course->price * $course->discount / 100);
+            }else{
+                $finalPrice = $course->price;
+            }
             return [
                 'price_data' => [
                     'currency' => 'usd',
@@ -71,11 +75,11 @@ class PaymentRepository
 
             $totalPrice = $purchasedCourses->sum(function ($courseId) {
                 $course = Course::find($courseId);
-                // foreach course
-                if ($course->discount) {
+                if( $course->discount != 0 || $course->discount != null){
                     return $course->price - ($course->price * $course->discount / 100);
+                }else{
+                    return $course->price;
                 }
-                return $course->price;
             });
             $totalPrice = $learningPath->price - $totalPrice;
 

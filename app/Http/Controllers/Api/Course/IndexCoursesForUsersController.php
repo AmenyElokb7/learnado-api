@@ -59,6 +59,7 @@ class IndexCoursesForUsersController extends Controller
             'price_max' => $request->input('price_max', null),
             'start_time_min' => $startTimeMinUnix,
             'start_time_max' => $startTimeMaxUnix,
+            'language' => $request->input('language', null),
         ];
         $order_by = [
             'created_at',

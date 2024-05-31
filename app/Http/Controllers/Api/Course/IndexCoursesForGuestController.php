@@ -54,6 +54,7 @@ class IndexCoursesForGuestController extends Controller
             'price_min' => $request->input('price_min', null),
             'start_time_min' => $startTimeMinUnix,
             'start_time_max' => $startTimeMaxUnix,
+            'language' => $request->input('language', null),
             ];
         $order_by = [
             'created_at',

@@ -64,6 +64,9 @@ class StatsticsRepository
         $totalPricePerMonth = $months->mapWithKeys(function ($month) use ($totalPricePerMonth) {
             return [$month => $totalPricePerMonth->get($month, 0)];
         });
+        $totalPricePerMonth = $totalPricePerMonth->map(function ($price) {
+            return round($price, 2);
+        });
         return [
             'enrolled_courses' => $enrolledCourses,
             'completed_courses' => $completedCourses,

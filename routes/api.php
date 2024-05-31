@@ -107,7 +107,7 @@ use \App\Http\Controllers\Api\Quiz\ValidateOpenQuestionAnswerController;
 use \App\Http\Controllers\Api\Quiz\IndexOpenAnswerController;
 use \App\Http\Controllers\Api\Statstics\FacilitatorStatsticsController;
 use \App\Http\Controllers\Api\Message\IndexUsersForFacilitatorsController;
-
+use \App\Http\Controllers\Api\Language\IndexLanguagesWithCoursesController;
 // _________________________________Public routes_____________________________________
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -130,6 +130,7 @@ Route::get('/guest-learning-paths', IndexLearningPathForGuestController::class);
 Route::get('/guest-learning-paths/{id}', GetLearningPathForGuestByIdController::class);
 Route::get('/upcoming-courses', GetUpcomingCoursesController::class);
 Route::get('/stats', GuestStatisticsController::class);
+Route::get('/filter-languages', IndexLanguagesWithCoursesController::class);
 
 // _________________________________Protected routes_____________________________________
 Route::middleware('auth:user')->group(function () {

@@ -18,6 +18,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpKernel\Exception\LengthRequiredHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -134,6 +135,10 @@ class MessageRepository
 
     public static function sendPrivateMessage($data, $receiverId): Message
     {
+        Log::info('Sending private message', [
+            'data' => $data,
+            'receiverId' => $receiverId
+        ]);
         $message = Message::create([
             'message' => $data,
         ]);

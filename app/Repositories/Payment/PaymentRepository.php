@@ -12,6 +12,7 @@ use App\Models\Invoice;
 use App\Models\LearningPath;
 use App\Models\Payment;
 use App\Models\User;
+use App\Repositories\Course\CourseRepository;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -26,16 +27,13 @@ use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-
 class PaymentRepository
 {
     protected $stripe;
-
     public function __construct()
     {
         $this->stripe = new StripeClient(config('services.stripe.secret'));
     }
-
     /**
      * @param User $user
      * @param array $itemIds
@@ -52,7 +50,11 @@ class PaymentRepository
         $courses = $user->cart()->whereIn('course_id', $items->pluck('course_id'))->get();
         $learningPaths = $user->learningPathInCart()->whereIn('learning_path_id', $items->pluck('learning_path_id'))->get();
         $courseLineItems = $courses->map(function ($course) {
-            $finalPrice = $course->price - ($course->price * ($course->discount ?? 0 / 100));
+            if( $course->discount != 0 || $course->discount != null){
+                $finalPrice = $course->price - ($course->price * $course->discount / 100);
+            }else{
+                $finalPrice = $course->price;
+            }
             return [
                 'price_data' => [
                     'currency' => 'usd',
@@ -73,11 +75,11 @@ class PaymentRepository
 
             $totalPrice = $purchasedCourses->sum(function ($courseId) {
                 $course = Course::find($courseId);
-                // foreach course
-                if ($course->discount) {
+                if( $course->discount != 0 || $course->discount != null){
                     return $course->price - ($course->price * $course->discount / 100);
+                }else{
+                    return $course->price;
                 }
-                return $course->price;
             });
             $totalPrice = $learningPath->price - $totalPrice;
 
@@ -204,7 +206,7 @@ class PaymentRepository
                         $user->subscribedCourses()->attach($course->id);
                         Mail::to($user->email)->send(new sendSubscriptionMail(true, $course->title, $course->id));
                         if ($course->teaching_type == TeachingTypeEnum::ONLINE->value) {
-                            $icsContent = self::generateIcsContent($course);
+                            $icsContent = CourseRepository::generateIcsContent($course);
                             $filename = "course-{$course->id}.ics";
                             Storage::disk('local')->put($filename, $icsContent);
                             $pathToFile = storage_path('app/' . $filename);
@@ -216,7 +218,6 @@ class PaymentRepository
             }
         }
     }
-
     /**
      * @param $event
      * @throws Exception
@@ -260,7 +261,6 @@ class PaymentRepository
      * @param $invoiceId
      * @return Response
      */
-
     public final function downloadInvoicePDF($invoiceId) : Response
     {
         $invoice = Invoice::findOrFail($invoiceId);
@@ -270,31 +270,4 @@ class PaymentRepository
             'Content-Disposition' => 'attachment; filename="invoice-' . $invoiceId . '.pdf"'
         ]);
     }
-
-    private static function generateIcsContent($course): string
-    {
-        $startDateTime = gmdate('Ymd\THis\Z', $course->start_time);
-        $endDateTime = gmdate('Ymd\THis\Z', $course->end_time);
-
-        $courseCreator = $course->facilitator;
-        $organizerEmail = $courseCreator->email;
-        $organizerName = "{$courseCreator->first_name} {$courseCreator->last_name}";
-
-        $icsContent = "BEGIN:VCALENDAR\r\n";
-        $icsContent .= "VERSION:2.0\r\n";
-        $icsContent .= "PRODID:-//Learnado//EN\r\n";
-        $icsContent .= "BEGIN:VEVENT\r\n";
-        $icsContent .= "UID:" . uniqid() . "\r\n";
-        $icsContent .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
-        $icsContent .= "DTSTART:{$startDateTime}\r\n";
-        $icsContent .= "DTEND:{$endDateTime}\r\n";
-        $icsContent .= "SUMMARY:{$course->title}\r\n";
-        $icsContent .= "DESCRIPTION:{$course->description}\r\n";
-        $icsContent .= "ORGANIZER;CN=\"{$organizerName}\":mailto:{$organizerEmail}\r\n";
-        $icsContent .= "END:VEVENT\r\n";
-        $icsContent .= "END:VCALENDAR\r\n";
-
-        return $icsContent;
-    }
-
 }

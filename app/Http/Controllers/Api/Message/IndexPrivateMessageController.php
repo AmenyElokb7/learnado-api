@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class IndexPrivateMessageController extends Controller
 {
@@ -22,11 +23,11 @@ class IndexPrivateMessageController extends Controller
         try
         {
             $message = MessageRepository::indexPrivateMessages();
-            return$this->returnSuccessResponse(__('message_retrieved_successfully'),$message, Response::HTTP_OK);
+            return$this->returnSuccessResponse(__('message_retrieved_successfully'),$message, ResponseAlias::HTTP_OK);
         }
         catch (\Exception $e) {
             Log::error($e->getMessage());
-            return $this->returnErrorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

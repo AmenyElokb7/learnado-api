@@ -66,9 +66,6 @@ class CreateAccountController extends Controller
 {
     protected $adminRepository;
 
-    /**
-     * Handle the incoming request.
-     */
     use SuccessResponse, ErrorResponse;
 
     public function __construct(AdminRepository $adminRepository)
@@ -94,6 +91,10 @@ class CreateAccountController extends Controller
 
     }
 
+    /**
+     * @param CreateUserAccountRequest $request
+     * @return array
+     */
     private function getAttributes(CreateUserAccountRequest $request): array
     {
         return $request->validated();

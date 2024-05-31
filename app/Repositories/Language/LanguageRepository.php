@@ -47,4 +47,18 @@ class LanguageRepository
         }
         return $languages;
     }
+
+    public static function indexLanguagesWithCourses(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    {
+        $query = Language::whereHas('courses', function ($query) {
+            $query->where('is_active', true)->where('is_public', true)->where('is_offline', false);
+        })->newQuery();
+        Language::applyFilters($queryConfig->getFilters(), $query);
+
+        $languages = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();
+        if ($queryConfig->getPaginated()) {
+            return self::applyPagination($languages, $queryConfig);
+        }
+        return $languages;
+    }
 }

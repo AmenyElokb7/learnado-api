@@ -92,7 +92,23 @@ use \App\Http\Controllers\Api\LearningPath\IndexAttestationsController;
 use \App\Http\Controllers\Api\Quiz\DownloadAttestationController;
 use \App\Http\Controllers\Api\LearningPath\IndexCompletedLearningPathForUsersController;
 use \App\Http\Controllers\Api\Category\IndexCategoriesWithLearningPathsController;
-// Public routes
+use \App\Http\Controllers\Api\Statstics\GuestStatisticsController;
+use \App\Http\Controllers\Api\Course\GetUpcomingCoursesController;
+use \App\Http\Controllers\Api\Message\SendPrivateMessageController;
+use \App\Http\Controllers\Api\Message\IndexPrivateMessageController;
+use \App\Http\Controllers\Api\Message\GetUnreadCountController;
+use \App\Http\Controllers\Api\Message\MarkAsReadController;
+use \App\Http\Controllers\Api\Statstics\UserStatsticsController;
+use \App\Http\Controllers\Api\Message\IndexFacilitatorsChatForUserController;
+use \App\Http\Controllers\Api\Statstics\AdminStatsticsController;
+use \App\Http\Controllers\Api\Statstics\DesignerStatsticsController;
+use \App\Http\Controllers\Api\Quiz\InvalidateOpenQuestionAnswerController;
+use \App\Http\Controllers\Api\Quiz\ValidateOpenQuestionAnswerController;
+use \App\Http\Controllers\Api\Quiz\IndexOpenAnswerController;
+use \App\Http\Controllers\Api\Statstics\FacilitatorStatsticsController;
+use \App\Http\Controllers\Api\Message\IndexUsersForFacilitatorsController;
+use \App\Http\Controllers\Api\Language\IndexLanguagesWithCoursesController;
+// _________________________________Public routes_____________________________________
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
 Route::post('/password-set', SetPasswordController::class);
@@ -101,7 +117,22 @@ Route::post('/refresh-token', TokenController::class)->middleware('refreshToken'
 Route::get('/certificates/download/{certificateId}', DownloadCertificateController::class)->name('certificates.download');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 Route::post('/invoices/{invoice_id}', DownloadInvoiceController::class);
+Route::get('/guest-courses', IndexCoursesForGuestController::class);
+Route::get('/guest-courses/{id}', GetCourseByIdForGuestController::class);
+Route::get('/steps/{id}', GetStepMediaByIdController::class);
+Route::get('/categories', IndexCategoriesController::class);
+Route::get('/categories-filter', IndexCategoriesWithCoursesController::class);
+Route::get('/categories-learning-paths', IndexCategoriesWithLearningPathsController::class);
+Route::get('/categories/{id}', GetCategoryByIdController::class);
+Route::get('/languages', IndexLanguagesController::class);
+Route::get('/facilitators', IndexFacilitatorsController::class);
+Route::get('/guest-learning-paths', IndexLearningPathForGuestController::class);
+Route::get('/guest-learning-paths/{id}', GetLearningPathForGuestByIdController::class);
+Route::get('/upcoming-courses', GetUpcomingCoursesController::class);
+Route::get('/stats', GuestStatisticsController::class);
+Route::get('/filter-languages', IndexLanguagesWithCoursesController::class);
 
+// _________________________________Protected routes_____________________________________
 Route::middleware('auth:user')->group(function () {
     Route::post('/logout', LogoutController::class);
     Route::post('/update-profile', UpdateProfileController::class);
@@ -110,13 +141,14 @@ Route::middleware('auth:user')->group(function () {
     Route::get('/courses/{id}', GetCourseByIdForUserController::class);
     Route::post('/send-message', ForumMessageSendController::class);
     Route::get('/forum-messages/{courseId}/{learningPathId}', IndexForumMessagesController::class);
-    Route::post('/send-private-message', \App\Http\Controllers\Api\Message\SendPrivateMessageController::class);
-    Route::get('/private-messages', \App\Http\Controllers\Api\Message\IndexPrivateMessageController::class);
+    Route::post('/send-private-message', SendPrivateMessageController::class);
+    Route::get('/private-messages', IndexPrivateMessageController::class);
     Route::get('/learning-paths', IndexLearningPathForUsersController::class);
     Route::get('/learning-paths/{id}', GetLearningPathByIdController::class);
-    Route::get('/messages/unread-count', \App\Http\Controllers\Api\Message\GetUnreadCountController::class);
-    Route::post('/messages/mark-as-read/{id}', \App\Http\Controllers\Api\Message\MarkAsReadController::class);
+    Route::get('/messages/unread-count', GetUnreadCountController::class);
+    Route::post('/messages/mark-as-read/{id}', MarkAsReadController::class);
 
+    // _________________________________User routes_____________________________________
     Route::middleware('user')->group(function () {
         Route::post('/enroll-learning-path/{id}', SubscribeToLearningPathController::class);
         Route::post('/subscribe-course/{id}', CourseSubscriptionController::class);
@@ -141,10 +173,11 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/attestations', IndexAttestationsController::class);
         Route::post('/download-attestation/{learning_path_id}', DownloadAttestationController::class);
         Route::get('/completed-learning-paths', IndexCompletedLearningPathForUsersController::class);
-        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\UserStatsticsController::class);
-        Route::get('/facilitators-chat', \App\Http\Controllers\Api\Message\IndexFacilitatorsChatForUserController::class);
+        Route::get('/statistics', UserStatsticsController::class);
+        Route::get('/facilitators-chat', IndexFacilitatorsChatForUserController::class);
     });
 
+// _________________________________Admin routes_____________________________________
     Route::middleware('admin')->prefix(
         'admin'
     )->group(function () {
@@ -164,9 +197,9 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/update-category/{id}', UpdateCategoryController::class);
         Route::delete('/delete-category/{id}', DeleteCategoryController::class);
         Route::get('/notifications', AdminNotificationController::class);
-        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\AdminStatsticsController::class);
+        Route::get('/statistics', AdminStatsticsController::class);
     });
-
+    // _________________________________Designer routes_____________________________________
     Route::middleware('designer')->prefix(
         'designer'
     )->group(function () {
@@ -194,32 +227,19 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/set-active-learning-path/{learning_path_id}', SetLearningPathActiveController::class);
         Route::post('/set-online-learning-path/{learning_path_id}', SetLearningPathOnlineController::class);
         Route::post('/set-offline-learning-path/{learning_path_id}', SetLearningPathOfflineController::class);
-        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\DesignerStatsticsController::class);
-
+        Route::get('/statistics', DesignerStatsticsController::class);
     });
+
+    // _________________________________Facilitator routes_____________________________________
     Route::middleware('facilitator')->prefix(
         'facilitator'
     )->group(function () {
         Route::get('/courses', IndexCoursesForFacilitator::class);
         Route::get('courses/{id}', GetCourseByIdForFacilitatorController::class);
-        Route::post('/invalidate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\InvalidateOpenQuestionAnswerController::class);
-        Route::post('/validate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\ValidateOpenQuestionAnswerController::class);
-        Route::get('/open-questions', \App\Http\Controllers\Api\Quiz\IndexOpenAnswerController::class);
-        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\FacilitatorStatsticsController::class);
-        Route::get('/users', \App\Http\Controllers\Api\Message\IndexUsersForFacilitatorsController::class);
+        Route::post('/invalidate-answer/{answer_id}', InvalidateOpenQuestionAnswerController::class);
+        Route::post('/validate-answer/{answer_id}', ValidateOpenQuestionAnswerController::class);
+        Route::get('/open-questions', IndexOpenAnswerController::class);
+        Route::get('/statistics', FacilitatorStatsticsController::class);
+        Route::get('/users', IndexUsersForFacilitatorsController::class);
     });
 });
-// Public routes for guests
-Route::get('/guest-courses', IndexCoursesForGuestController::class);
-Route::get('/guest-courses/{id}', GetCourseByIdForGuestController::class);
-Route::get('/steps/{id}', GetStepMediaByIdController::class);
-Route::get('/categories', IndexCategoriesController::class);
-Route::get('/categories-filter', IndexCategoriesWithCoursesController::class);
-Route::get('/categories-learning-paths', IndexCategoriesWithLearningPathsController::class);
-Route::get('/categories/{id}', GetCategoryByIdController::class);
-Route::get('/languages', IndexLanguagesController::class);
-Route::get('/facilitators', IndexFacilitatorsController::class);
-Route::get('/guest-learning-paths', IndexLearningPathForGuestController::class);
-Route::get('/guest-learning-paths/{id}', GetLearningPathForGuestByIdController::class);
-Route::get('/upcoming-courses', \App\Http\Controllers\Api\Course\GetUpcomingCoursesController::class);
-Route::get('/stats', \App\Http\Controllers\Api\Statstics\GuestStatisticsController::class);

@@ -7,6 +7,7 @@ use App\Repositories\User\UserRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\SuccessResponse;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
@@ -69,7 +70,7 @@ class SendPasswordResetMailController extends Controller
         $this->userRepository = $userRepository;
     }
 
-    public function __invoke(Request $request)
+    public function __invoke(Request $request) : JsonResponse
     {
         try {
             $email = $request->input('email');

@@ -113,6 +113,11 @@ class AdminNotificationController extends Controller
             return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * @param Request $request
+     * @return QueryConfig
+     */
     private function getAttributes(Request $request): QueryConfig
     {
         $paginationParams = $this->getPaginationParams($request);

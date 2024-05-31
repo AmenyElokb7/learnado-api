@@ -89,7 +89,7 @@ class CourseRepository
      */
 
 
-    private static function generateIcsContent($course): string
+    public static function generateIcsContent($course): string
     {
         $startDateTime = gmdate('Ymd\THis\Z', $course->start_time);
         $endDateTime = gmdate('Ymd\THis\Z', $course->end_time);
@@ -266,7 +266,7 @@ class CourseRepository
             'language',
             'category'
         ])
-            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+            ->selectRaw('courses.*, (courses.price - (COALESCE(courses.price ,0) * COALESCE(courses.discount, 0) / 100)) as final_price')
             ->newQuery();
 
         $courses = $CourseQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
@@ -317,7 +317,7 @@ class CourseRepository
             'language',
             'category'
         ])
-            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
+            ->selectRaw('courses.*, (courses.price - (COALESCE(courses.price,0) * COALESCE(courses.discount,0) / 100)) as final_price')
             ->newQuery();
 
         $course = $query->find($courseId);
@@ -387,7 +387,7 @@ class CourseRepository
             'language',
             'category'
         ])
-            ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price');
+            ->selectRaw('courses.*, (courses.price - (COALESCE(courses.price,0) * COALESCE(courses.discount,0) / 100)) as final_price');
 
         // Apply filters to the query
         Course::applyFilters($queryConfig->getFilters(), $CourseQuery);
@@ -529,13 +529,22 @@ class CourseRepository
                 $query->where('users.id', $authUserId)
                     ->where('course_subscription_users.is_completed', 1);
             });
+
         }
         $completedCoursesQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
 
         // Decide whether to get a paginated result or a collection
-        return $queryConfig->getPaginated()
+        $courses = $queryConfig->getPaginated()
             ? $completedCoursesQuery->paginate($queryConfig->getPerPage())
             : $completedCoursesQuery->get();
+
+        $courses->each(function ($course) {
+            $course->lessons_count = $course->steps->count();
+            $course->duration = $course->steps->sum('duration');
+            $course->subscribed_users_count = $course->subscribers->count();
+            $course->is_subscribed = true;
+        });
+        return $courses;
     }
     /**
      * get all items in the cart
@@ -718,7 +727,7 @@ class CourseRepository
             'category'
         ])
             ->selectRaw('courses.*, (courses.price - (courses.price * courses.discount / 100)) as final_price')
-            ->where('start_time', '>', now())
+            ->where('start_time', '>', now()->timestamp)
             ->orderBy('start_time', 'asc')
             ->newQuery();
         Course::applyFilters($queryConfig->getFilters(), $upcomingCoursesQuery);

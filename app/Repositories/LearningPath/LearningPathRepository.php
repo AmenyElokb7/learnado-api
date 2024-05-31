@@ -12,14 +12,13 @@ use App\Models\LearningPath;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Repositories\Course\CourseRepository;
 use App\Repositories\Media\MediaRepository;
 use App\Repositories\Quiz\QuizRepository;
 use App\Traits\PaginationParams;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -31,11 +30,12 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class LearningPathRepository
 {
-
     use PaginationParams;
-
     /**
+     * create learning path
      * @throws Exception
+     * @param $data
+     * @return LearningPath
      */
     public final function createLearningPath($data): LearningPath
     {
@@ -119,7 +119,6 @@ class LearningPathRepository
      * @return Builder|\Illuminate\Database\Eloquent\Collection|Model|Builder[]
      * @throws Exception
      */
-
     public static function subscribeUsersToLearningPath($learningPathId, array $userIds, bool $byAdmin = false): Builder|array|\Illuminate\Database\Eloquent\Collection|Model
     {
         $learningPath = LearningPath::with(['courses'])->findOrFail($learningPathId);
@@ -127,7 +126,6 @@ class LearningPathRepository
         if (!$byAdmin && !$learningPath->is_public) {
             throw new Exception(__('user_not_authorized'));
         }
-
         $validUserIds = User::whereIn('id', $userIds)
             ->where('is_valid', true)
             ->whereDoesntHave('subscribedLearningPaths', function ($query) use ($learningPathId) {
@@ -135,11 +133,9 @@ class LearningPathRepository
             })
             ->pluck('id')
             ->toArray();
-
         if (empty($validUserIds)) {
             throw new Exception(__('No valid users found to subscribe.'));
         }
-
         $learningPathSubscriptions = collect(
             array_map(
                 function ($userId) use ($learningPathId) {
@@ -153,7 +149,6 @@ class LearningPathRepository
                 $validUserIds
             )
         );
-
         $courseSubscriptions = [];
         foreach ($learningPath->courses as $course) {
             foreach ($validUserIds as $userId) {
@@ -167,15 +162,12 @@ class LearningPathRepository
                 }
             }
         }
-
         DB::beginTransaction();
         try {
             DB::table('learning_path_subscriptions')->insert($learningPathSubscriptions->toArray());
-
             if (!empty($courseSubscriptions)) {
                 DB::table('course_subscription_users')->insert($courseSubscriptions);
             }
-
             $courseIds = $learningPath->courses->pluck('id')->toArray();
             $courses = Course::whereIn('id', $courseIds)->get();
 
@@ -187,7 +179,7 @@ class LearningPathRepository
                         if (!$course->subscribers->contains('id', $userId)) {
                             Mail::to($user->email)->queue(new sendSubscriptionMail(true, $course->title, $course->id));
                             if ($course->teaching_type == TeachingTypeEnum::ONLINE->value) {
-                                $icsContent = self::generateIcsContent($course);
+                                $icsContent = CourseRepository::generateIcsContent($course);
                                 $filename = "course-{$course->id}.ics";
                                 Storage::disk('local')->put($filename, $icsContent);
                                 $pathToFile = storage_path('app/' . $filename);
@@ -205,10 +197,8 @@ class LearningPathRepository
             Log::error('Error subscribing users to learning path: ' . $e->getMessage());
             throw $e;
         }
-
         return $learningPath;
     }
-
 
     /**
      * index learning paths
@@ -286,6 +276,7 @@ class LearningPathRepository
      * @param $learningPathId
      * @return void
      */
+
     public static function setLearningPathOffline($learningPathId): void
     {
         $learningPath = LearningPath::find($learningPathId);
@@ -300,6 +291,7 @@ class LearningPathRepository
      * @param $learningPathId
      * @return void
      */
+
     public static function setLearningPathOnline($learningPathId): void
     {
         $learningPath = LearningPath::find($learningPathId);
@@ -308,6 +300,7 @@ class LearningPathRepository
             $learningPath->save();
         }
     }
+
     /**
      * @throws Exception
      * @param $learningPathId
@@ -554,31 +547,5 @@ class LearningPathRepository
         } else {
             return $attestations->get();
         }
-    }
-
-    private static function generateIcsContent($course): string
-    {
-        $startDateTime = gmdate('Ymd\THis\Z', $course->start_time);
-        $endDateTime = gmdate('Ymd\THis\Z', $course->end_time);
-
-        $courseCreator = $course->facilitator;
-        $organizerEmail = $courseCreator->email;
-        $organizerName = "{$courseCreator->first_name} {$courseCreator->last_name}";
-
-        $icsContent = "BEGIN:VCALENDAR\r\n";
-        $icsContent .= "VERSION:2.0\r\n";
-        $icsContent .= "PRODID:-//Learnado//EN\r\n";
-        $icsContent .= "BEGIN:VEVENT\r\n";
-        $icsContent .= "UID:" . uniqid() . "\r\n";
-        $icsContent .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
-        $icsContent .= "DTSTART:{$startDateTime}\r\n";
-        $icsContent .= "DTEND:{$endDateTime}\r\n";
-        $icsContent .= "SUMMARY:{$course->title}\r\n";
-        $icsContent .= "DESCRIPTION:{$course->description}\r\n";
-        $icsContent .= "ORGANIZER;CN=\"{$organizerName}\":mailto:{$organizerEmail}\r\n";
-        $icsContent .= "END:VEVENT\r\n";
-        $icsContent .= "END:VCALENDAR\r\n";
-
-        return $icsContent;
     }
 }

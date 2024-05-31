@@ -71,7 +71,7 @@ class CategoryRepository
     {
 
         $query = Category::with('media')->whereHas('courses', function ($query) {
-            $query->where('is_active', true);
+            $query->where('is_active', true)->where('is_public', true)->where('is_offline', false);
         })->newQuery();
         Category::applyFilters($queryConfig->getFilters(), $query);
         $categories = $query->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection())->get();

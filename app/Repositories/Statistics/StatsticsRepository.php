@@ -64,6 +64,9 @@ class StatsticsRepository
         $totalPricePerMonth = $months->mapWithKeys(function ($month) use ($totalPricePerMonth) {
             return [$month => $totalPricePerMonth->get($month, 0)];
         });
+        $totalPricePerMonth = $totalPricePerMonth->map(function ($price) {
+            return round($price, 2);
+        });
         return [
             'enrolled_courses' => $enrolledCourses,
             'completed_courses' => $completedCourses,
@@ -155,6 +158,12 @@ class StatsticsRepository
             'total_fee' => $totalFee,
         ];
     }
+
+    /**
+     * Get statistics for admin
+     * @return array
+     * @throws Exception
+     */
     public static function getAdminStatistics() : array
     {
         $users = User::count();
@@ -178,6 +187,11 @@ class StatsticsRepository
             'languages' => $languages
         ];
     }
+
+    /**
+     * Get statistics for designer
+     * @return array
+     */
     public static function getDesignerStatistics() : array
     {
         $user = Auth::user();
@@ -264,6 +278,11 @@ class StatsticsRepository
             'total_price' => $totalPrice,
         ];
     }
+
+    /**
+     * Get statistics for guest
+     * @return array
+     */
 
     public static function getGuestStatistics() : array
     {

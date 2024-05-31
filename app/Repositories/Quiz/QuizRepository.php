@@ -62,7 +62,6 @@ class QuizRepository
 
     }
 
-
     /**
      * @throws Exception
      */
@@ -76,18 +75,14 @@ class QuizRepository
                 throw new Exception(__('quiz_not_found'), ResponseAlias::HTTP_NOT_FOUND);
             }
             $quizData = $quizData['quiz'];
-
-            // Process each question provided in the request
             if (isset($quizData['questions']) && is_array($quizData['questions'])) {
 
                 foreach ($quizData['questions'] as $questionData) {
                     if (isset($questionData['id'])) {
                         $question= $quiz->questions()->find($questionData['id']);
 
-                        // Update existing question
                         self::updateOrCreateQuestion($quiz, $questionData, $questionData['id']);
                     } else {
-                        // Add new question
                         self::createQuestionWithAnswers($quiz, $questionData);
                     }
                 }
@@ -113,23 +108,17 @@ class QuizRepository
         if ($questionId) {
             $question = $quiz->questions()->findOrFail($questionId);
 
-
-            // If changing from QCM to BINARY, delete all existing answers.
             if ($question->type === 'QCM' && $questionData['type'] === 'BINARY') {
 
                 $question->answers()->delete(); // This deletes all related answers.
             }  else if ($question->type === 'BINARY' && $questionData['type'] === 'QCM') {
                     $question->update(['is_valid' => null]);
                 }
-
-            // Update the question itself.
             $question->update($questionData);
         } else {
             $question = $quiz->questions()->create($questionData);
         }
 
-        // If the question is of type BINARY, I don't handle answers here because they should be deleted above.
-        // Only if it's QCM, we update or create new answers.
         if ($questionData['type'] === 'QCM' && isset($questionData['answers']) && is_array($questionData['answers'])) {
             foreach ($questionData['answers'] as $answerData) {
                 if (isset($answerData['id'])) {
@@ -139,7 +128,6 @@ class QuizRepository
                         $answer->update($answerData);
                     }
                 } else {
-                    // Create new answer
                     $question->answers()->create($answerData);
                 }
             }
@@ -159,7 +147,6 @@ class QuizRepository
 
     /**
      * Deletes the quiz associated with the given entity (Step or Learning Path).
-     *
      * @param $quiz_id
      * @throws Exception If the quiz is not found.
      */
@@ -167,11 +154,9 @@ class QuizRepository
     {
         $quiz = Quiz::findOrFail($quiz_id);
         if ($quiz) {
-            // Delete all answers to each question
             foreach ($quiz->questions as $question) {
                 $question->answers()->delete();
             }
-            // Delete all questions
             $quiz->questions()->delete();
 
             // Delete the quiz
@@ -188,9 +173,7 @@ class QuizRepository
     {
         $question = Question::findOrFail($question_id);
         if ($question) {
-            // Delete all answers to the question
             $question->answers()->delete();
-            // Delete the question
             $question->delete();
         } else {
             throw new Exception(__('question_not_found'), ResponseAlias::HTTP_NOT_FOUND);
@@ -215,7 +198,7 @@ class QuizRepository
     * @param $user_id
     * @return int|bool
      */
-    public final function getQuizScoreForUser($quiz_id,$user_id): int| bool
+    public static function getQuizScoreForUser($quiz_id,$user_id): int| bool
     {
         $quizAttempt= QuizAttempt::where('quiz_id',$quiz_id)->where('user_id',$user_id)->first();
         if($quizAttempt){
@@ -223,41 +206,39 @@ class QuizRepository
         }
         return false;
     }
-    public final function indexQuizAttempts(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    public static function indexQuizAttempts(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
     {
-        // index quiz attempts for user with the course title and the section related to that quiz title and the score and whether the user passed or not
         $user_id = auth()->id();
         $quizQuery = QuizAttempt::with('quiz.step.course')->where('user_id', $user_id);
         QuizAttempt::applyFilters($queryConfig->getFilters(), $quizQuery);
 
         $quizQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
 
-        // Decide whether to get a paginated result or a collection
         return $queryConfig->isPaginated() ? $quizQuery->paginate($queryConfig->getPerPage()) : $quizQuery->get();
     }
 
-    public final function indexQuizScores(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
+    public static function indexQuizScores(QueryConfig $queryConfig): LengthAwarePaginator|\Illuminate\Support\Collection
     {
-        // index quiz scores for user with the course title and the section related to that quiz title and the score and whether the user passed or not
         $user_id = auth()->id();
-        // just the course title and the section related to that quiz title and the score and whether the user passed or not
         $quizQuery = QuizAttempt::with(['quiz' => function($query) {
-            $query->select('id', 'step_id')  // Assuming 'id' and 'title' are columns in 'quizzes'
+            $query->select('id', 'step_id', 'learning_path_id')
             ->with(['step' => function($query) {
-                $query->select('id', 'course_id', 'title')  // Assuming 'id' is a column in 'steps'
+                $query->select('id', 'course_id', 'title')
                 ->with(['course' => function($query) {
-                    $query->select('id', 'title');  // Assuming 'id' and 'title' are columns in 'courses'
+                    $query->select('id', 'title');
                 }]);
-            }]);
+            }])
+                ->with(['learningPath' => function($query) {
+                    $query->select('id', 'title');
+                }]);
         }])
             ->where('user_id', $user_id)
-            ->select('id', 'user_id', 'quiz_id', 'score','total_score_possible', 'passed');
+            ->select('id', 'user_id', 'quiz_id', 'score','total_score_possible', 'passed', 'needs_review');
 
         QuizAttempt::applyFilters($queryConfig->getFilters(), $quizQuery);
 
         $quizQuery->orderBy($queryConfig->getOrderBy(), $queryConfig->getDirection());
 
-        // decide whether to get a paginated result or a collection
         return $queryConfig->isPaginated() ? $quizQuery->paginate($queryConfig->getPerPage()) : $quizQuery->get();
 
     }

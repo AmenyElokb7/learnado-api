@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminNotificationController;
 use App\Http\Controllers\Api\Admin\CreateAccountController;
 use App\Http\Controllers\Api\Admin\DeleteAccountController;
+use App\Http\Controllers\Api\Admin\IndexAcceptedUsersController;
+use App\Http\Controllers\Api\Admin\IndexPendingUsersController;
 use App\Http\Controllers\Api\Admin\IndexUsersController;
+use App\Http\Controllers\Api\Admin\RejectUserAccountController;
 use App\Http\Controllers\Api\Admin\SuspendUserAccountController;
 use App\Http\Controllers\Api\Admin\UpdateAccountController;
 use App\Http\Controllers\Api\Admin\ValidateAccountController;
@@ -14,63 +18,80 @@ use App\Http\Controllers\Api\Auth\SetPasswordController;
 use App\Http\Controllers\Api\Auth\TokenController;
 use App\Http\Controllers\Api\Category\CreateCategoryController;
 use App\Http\Controllers\Api\Category\DeleteCategoryController;
+use App\Http\Controllers\Api\Category\GetCategoryByIdController;
 use App\Http\Controllers\Api\Category\IndexCategoriesController;
+use App\Http\Controllers\Api\Category\IndexCategoriesWithCoursesController;
+use App\Http\Controllers\Api\Category\UpdateCategoryController;
+use App\Http\Controllers\Api\Course\CompleteCourseController;
 use App\Http\Controllers\Api\Course\CourseSubscriptionController;
 use App\Http\Controllers\Api\Course\CreateCourseController;
 use App\Http\Controllers\Api\Course\DeleteCourseController;
+use App\Http\Controllers\Api\Course\DownloadCertificateController;
 use App\Http\Controllers\Api\Course\GetCourseByIdForDesignerController;
 use App\Http\Controllers\Api\Course\GetCourseByIdForFacilitatorController;
+use App\Http\Controllers\Api\Course\GetCourseByIdForGuestController;
 use App\Http\Controllers\Api\Course\GetCourseByIdForUserController;
+use App\Http\Controllers\Api\Course\IndexCompletedCoursesController;
+use App\Http\Controllers\Api\Course\IndexCourseCertificatesController;
 use App\Http\Controllers\Api\Course\IndexCoursesForDesignerController;
 use App\Http\Controllers\Api\Course\IndexCoursesForFacilitator;
-use App\Http\Controllers\Api\Course\IndexCoursesForUsersController;
+use App\Http\Controllers\Api\Course\IndexCoursesForGuestController;
+use App\Http\Controllers\Api\Course\IndexEnrolledCoursesController;
 use App\Http\Controllers\Api\Course\UpdateCourseController;
 use App\Http\Controllers\Api\Language\CreateLanguageController;
 use App\Http\Controllers\Api\Language\DeleteLanguageController;
 use App\Http\Controllers\Api\Language\IndexLanguagesController;
 use App\Http\Controllers\Api\LearningPath\CreateLearningController;
 use App\Http\Controllers\Api\LearningPath\DeleteLearningPathController;
-use App\Http\Controllers\Api\LearningPath\LearningPathSubscriptionController;
-use App\Http\Controllers\Api\LearningPath\UpdateLearningPathController;
-use App\Http\Controllers\Api\Quiz\DeleteLearningPathQuizController;
+use App\Http\Controllers\Api\LearningPath\IndexEnrolledLearningPathForUsersController;
+use App\Http\Controllers\Api\Message\SupportMessageController;
+use App\Http\Controllers\Api\Quiz\DeleteAnswerController;
+use App\Http\Controllers\Api\Quiz\DeleteQuestionController;
 use App\Http\Controllers\Api\Quiz\DeleteQuizController;
-use App\Http\Controllers\Api\Quiz\UpdateLearningPathQuizController;
+use App\Http\Controllers\Api\Quiz\GetUserScoreController;
+use App\Http\Controllers\Api\Quiz\IndexQuizAttemptsController;
+use App\Http\Controllers\Api\Quiz\IndexQuizScoresController;
 use App\Http\Controllers\Api\Quiz\UpdateStepQuizController;
 use App\Http\Controllers\Api\Step\CreateStepController;
 use App\Http\Controllers\Api\Step\DeleteStepController;
+use App\Http\Controllers\Api\Step\GetStepMediaByIdController;
 use App\Http\Controllers\Api\Step\UpdateStepController;
+use App\Http\Controllers\Api\Stripe\PaymentController;
+use App\Http\Controllers\Api\Stripe\StripeWebhookController;
+use App\Http\Controllers\Api\User\AddToCartController;
+use App\Http\Controllers\Api\User\ClearCartController;
 use App\Http\Controllers\Api\User\GetUserByIdController;
+use App\Http\Controllers\Api\User\IndexCartItemsController;
 use App\Http\Controllers\Api\User\IndexFacilitatorsController;
+use App\Http\Controllers\Api\User\RemoveFromCartController;
 use App\Http\Controllers\Api\User\UpdateProfileController;
 use App\Http\Controllers\Api\User\UserAnswersController;
+use App\Http\Controllers\Api\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
-use \App\Http\Controllers\Api\Admin\RejectUserAccountController;
-use \App\Http\Controllers\Api\User\UserProfileController;
-use \App\Http\Controllers\Api\Category\GetCategoryByIdController;
-use \App\Http\Controllers\Api\User\AddToCartController;
-use \App\Http\Controllers\Api\User\IndexCartCoursesController;
-use \App\Http\Controllers\Api\Course\IndexCompletedCoursesController;
-use \App\Http\Controllers\Api\Quiz\IndexQuizScoresController;
-use \App\Http\Controllers\Api\Course\IndexCourseCertificatesController;
-use \App\Http\Controllers\Api\Course\CompleteCourseController;
-use \App\Http\Controllers\Api\Quiz\IndexQuizAttemptsController;
-use \App\Http\Controllers\Api\Quiz\GetUserScoreController;
-use \App\Http\Controllers\Api\Course\IndexEnrolledCoursesController;
-use \App\Http\Controllers\Api\Admin\IndexPendingUsersController;
-use \App\Http\Controllers\Api\Admin\IndexAcceptedUsersController;
-use \App\Http\Controllers\Api\Course\DownloadCertificateController;
-use \App\Http\Controllers\Api\Category\UpdateCategoryController;
-use \App\Http\Controllers\Api\Admin\AdminNotificationController;
-use \App\Http\Controllers\Api\Admin\MarkAsReadNotificationController;
-use \App\Http\Controllers\Api\Quiz\DeleteQuestionController;
-use \App\Http\Controllers\Api\Quiz\DeleteAnswerController;
-use \App\Http\Controllers\Api\Message\SupportMessageController;
-use \App\Http\Controllers\Api\Course\IndexCoursesForGuestController;
-use \App\Http\Controllers\Api\Course\GetCourseByIdForGuestController;
-use \App\Http\Controllers\Api\Step\GetStepMediaByIdController;
-use \App\Http\Controllers\Api\Category\IndexCategoriesWithCoursesController;
-use \App\Http\Controllers\Api\User\RemoveFromCartController;
-
+use \App\Http\Controllers\Api\Stripe\IndexInvoicesController;
+use \App\Http\Controllers\Api\Stripe\DownloadInvoiceController;
+use \App\Http\Controllers\Api\Course\SetCourseActiveController;
+use \App\Http\Controllers\Api\LearningPath\SubscribeToLearningPathController;
+use \App\Http\Controllers\Api\LearningPath\CompleteLearningPathController;
+use \App\Http\Controllers\Api\User\GetUserStatisticsController;
+use \App\Http\Controllers\Api\LearningPath\IndexLearningPathForUsersController;
+use \App\Http\Controllers\Api\LearningPath\IndexLearningPathsForDesignerController;
+use App\Http\Controllers\Api\Course\IndexCoursesForUsersController;
+use App\Http\Controllers\Api\LearningPath\GetLearningPathByIdController;
+use \App\Http\Controllers\Api\LearningPath\GetLearningPathForGuestByIdController;
+use \App\Http\Controllers\Api\LearningPath\IndexLearningPathForGuestController;
+use \App\Http\Controllers\Api\Message\IndexForumMessagesController;
+use \App\Http\Controllers\Api\Message\ForumMessageSendController;
+use \App\Http\Controllers\Api\Course\SetCourseOfflineController;
+use \App\Http\Controllers\Api\Course\SetCourseOnlineController;
+use \App\Http\Controllers\Api\LearningPath\FilterCoursesController;
+use \App\Http\Controllers\Api\LearningPath\SetLearningPathActiveController;
+use \App\Http\Controllers\Api\LearningPath\SetLearningPathOfflineController;
+use \App\Http\Controllers\Api\LearningPath\SetLearningPathOnlineController;
+use \App\Http\Controllers\Api\LearningPath\IndexAttestationsController;
+use \App\Http\Controllers\Api\Quiz\DownloadAttestationController;
+use \App\Http\Controllers\Api\LearningPath\IndexCompletedLearningPathForUsersController;
+use \App\Http\Controllers\Api\Category\IndexCategoriesWithLearningPathsController;
 // Public routes
 Route::post('/login', AuthController::class);
 Route::post('/register', RegisterController::class);
@@ -78,6 +99,8 @@ Route::post('/password-set', SetPasswordController::class);
 Route::post('/send-password-reset-mail', SendPasswordResetMailController::class);
 Route::post('/refresh-token', TokenController::class)->middleware('refreshToken');
 Route::get('/certificates/download/{certificateId}', DownloadCertificateController::class)->name('certificates.download');
+Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+Route::post('/invoices/{invoice_id}', DownloadInvoiceController::class);
 
 Route::middleware('auth:user')->group(function () {
     Route::post('/logout', LogoutController::class);
@@ -85,8 +108,17 @@ Route::middleware('auth:user')->group(function () {
     Route::get('/profile', UserProfileController::class);
     Route::get('/courses', IndexCoursesForUsersController::class);
     Route::get('/courses/{id}', GetCourseByIdForUserController::class);
+    Route::post('/send-message', ForumMessageSendController::class);
+    Route::get('/forum-messages/{courseId}/{learningPathId}', IndexForumMessagesController::class);
+    Route::post('/send-private-message', \App\Http\Controllers\Api\Message\SendPrivateMessageController::class);
+    Route::get('/private-messages', \App\Http\Controllers\Api\Message\IndexPrivateMessageController::class);
+    Route::get('/learning-paths', IndexLearningPathForUsersController::class);
+    Route::get('/learning-paths/{id}', GetLearningPathByIdController::class);
+    Route::get('/messages/unread-count', \App\Http\Controllers\Api\Message\GetUnreadCountController::class);
+    Route::post('/messages/mark-as-read/{id}', \App\Http\Controllers\Api\Message\MarkAsReadController::class);
+
     Route::middleware('user')->group(function () {
-        Route::post('/subscribe-learning-path/{id}', LearningPathSubscriptionController::class);
+        Route::post('/enroll-learning-path/{id}', SubscribeToLearningPathController::class);
         Route::post('/subscribe-course/{id}', CourseSubscriptionController::class);
         Route::post('/quiz/submit/{quiz_id}', UserAnswersController::class)->middleware('subscribed');
         Route::get('/enrolled-courses', IndexEnrolledCoursesController::class);
@@ -96,11 +128,21 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/course-certificate', IndexCourseCertificatesController::class);
         Route::get('/quiz-scores', IndexQuizScoresController::class);
         Route::get('/completed-courses', IndexCompletedCoursesController::class);
-        Route::get('/cart', IndexCartCoursesController::class);
+        Route::get('/cart', IndexCartItemsController::class);
         Route::post('/add-to-cart/{course_id}', AddToCartController::class);
         Route::delete('/remove-from-cart/{course_id}', RemoveFromCartController::class);
-        Route::post('/checkout', \App\Http\Controllers\Api\User\PaymentController::class)->name('stripe.checkout');
-
+        Route::post('/checkout', PaymentController::class)->name('stripe.checkout');
+        Route::delete('/clear-cart', ClearCartController::class);
+        Route::get('/invoices', IndexInvoicesController::class);
+        Route::post('/complete-learning-path/{learning_path_id}', CompleteLearningPathController::class);
+        Route::get('/statistics', GetUserStatisticsController::class);
+        Route::get('/enrolled-learning-paths', IndexEnrolledLearningPathForUsersController::class);
+        Route::post('/add-learning-path-to-cart/{learning_path_id}', \App\Http\Controllers\Api\LearningPath\AddToCartController::class);
+        Route::get('/attestations', IndexAttestationsController::class);
+        Route::post('/download-attestation/{learning_path_id}', DownloadAttestationController::class);
+        Route::get('/completed-learning-paths', IndexCompletedLearningPathForUsersController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\UserStatsticsController::class);
+        Route::get('/facilitators-chat', \App\Http\Controllers\Api\Message\IndexFacilitatorsChatForUserController::class);
     });
 
     Route::middleware('admin')->prefix(
@@ -122,8 +164,9 @@ Route::middleware('auth:user')->group(function () {
         Route::post('/update-category/{id}', UpdateCategoryController::class);
         Route::delete('/delete-category/{id}', DeleteCategoryController::class);
         Route::get('/notifications', AdminNotificationController::class);
-        Route::post('/mark-as-read/{messageId}', MarkAsReadNotificationController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\AdminStatsticsController::class);
     });
+
     Route::middleware('designer')->prefix(
         'designer'
     )->group(function () {
@@ -136,9 +179,7 @@ Route::middleware('auth:user')->group(function () {
         Route::delete('/delete-step/{step_id}', DeleteStepController::class);
         Route::delete('/delete-quiz/{quiz_id}', DeleteQuizController::class);
         Route::post('/create-learning-path', CreateLearningController::class);
-        Route::patch('/update-learning-path/{id}', UpdateLearningPathController::class);
-        Route::patch('/update-lp-quiz/{learning_path_id}', UpdateLearningPathQuizController::class);
-        Route::delete('/delete-lp-quiz/{learning_path_id}', DeleteLearningPathQuizController::class);
+        Route::get('/learning-paths', IndexLearningPathsForDesignerController::class);
         Route::delete('/delete-learning-path/{id}', DeleteLearningPathController::class);
         Route::get('/courses', IndexCoursesForDesignerController::class);
         Route::get('/users', \App\Http\Controllers\Api\Course\IndexUsersController::class);
@@ -146,21 +187,38 @@ Route::middleware('auth:user')->group(function () {
         Route::delete('/delete-question/{question_id}', DeleteQuestionController::class);
         Route::delete('/delete-answer/{answer_id}', DeleteAnswerController::class);
         Route::post('/support-message', SupportMessageController::class);
+        Route::post('/active-course/{course_id}', SetCourseActiveController::class);
+        Route::post('/offline/{course_id}', SetCourseOfflineController::class);
+        Route::post('online/{course_id}', SetCourseOnlineController::class);
+        Route::get('/filter-courses', FilterCoursesController::class);
+        Route::post('/set-active-learning-path/{learning_path_id}', SetLearningPathActiveController::class);
+        Route::post('/set-online-learning-path/{learning_path_id}', SetLearningPathOnlineController::class);
+        Route::post('/set-offline-learning-path/{learning_path_id}', SetLearningPathOfflineController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\DesignerStatsticsController::class);
+
     });
     Route::middleware('facilitator')->prefix(
         'facilitator'
     )->group(function () {
         Route::get('/courses', IndexCoursesForFacilitator::class);
         Route::get('courses/{id}', GetCourseByIdForFacilitatorController::class);
+        Route::post('/invalidate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\InvalidateOpenQuestionAnswerController::class);
+        Route::post('/validate-answer/{answer_id}', \App\Http\Controllers\Api\Quiz\ValidateOpenQuestionAnswerController::class);
+        Route::get('/open-questions', \App\Http\Controllers\Api\Quiz\IndexOpenAnswerController::class);
+        Route::get('/statistics', \App\Http\Controllers\Api\Statstics\FacilitatorStatsticsController::class);
+        Route::get('/users', \App\Http\Controllers\Api\Message\IndexUsersForFacilitatorsController::class);
     });
 });
-
 // Public routes for guests
 Route::get('/guest-courses', IndexCoursesForGuestController::class);
 Route::get('/guest-courses/{id}', GetCourseByIdForGuestController::class);
 Route::get('/steps/{id}', GetStepMediaByIdController::class);
 Route::get('/categories', IndexCategoriesController::class);
 Route::get('/categories-filter', IndexCategoriesWithCoursesController::class);
+Route::get('/categories-learning-paths', IndexCategoriesWithLearningPathsController::class);
 Route::get('/categories/{id}', GetCategoryByIdController::class);
 Route::get('/languages', IndexLanguagesController::class);
 Route::get('/facilitators', IndexFacilitatorsController::class);
+Route::get('/guest-learning-paths', IndexLearningPathForGuestController::class);
+Route::get('/guest-learning-paths/{id}', GetLearningPathForGuestByIdController::class);
+Route::get('/upcoming-courses', \App\Http\Controllers\Api\Course\GetUpcomingCoursesController::class);

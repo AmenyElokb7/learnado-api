@@ -10,4 +10,5 @@ class PasswordResetToken extends Model
     protected $fillable = [
         'email', 'token', 'expires_at', 'created_at'
     ];
+    protected $dateFormat = 'U';
 }

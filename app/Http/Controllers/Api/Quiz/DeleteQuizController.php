@@ -63,17 +63,10 @@ class DeleteQuizController extends Controller
 
     use SuccessResponse, ErrorResponse;
 
-    protected $quizRepository;
-
-    public function __construct(QuizRepository $quizRepository)
-    {
-        $this->quizRepository = $quizRepository;
-    }
-
     public function __invoke($quiz_id): JsonResponse
     {
         try {
-            $this->quizRepository->deleteQuiz($quiz_id);
+            QuizRepository::deleteQuiz($quiz_id);
             return $this->returnSuccessResponse(__('quiz_deleted'), null, ResponseAlias::HTTP_OK);
         } catch (Exception $e) {
             Log::error($e->getMessage());

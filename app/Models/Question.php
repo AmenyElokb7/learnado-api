@@ -10,7 +10,9 @@ class Question extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['quiz_id', 'question', 'type', 'is_valid'];
+    protected $dateFormat = 'U';
+
+    protected $fillable = ['quiz_id', 'question', 'type', 'is_valid', 'created_at', 'updated_at'];
 
     public function answers()
     {

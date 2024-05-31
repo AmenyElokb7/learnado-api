@@ -10,6 +10,7 @@ use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class IndexQuizAttemptsController extends Controller
@@ -18,21 +19,15 @@ class IndexQuizAttemptsController extends Controller
      * Handle the incoming request.
      */
     use SuccessResponse, ErrorResponse,PaginationParams;
-    protected $quizRepository;
-
-
-    public function __construct(QuizRepository $quizRepository)
-    {
-        $this->quizRepository = $quizRepository;
-    }
 
     public function __invoke(Request $request): \Illuminate\Http\JsonResponse
     {
         $paginationParams = $this->getAttributes($request);
         try {
-            $quizAttempts = $this->quizRepository->indexQuizAttempts($paginationParams);
+            $quizAttempts = QuizRepository::indexQuizAttempts($paginationParams);
             return $this->returnSuccessPaginationResponse(__('quiz_attempts_found'), $quizAttempts, ResponseAlias::HTTP_OK, $paginationParams->isPaginated());
         } catch (\Exception $exception) {
+            Log::error($exception->getMessage());
             return $this->returnErrorResponse($exception->getMessage() ?: __('general_error'), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -41,11 +36,9 @@ class IndexQuizAttemptsController extends Controller
     private function getAttributes(Request $request): QueryConfig
     {
         $paginationParams = $this->getPaginationParams($request);
-
         $filters = [
             'keyword' => $paginationParams['KEYWORD'] ?? '',
         ];
-
         $search = new QueryConfig();
         $search->setFilters($filters)
             ->setPerPage($paginationParams['PER_PAGE'])

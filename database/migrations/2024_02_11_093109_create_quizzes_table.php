@@ -17,8 +17,9 @@ return new class extends Migration {
             // nullable when the quiz is not an exam
             $table->foreignId('learning_path_id')->nullable()->constrained('learning_paths')->onDelete('cascade');
             $table->boolean('is_exam')->default(false);
-            $table->timestamps();
-            $table->softDeletes();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
+            $table->softDeletesBigInteger();
         });
     }
 

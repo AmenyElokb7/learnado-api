@@ -17,9 +17,8 @@ return new class extends Migration
             $table->string('subject');
             $table->text('message');
             $table->boolean('is_read')->default(false);
-
-
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
         });
     }
 

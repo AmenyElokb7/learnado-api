@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * @OA\Get(
- *     path="/api/admin/languages",
+ *     path="/api/languages",
  *     summary="List languages with optional filtering and pagination",
  *     tags={"Language"},
  *     @OA\Parameter(

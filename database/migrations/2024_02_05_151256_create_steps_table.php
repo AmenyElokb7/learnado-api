@@ -16,8 +16,9 @@ return new class extends Migration {
             $table->text('description');
             $table->string('duration');
             $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
-            $table->softDeletes();
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
+            $table->softDeletesBigInteger();
         });
     }
 

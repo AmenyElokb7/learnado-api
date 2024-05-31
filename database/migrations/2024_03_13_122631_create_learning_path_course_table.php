@@ -14,7 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('learning_path_id')->constrained()->onDelete('cascade');
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
         });
     }
 

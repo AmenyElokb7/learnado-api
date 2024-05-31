@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Answer extends Model
 {
     use HasFactory, SoftDeletes;
+    protected $dateFormat = 'U';
 
-    protected $fillable = ['question_id', 'answer', 'is_valid'];
+    protected $fillable = ['question_id', 'answer', 'is_valid', 'created_at', 'updated_at'];
 
     public function question()
     {

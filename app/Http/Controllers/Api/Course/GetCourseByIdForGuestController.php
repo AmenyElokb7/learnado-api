@@ -10,17 +10,12 @@ use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class GetCourseByIdForGuestController extends Controller
 {
-    protected $courseRepository;
     use ErrorResponse, SuccessResponse, PaginationParams;
-
-    public function __construct(CourseRepository $courseRepository)
-    {
-        $this->courseRepository = $courseRepository;
-    }
 
     /**
      * @param $id
@@ -28,13 +23,15 @@ class GetCourseByIdForGuestController extends Controller
      */
     public function __invoke($id): JsonResponse
     {
-        $course = $this->getAttributes();
-
-        $course = $this->courseRepository->getCourseById($id, $course);
-        return $this->returnSuccessResponse(__('course_found'), $course, ResponseAlias::HTTP_OK);
-
+        try{
+            $course = $this->getAttributes();
+            $course = CourseRepository::getCourseById($id, $course);
+            return $this->returnSuccessResponse(__('course_found'), $course, ResponseAlias::HTTP_OK);
+        }catch (\Exception $e){
+            Log::error($e->getMessage());
+            return $this->returnErrorResponse(__('course_not_found'), ResponseAlias::HTTP_NOT_FOUND);
+        }
     }
-
     private function getAttributes(): QueryConfig
     {
         $filters = [
@@ -44,6 +41,5 @@ class GetCourseByIdForGuestController extends Controller
         $search = new QueryConfig();
         $search->setFilters($filters);
         return $search;
-
     }
 }

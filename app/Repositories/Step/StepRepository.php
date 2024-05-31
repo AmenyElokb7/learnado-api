@@ -8,7 +8,11 @@ use App\Models\Step;
 use App\Repositories\Media\MediaRepository;
 use App\Repositories\Quiz\QuizRepository;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class StepRepository
@@ -28,29 +32,20 @@ class StepRepository
             throw new Exception(__('course_not_found'));
         }
         foreach ($data['steps'] as $stepData) {
-            // Create the step and attach it to the course
             $step = $course->steps()->create([
                 'title' => $stepData['title'],
                 'description' => $stepData['description'],
                 'duration' => $stepData['duration'],
             ]);
-
             if (!empty($stepData['media_files'])) {
                 self::processMediaFiles($step, $stepData['media_files'], $stepData['media_titles'] ?? []);
             }
-
-            if (!empty($stepData['media_urls'])) {
-                self::processMediaUrls($step, $stepData['media_urls']);
-            }
-
             if (isset($stepData['quiz'])) {
-
                 QuizRepository::createQuiz($step, $stepData['quiz']);
             }
         }
         return $step;
     }
-
 
     /**
      * add media files to a step
@@ -67,30 +62,14 @@ class StepRepository
     }
 
     /**
-     * add media urls to a step
-     * @param $step
-     * @param $mediaUrls
-     * @return void
-     */
-    private static function processMediaUrls($step, $mediaUrls): void
-    {
-        foreach ($mediaUrls as $mediaUrl) {
-            $step->media()->create([
-                'external_url' => $mediaUrl['url'],
-                'title' => $mediaUrl['title'] ?? null,
-            ]);
-        }
-    }
-
-    /**
-     * Update a step with new information, media files, and external URLs.
+     * Update a step with new information, media files.
      *
      * @param int $stepId The ID of the step to update.
      * @param array $data The new data for the step.
-     * @return Step The updated step.
+     * @return Builder|Collection|Model|Builder[] The updated step.
      * @throws Exception If an error occurs.
      */
-    public final function updateStep(int $stepId, array $data): Step
+    public final function updateStep(int $stepId, array $data): Builder|array|Collection|Model
     {
         DB::beginTransaction();
         try{
@@ -103,47 +82,26 @@ class StepRepository
         if (!$step) {
             throw new Exception(__('step_not_found'), ResponseAlias::HTTP_NOT_FOUND);
         }
-
             $step->update([
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'duration' => $data['duration'],
             ]);
-
-
-        $existingMediaIds = $step->media()->pluck('id')->toArray();
-
-        // Remove media files that are no longer attached to the step and put them in an array to delete
-        $mediaFilesToDelete = array_diff($existingMediaIds, $data['media_files']);
-
-
-
-        // Add new media files
         if (!empty($data['media_files'])) {
+            $data['media_files'] = array_filter($data['media_files'], function ($file) {
+                return !Str::contains($file, 'http');
+            });
             self::processMediaFiles($step, $data['media_files']);
         }
-
-
-        // Remove external URLs that are no longer attached to the step
-        foreach ($step->media()->whereNotNull('external_url')->get() as $media) {
-            if (!in_array($media->id, $data['external_urls'])) {
-                $media->delete();
-            }
-        }
-        // Update existing external URLs and add new ones
-        foreach ($data['external_urls'] as $externalUrlData) {
-            if (isset($externalUrlData['id'])) {
-                // Update existing media record
-                $media = $step->media()->find($externalUrlData['id']);
-                $media->update([
-                    'title' => $externalUrlData['title'],
-                    'external_url' => $externalUrlData['url']
-                ]);
-            } else {
-                // Create new media record for the external URL
-                MediaRepository::attachOrUpdateMediaForModel($step, null, null, $externalUrlData['title']);
+        if (isset($data['deleted_media'])) {
+            foreach ($data['deleted_media'] as $mediaName) {
+                $media = $step->media()->where('file_name', Str::after($mediaName, 'storage/'))->first();
+                if ($media) {
+                    $media->delete();
+                }
 
             }
+
         }
             DB::commit();
             return $step;

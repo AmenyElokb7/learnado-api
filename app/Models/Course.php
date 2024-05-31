@@ -27,6 +27,7 @@ use Illuminate\Notifications\Notifiable;
  * @property double longitude
  * @property string start_time
  * @property string end_time
+ * @property boolean is_offline
  * @property User admin
  * @property User facilitator
  * @property Media media
@@ -35,6 +36,7 @@ use Illuminate\Notifications\Notifiable;
 class Course extends Model
 {
     use SoftDeletes, ApplyQueryScopes, HasFactory, Notifiable;
+    protected $dateFormat = 'U';
 
     protected $fillable = [
         'title',
@@ -47,58 +49,56 @@ class Course extends Model
         'discount',
         'facilitator_id',
         'is_public',
-        'sequential',
         'is_active',
+        'is_offline',
         'teaching_type',
+        'has_forum',
         'link',
         'latitude',
         'longitude',
         'start_time',
         'end_time',
+        'created_at',
+        'updated_at',
     ];
-
+    // Relationships
     public function media()
     {
         return $this->morphMany(Media::class, 'model');
     }
-
+    public function discussion()
+    {
+        return $this->morphMany(Discussion::class, 'discussable');
+    }
     public function admin()
     {
         return $this->belongsTo(User::class);
     }
-
     public function facilitator()
     {
         return $this->belongsTo(User::class);
     }
-
     public function learningPaths()
     {
         return $this->belongsToMany(LearningPath::class, 'learning_path_course');
     }
-
     public function steps()
     {
         return $this->hasMany(Step::class);
     }
 
-    // App\Models\Course.php
-
     public function subscribers()
     {
         return $this->belongsToMany(User::class, 'course_subscription_users', 'course_id', 'user_id');
     }
-
     public function added_by()
     {
         return $this->belongsTo(User::class, 'id');
     }
-
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
-
     public function language()
     {
         return $this->belongsTo(Language::class);
@@ -111,26 +111,18 @@ class Course extends Model
     {
         return $this->belongsToMany(User::class, 'cart');
     }
-
+    // Methods
     public function deleteWithRelations()
     {
-        // Delete related media
         $this->media()->delete();
-
-        // delete the course from cart
         $this->usersInCart()->detach();
-
-        // Delete subscribed users associations
-
         $this->subscribers()->detach();
-
-        // Delete related steps and their quizzes, questions, and answers
         foreach ($this->steps as $step) {
             $step->deleteWithRelations();
         }
         $this->delete();
     }
-
+    // Scopes
     public function scopeByFacilitator($query, $facilitatorId)
     {
 
@@ -139,8 +131,6 @@ class Course extends Model
         }
         return $query;
     }
-
-
     public function scopeByAddedBy($query, $DesignerId)
     {
         if (!$DesignerId) {
@@ -148,23 +138,27 @@ class Course extends Model
         }
         return $query;
     }
-
-    public function scopeByIsPublic($query, $isPublic)
+    public function scopeByIsPublic($query, $isPublic = null)
     {
-        if ($isPublic) {
+        if (!is_null($isPublic)) {
             return $query->where('is_public', $isPublic);
         }
         return $query;
     }
-
-    public function scopeByIsActive($query, $isActive)
+    public function scopeByIsActive($query, $isActive = null)
     {
-        if ($isActive) {
+        if (!is_null($isActive)) {
             return $query->where('is_active', $isActive);
         }
         return $query;
     }
-
+    public function scopeByIsOffline($query, $isOffline = null)
+    {
+        if (!is_null($isOffline)) {
+            return $query->where('is_offline', $isOffline);
+        }
+        return $query;
+    }
     public function scopeByStartTime($query, $startTime)
     {
         if ($startTime) {
@@ -172,7 +166,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeBySubscribedUser($query, $userId)
     {
         if ($userId) {
@@ -182,7 +175,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByKeyWord($query, $keyword)
     {
         if ($keyword) {
@@ -193,7 +185,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByIsPaid($query, $isPaid)
     {
         if ($isPaid !== null) {
@@ -202,7 +193,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByTeachingType($query, $teachingType)
     {
         if ($teachingType !== null) {
@@ -210,7 +200,6 @@ class Course extends Model
         }
         return $query;
     }
-
     public function scopeByCategory($query, $categorieId)
     {
         if ($categorieId !== null) {
@@ -218,6 +207,36 @@ class Course extends Model
         }
         return $query;
     }
-
-
+    public function scopeByPriceMin($query, $priceMin)
+    {
+        if ($priceMin !== null && $priceMin > 0) {
+            $query->where(function ($query) use ($priceMin) {
+                $query->whereRaw('COALESCE(price, 0) - (COALESCE(price, 0) * COALESCE(discount, 0) / 100) >= ?', [$priceMin]);
+            });
+        }
+        return $query;
+    }
+    public function scopeByPriceMax($query, $priceMax)
+    {
+        if ($priceMax !== null) {
+            $query->where(function ($query) use ($priceMax) {
+                $query->whereRaw('COALESCE(price, 0) - (COALESCE(price, 0) * COALESCE(discount, 0) / 100) <= ?', [$priceMax]);
+            });
+        }
+        return $query;
+    }
+    public function scopeByStartTimeMin($query, $startTimeMin)
+    {
+        if ($startTimeMin) {
+            return $query->where('start_time', '>=', $startTimeMin);
+        }
+        return $query;
+    }
+    public function scopeByStartTimeMax($query, $startTimeMax)
+    {
+        if ($startTimeMax) {
+            return $query->where('start_time', '<=', $startTimeMax);
+        }
+        return $query;
+    }
 }

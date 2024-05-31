@@ -32,9 +32,9 @@
 <body>
 <div class="meeting-details">
     <h2>{{ $course->name }} - Invitation</h2>
-    <p><strong>Date:</strong> {{ date('Y-m-d', strtotime($course->start_time)) }}</p>
-    <p><strong>Time:</strong> {{ date('H:i', strtotime($course->start_time)) }}
-        - {{ date('H:i', strtotime($course->end_time)) }}</p>
+    <p><strong>Date:</strong> {{ date('Y-m-d', ($course->start_time)) }}</p>
+    <p><strong>Time:</strong> {{ date('H:i', ($course->start_time)) }}
+        - {{ date('H:i', ($course->end_time)) }}</p>
     <a href="{{ $googleMeetLink }}" class="button">Join Google Meet</a>
 </div>
 <div class="footer">

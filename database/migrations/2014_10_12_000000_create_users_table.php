@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+use \App\Enum\UserRoleEnum;
 return new class extends Migration {
     /**
      * Run the migrations.
@@ -15,15 +15,14 @@ return new class extends Migration {
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             /** ENUM */
-            $table->integer('role');
+            $table->unsignedBigInteger('role')->default(UserRoleEnum::USER->value);
             /** end ENUM */
             $table->string('password')->nullable();
             $table->boolean('is_valid')->default(false);
-            $table->softDeletes();
-            $table->rememberToken();
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at');
+            $table->unsignedBigInteger('updated_at');
+            $table->softDeletesBigInteger();
         });
     }
 

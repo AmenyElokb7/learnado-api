@@ -10,6 +10,93 @@ use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
+
+/**
+ * @OA\Get(
+ *     path="/api/course-certificate",
+ *     summary="Retrieve course certificates",
+ *     tags={"Course"},
+ *     security={
+ *         {"bearerAuth": {}}
+ *     },
+ *     @OA\Parameter(
+ *         name="keyword",
+ *         in="query",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="string",
+ *             example="certificate"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="integer",
+ *             example=1
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="per_page",
+ *         in="query",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="integer",
+ *             example=10
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="order_by",
+ *         in="query",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="string",
+ *             example="created_at"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="direction",
+ *         in="query",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="string",
+ *             example="desc"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Course certificates retrieved successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Course certificates found"),
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="course_id", type="integer", example=1),
+ *                     @OA\Property(property="certificate_name", type="string", example="Course Completion Certificate"),
+ *                     @OA\Property(property="issued_at", type="string", format="date-time", example="2024-05-21T12:00:00Z"),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2024-05-21T12:00:00Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-05-21T12:00:00Z")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid request due to incorrect input or missing fields"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized - User not authorized to perform this action"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error - Failed to retrieve course certificates"
+ *     )
+ * )
+ */
 
 class IndexCourseCertificatesController extends Controller
 {

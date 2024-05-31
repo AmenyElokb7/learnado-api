@@ -17,57 +17,16 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
  * @OA\Get(
- *     path="/api/courses",
- *     summary="List all courses with optional filtering and pagination",
+ *     path="/api/designer/courses",
+ *     summary="List all courses for designer with optional filtering and pagination",
  *     tags={"Course"},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="title",
  *         in="query",
  *         description="Filter courses by title",
  *         required=false,
  *         @OA\Schema(type="string")
- *     ),
- *     @OA\Parameter(
- *         name="category",
- *         in="query",
- *         description="Filter courses by category ID",
- *         required=false,
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Parameter(
- *         name="language",
- *         in="query",
- *         description="Filter courses by language ID",
- *         required=false,
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Parameter(
- *         name="is_paid",
- *         in="query",
- *         description="Filter courses by paid status",
- *         required=false,
- *         @OA\Schema(type="boolean")
- *     ),
- *     @OA\Parameter(
- *         name="price",
- *         in="query",
- *         description="Filter courses by price",
- *         required=false,
- *         @OA\Schema(type="number")
- *     ),
- *     @OA\Parameter(
- *         name="discount",
- *         in="query",
- *         description="Filter courses by discount",
- *         required=false,
- *         @OA\Schema(type="number")
- *     ),
- *     @OA\Parameter(
- *         name="teaching_type",
- *         in="query",
- *         description="Filter courses by teaching type ID",
- *         required=false,
- *         @OA\Schema(type="integer")
  *     ),
  *     @OA\Parameter(
  *         name="perPage",

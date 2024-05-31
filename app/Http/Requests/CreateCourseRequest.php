@@ -37,11 +37,12 @@ class CreateCourseRequest extends FormRequest
             'selected_user_ids.*' => 'exists:users,id',
             'course_media' => 'required|file|max:' . config('constants.MAX_FILE_SIZE') . '|mimes:' . config('constants.MEDIA_MIMES'),
             'teaching_type' => 'nullable|integer',
-            'start_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . ',' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
-            'end_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . ',' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
+            'start_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . ',' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable',
+            'end_time' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . ',' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable',
             'link' => 'required_if:teaching_type,' . TeachingTypeEnum::ONLINE->value . '|nullable|string',
             'latitude' => 'required_if:teaching_type,' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
             'longitude' => 'required_if:teaching_type,' . TeachingTypeEnum::ON_A_PLACE->value . '|nullable|string',
+            'has_forum' => 'required|boolean',
         ];
     }
 
@@ -66,6 +67,7 @@ class CreateCourseRequest extends FormRequest
             'course_media.*.mimes' => __('messages.course_media_mimes'),
             'latitude.required_if' => __('messages.place_required_if'),
             'link.required_if' => __('messages.link_required_if'),
+            'has_forum.required' => __('messages.has_forum_required'),
         ];
     }
 }

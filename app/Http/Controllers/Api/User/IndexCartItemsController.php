@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Api\User;
 use App\Helpers\QueryConfig;
 use App\Http\Controllers\Controller;
 use App\Repositories\Course\CourseRepository;
+use App\Repositories\LearningPath\LearningPathRepository;
 use App\Traits\ErrorResponse;
 use App\Traits\PaginationParams;
 use App\Traits\SuccessResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -106,29 +108,18 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  * )
  */
 
-class IndexCartCoursesController extends Controller
+class IndexCartItemsController extends Controller
 {
     use ErrorResponse, SuccessResponse, PaginationParams;
 
     public function __invoke(Request $request): JsonResponse
     {
         try {
-            $paginationParams = $this->getAttributes($request);
-            $courses = CourseRepository::indexCartCourses($paginationParams);
-            return $this->returnSuccessResponse('Courses retrieved successfully', $courses, ResponseAlias::HTTP_OK);
+            $data = CourseRepository::indexCartItems();
+            return $this->returnSuccessResponse('items retrieved successfully', $data, ResponseAlias::HTTP_OK);
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
             return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
-    }
-    private function getAttributes(Request $request) : QueryConfig
-    {
-        $paginationParams = $this->getPaginationParams($request);
-        $search = new QueryConfig();
-        $search->setPerPage($paginationParams['PER_PAGE'])
-            ->setOrderBy($paginationParams['ORDER_BY'])
-            ->setDirection($paginationParams['DIRECTION'])
-            ->setPaginated($paginationParams['PAGINATION'])
-            ->setPage($paginationParams['PAGE']);
-        return $search;
     }
 }

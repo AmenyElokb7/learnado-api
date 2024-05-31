@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Quiz extends Model
 {
     use HasFactory, SoftDeletes;
+    protected $dateFormat = 'U';
 
-    protected $fillable = ['step_id', 'is_exam'];
+    protected $fillable = ['step_id', 'is_exam', 'created_at', 'updated_at'];
 
     public function step()
     {

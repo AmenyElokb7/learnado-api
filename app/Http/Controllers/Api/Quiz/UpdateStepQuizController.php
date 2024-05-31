@@ -10,6 +10,7 @@ use App\Traits\ErrorResponse;
 use App\Traits\SuccessResponse;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -126,15 +127,15 @@ class UpdateStepQuizController extends Controller
      */
     public function __invoke($step_id, UpdateQuizRequest $request): JsonResponse
     {
-        $data = $this->getAttributes($request);
-
-
-        $quiz = $this->quizRepository->updateQuiz($step_id, $data);
-
-        return $this->returnSuccessResponse(__('quiz_updated'), $quiz, ResponseAlias::HTTP_CREATED);
-
+        try{
+            $data = $this->getAttributes($request);
+            $quiz = $this->quizRepository->updateQuiz($step_id, $data);
+            return $this->returnSuccessResponse(__('quiz_updated'), $quiz, ResponseAlias::HTTP_CREATED);
+        }catch (Exception $e){
+            Log::error($e->getMessage());
+            return $this->returnErrorResponse($e->getMessage(), ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
-
     private function getAttributes(UpdateQuizRequest $request): array
     {
         return $request->validated();

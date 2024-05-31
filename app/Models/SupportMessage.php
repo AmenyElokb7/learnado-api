@@ -10,29 +10,26 @@ use Illuminate\Database\Query\Builder;
 class SupportMessage extends Model
 {
     use HasFactory, ApplyQueryScopes;
+    protected $dateFormat = "U";
 
     protected $fillable = [
         'user_id',
         'message',
-        'subject'
+        'subject',
+        "created_at",
+            "updated_at",
+
     ];
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
     public final function scopeBySubject($query, $subject)
     {
         return $query->where('subject', 'like', "%$subject%");
     }
     public function scopeByIsRead($query, $isRead)
     {
-        if($isRead === 'true') {
-            $isRead = 1;
-        } elseif ($isRead === 'false') {
-            $isRead = 0;
-        }
         return $query->where('is_read', $isRead);
     }
-
 }

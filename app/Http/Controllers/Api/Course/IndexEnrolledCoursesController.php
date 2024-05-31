@@ -46,6 +46,5 @@ class IndexEnrolledCoursesController extends Controller
             ->setDirection($paginationParams['DIRECTION'])
             ->setPaginated($paginationParams['PAGINATION']);
         return $search;
-
     }
 }

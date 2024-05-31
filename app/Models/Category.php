@@ -9,13 +9,19 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     use HasFactory, ApplyQueryScopes;
+    protected $dateFormat = 'U';
 
-    protected $fillable = ['category'];
+    protected $fillable = ['category', 'created_at', 'updated_at'];
 
     // course has one category and category belongs to many courses
     public function courses()
     {
         return $this->hasMany(Course::class);
+    }
+
+    public function learningPaths()
+    {
+        return $this->hasMany(LearningPath::class);
     }
 
     public function media()

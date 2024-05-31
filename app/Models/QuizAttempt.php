@@ -9,8 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 class QuizAttempt extends Model
 {
     use HasFactory,ApplyQueryScopes;
+    protected $dateFormat = "U";
+    const QUIZ_COOLDOWN_TIME = 120; // 2 hours
 
-    protected $fillable = ['user_id', 'quiz_id', 'score', 'total_score_possible', 'needs_review', 'passed'];
+
+    protected $fillable = ['user_id', 'quiz_id', 'score', 'total_score_possible', 'needs_review', 'passed', 'created_at','updated_at' ];
 
     public function user()
     {

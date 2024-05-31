@@ -27,6 +27,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable, SoftDeletes, ApplyQueryScopes;
+    protected $dateFormat= "U";
 
 
     /**
@@ -34,7 +35,7 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
-    protected $fillable = ['first_name', 'last_name', 'email', 'role', 'password', 'is_valid'];
+    protected $fillable = ['first_name', 'last_name', 'email', 'role', 'password', 'is_valid', "created_at", "updated_at"];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -80,9 +81,26 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(CourseCertificate::class);
     }
+
+    public function attestations()
+    {
+        return $this->hasMany(Attestation::class);
+    }
     public function cart()
     {
         return $this->belongsToMany(Course::class, 'cart');
+    }
+    public function learningPathInCart()
+    {
+        return $this->belongsToMany(LearningPath::class, 'cart');
+    }
+
+    public function sentMessages() {
+        return $this->belongsToMany(Message::class, 'user_messages', 'sender_id', 'message_id');
+    }
+
+    public function receivedMessages() {
+        return $this->belongsToMany(Message::class, 'user_messages', 'receiver_id', 'message_id');
     }
 
 
@@ -166,6 +184,8 @@ class User extends Authenticatable implements JWTSubject
         }
         return $query;
     }
+
+
 
 
 }

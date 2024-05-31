@@ -25,16 +25,18 @@ return new class extends Migration {
             $table->unsignedBigInteger('facilitator_id')->nullable();
             $table->foreign('facilitator_id')->references('id')->on('users')->onDelete('set null');
             $table->boolean('is_public')->default(true);
-            $table->boolean('sequential')->default(false);
             $table->boolean('is_active')->default(false);
+            $table->boolean('is_offline')->default(false);
+            $table->boolean('has_forum')->default(false);
             $table->integer('teaching_type')->default(0);
             $table->string('link')->nullable();
-            $table->timestamp('start_time')->nullable();
-            $table->timestamp('end_time')->nullable();
+            $table->unsignedBigInteger('start_time')->nullable();
+            $table->unsignedBigInteger('end_time')->nullable();
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
+            $table->unsignedBigInteger('created_at')->default(now()->timestamp);
+            $table->unsignedBigInteger('updated_at')->default(now()->timestamp);
+            $table->softDeletesBigInteger();
         });
     }
 

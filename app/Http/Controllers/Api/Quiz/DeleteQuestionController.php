@@ -9,6 +9,7 @@ use App\Traits\SuccessResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class DeleteQuestionController extends Controller
@@ -19,18 +20,13 @@ class DeleteQuestionController extends Controller
 
     use SuccessResponse, ErrorResponse;
 
-    protected $questionRepository;
-
-    public function __construct(QuizRepository $questionRepository)
-    {
-        $this->questionRepository = $questionRepository;
-    }
     public function __invoke($question_id) : JsonResponse
     {
         try {
-            $this->questionRepository->deleteQuestion($question_id);
+            QuizRepository::deleteQuestion($question_id);
             return $this->returnSuccessResponse(__('messages.question_deleted'), null, ResponseAlias::HTTP_OK);
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
             return $this->returnErrorResponse($e->getMessage() ?: __('messages.general_error'), $e->getCode() ?: ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

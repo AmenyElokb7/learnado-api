@@ -138,9 +138,12 @@ class UpdateAccountController extends Controller
         }
     }
 
+    /**
+     * @param UpdateUserAccountRequest $request
+     * @return array
+     */
     private function getAttributes(UpdateUserAccountRequest $request): array
     {
-
         return $request->validated();
     }
 }

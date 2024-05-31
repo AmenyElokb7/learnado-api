@@ -18,6 +18,11 @@ class IndexCoursesForUsersController extends Controller
 {
     use SuccessResponse, ErrorResponse, PaginationParams;
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+
     public function __invoke(Request $request): JsonResponse
     {
         $paginationParams = $this->getAttributes($request);

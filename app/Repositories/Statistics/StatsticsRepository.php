@@ -155,6 +155,12 @@ class StatsticsRepository
             'total_fee' => $totalFee,
         ];
     }
+
+    /**
+     * Get statistics for admin
+     * @return array
+     * @throws Exception
+     */
     public static function getAdminStatistics() : array
     {
         $users = User::count();
@@ -178,6 +184,11 @@ class StatsticsRepository
             'languages' => $languages
         ];
     }
+
+    /**
+     * Get statistics for designer
+     * @return array
+     */
     public static function getDesignerStatistics() : array
     {
         $user = Auth::user();
@@ -264,6 +275,11 @@ class StatsticsRepository
             'total_price' => $totalPrice,
         ];
     }
+
+    /**
+     * Get statistics for guest
+     * @return array
+     */
 
     public static function getGuestStatistics() : array
     {

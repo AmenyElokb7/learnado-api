@@ -103,7 +103,7 @@ class UserRepository
      * @throws Exception
      */
 
-    public final function updateProfile(array $data) : User
+    public final function updateProfile(array $data)
     {
         $user = Auth::user();
         if (!$user) {

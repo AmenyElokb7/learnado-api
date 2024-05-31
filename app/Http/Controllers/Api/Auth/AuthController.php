@@ -68,6 +68,10 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * @param AuthenticateUserRequest $request
+     * @return array
+     */
     private function getAttributes(AuthenticateUserRequest $request): array
     {
         return $request->validated();

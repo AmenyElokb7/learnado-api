@@ -89,7 +89,7 @@ class CourseRepository
      */
 
 
-    private static function generateIcsContent($course): string
+    public static function generateIcsContent($course): string
     {
         $startDateTime = gmdate('Ymd\THis\Z', $course->start_time);
         $endDateTime = gmdate('Ymd\THis\Z', $course->end_time);

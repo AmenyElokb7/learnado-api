@@ -91,6 +91,11 @@ class RegisterController extends Controller
         }
     }
 
+    /**
+     * @param RegistrationRequest $request
+     * @return array
+     */
+
     private function getAttributes(RegistrationRequest $request): array
     {
         return $request->validated();

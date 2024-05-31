@@ -99,6 +99,8 @@ Route::middleware('auth:user')->group(function () {
         Route::get('/cart', IndexCartCoursesController::class);
         Route::post('/add-to-cart/{course_id}', AddToCartController::class);
         Route::delete('/remove-from-cart/{course_id}', RemoveFromCartController::class);
+        Route::post('/checkout', \App\Http\Controllers\Api\User\PaymentController::class)->name('stripe.checkout');
+
     });
 
     Route::middleware('admin')->prefix(

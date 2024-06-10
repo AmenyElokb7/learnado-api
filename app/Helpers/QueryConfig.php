@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Helpers;
-
 class QueryConfig
 {
     /**
@@ -9,7 +8,8 @@ class QueryConfig
      */
     const SORT_ASC = 'ASC';
     const SORT_DESC = 'DESC';
-
+    const DEFAULT_PAGE = 10;
+    const PAGE = 1;
     /**
      * Pagination
      * @var bool $paginated
@@ -17,41 +17,48 @@ class QueryConfig
     private bool $paginated = true;
 
     /**
+     * Pagination Mode (Paginate with count or not)
+     * @var mixed
+     */
+
+    protected mixed $paginationMode = true;
+    /**
      * paginate per page
      * @var int $perPage
      */
-    private int $perPage;
-
+    private int $perPage = self::DEFAULT_PAGE;
     /**
      * paginate page number
      * @var int $page
      */
-    private int $page;
-
+    private int $page = self::PAGE;
     /**
      * Filters
      * @var array $filters
      */
     private array $filters = [];
-
     /**
      * order by column
      * @var string|null $orderBy
      */
     private ?string $orderBy;
-
-
     /**
      * Filters
      * @var array $selectColumns
      */
     private array $selectColumns = ['*'];
-
     /**
      * Filters
      * @var string $selectedRaw
      */
     private string $selectedRaw = '';
+
+    /**
+     * Filters
+     * @var  array
+     */
+    protected array $relations = [];
+    private array $appends = [];
 
     /**
      * Order by direction
@@ -64,15 +71,15 @@ class QueryConfig
      */
     public function __construct()
     {
-        $configValuePerPage = config('constants.DEFAULT_PER_PAGE');
-        $this->perPage = is_null($configValuePerPage) ? 10 : (int)$configValuePerPage;
-
-        $configValuePage = config('constants.DEFAULT_PAGE');
-        $this->page = is_null($configValuePage) ? 1 : (int)$configValuePage;
-
-
     }
 
+    /**
+     * @return mixed
+     */
+    public function getPaginationMode(): mixed
+    {
+        return $this->paginationMode;
+    }
 
     public final function getPage(): int
     {
@@ -87,7 +94,6 @@ class QueryConfig
     public final function setPerPage(int $perPage): static
     {
         $this->perPage = $perPage;
-
         return $this;
     }
 
@@ -112,7 +118,6 @@ class QueryConfig
     {
         $this->filters = $filters;
         return $this;
-
     }
 
     public final function getDirection(): string
@@ -120,9 +125,9 @@ class QueryConfig
         return $this->direction;
     }
 
-    public final function setDirection(mixed $direction): static
+    public final function setDirection(mixed $DIRECTION): static
     {
-        $this->direction = $direction;
+        $this->direction = $DIRECTION;
         return $this;
     }
 
@@ -131,9 +136,9 @@ class QueryConfig
         return $this->paginated;
     }
 
-    public final function setPaginated(mixed $pagination): static
+    public final function setPaginated(mixed $PAGINATION): static
     {
-        $this->paginated = $pagination;
+        $this->paginated = $PAGINATION;
         return $this;
     }
 
@@ -142,5 +147,10 @@ class QueryConfig
         return $this->paginated;
     }
 
+    public final function setPage(int $page): static
+    {
+        $this->page = $page;
+        return $this;
+    }
 
 }
